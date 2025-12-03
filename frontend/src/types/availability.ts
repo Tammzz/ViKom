@@ -24,5 +24,5 @@ export interface AvailabilitySummary {
   startTime: string;
   endTime: string;
   notes?: string;
-  hasAppointment: boolean;
+  isBooked: boolean;
 }

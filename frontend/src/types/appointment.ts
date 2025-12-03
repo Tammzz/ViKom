@@ -22,7 +22,7 @@ export interface AppointmentCreateDto {
 // Appointment summary for dashboard display
 export interface AppointmentSummary {
   id: number;
-  clientName: string;
+  patientName: string;
   personnelName: string;
   taskDescription: string;
   date: string; // ISO date string

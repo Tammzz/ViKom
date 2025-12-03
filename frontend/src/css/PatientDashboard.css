@@ -1,0 +1,17 @@
+.patient-dashboard .cta-card {
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.patient-dashboard .cta-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.patient-dashboard .vstack > div {
+  transition: transform 0.2s;
+}
+
+.patient-dashboard .vstack > div:hover {
+  transform: translateX(4px);
+}

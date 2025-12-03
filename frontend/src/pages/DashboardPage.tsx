@@ -1,12 +1,25 @@
 import React from 'react';
-import { Container } from 'react-bootstrap';
+import { getUserInfo } from '../services/AuthService';
+import PersonnelDashboard from '../components/PersonnelDashboard';
+import PatientDashboard from '../components/PatientDashboard';
 
+// role-based dashboard wrapper
 const DashboardPage: React.FC = () => {
+  const userInfo = getUserInfo();
+
+  // renders appropriate dashboard based on user role
+  if (userInfo?.role === 'Personnel' || userInfo?.role === 'Admin') {
+    return <PersonnelDashboard />;
+  }
+
+  if (userInfo?.role === 'Patient') {
+    return <PatientDashboard />;
+  }
+
   return (
-    <Container className="mt-4">
-      <h2>Dashboard</h2>
-      <p>Welcome to the HomeCare Dashboard. Role-specific content will be displayed here.</p>
-    </Container>
+    <div className="container mt-5">
+      <p className="text-muted">Unable to load dashboard. Please log in again.</p>
+    </div>
   );
 };
 
