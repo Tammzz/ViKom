@@ -1,4 +1,12 @@
 :root {
+  /* Custom Color Palette */
+  --bs-primary: #8d6af1;
+  --bs-primary-rgb: 141, 106, 241;
+  --bs-secondary: #1e214c;
+  --bs-secondary-rgb: 30, 33, 76;
+  --bs-success: #28a745;
+  --bs-success-rgb: 40, 167, 69;
+
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
@@ -11,6 +19,45 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Bootstrap Color Overrides */
+.btn-primary {
+  --bs-btn-bg: #8d6af1;
+  --bs-btn-border-color: #8d6af1;
+  --bs-btn-hover-bg: #7a59d9;
+  --bs-btn-hover-border-color: #7a59d9;
+  --bs-btn-active-bg: #6847c1;
+  --bs-btn-active-border-color: #6847c1;
+}
+
+.btn-secondary {
+  --bs-btn-bg: #1e214c;
+  --bs-btn-border-color: #1e214c;
+  --bs-btn-hover-bg: #171a3d;
+  --bs-btn-hover-border-color: #171a3d;
+  --bs-btn-active-bg: #10122e;
+  --bs-btn-active-border-color: #10122e;
+}
+
+.bg-success {
+  background-color: #28a745 !important;
+}
+
+.bg-secondary {
+  background-color: #1e214c !important;
+}
+
+.bg-primary {
+  background-color: #8d6af1 !important;
+}
+
+.badge.bg-success {
+  background-color: #28a745 !important;
+}
+
+.badge.bg-secondary {
+  background-color: #1e214c !important;
 }
 
 a {

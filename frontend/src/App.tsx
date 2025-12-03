@@ -5,7 +5,7 @@ import PrivateRoute from './auth/PrivateRoute';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import AppointmentListPage from './pages/AppointmentListPage';
-import AvailabilityPage from './pages/AvailabilityPage';
+import AvailabilityListPage from './pages/AvailabilityListPage';
 import PatientListPage from './pages/PatientListPage';
 import PersonnelListPage from './pages/PersonnelListPage';
 import UsersPage from './pages/UsersPage';
@@ -23,7 +23,7 @@ const App: React.FC = () => {
           <Route path="/patients" element={<PrivateRoute><PatientListPage /></PrivateRoute>} />
           <Route path="/personnel" element={<PrivateRoute><PersonnelListPage /></PrivateRoute>} />
           <Route path="/appointments" element={<PrivateRoute><AppointmentListPage /></PrivateRoute>} />
-          <Route path="/availability" element={<PrivateRoute><AvailabilityPage /></PrivateRoute>} />
+          <Route path="/availability" element={<PrivateRoute><AvailabilityListPage /></PrivateRoute>} />
           <Route path="/users" element={<PrivateRoute><UsersPage /></PrivateRoute>} />
           
           {/* Default redirect */}
