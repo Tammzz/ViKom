@@ -1,10 +1,13 @@
 import React from 'react';
 import { Nav } from 'react-bootstrap';
 import { Link, useLocation } from 'react-router-dom';
+import { getUserInfo } from '../services/AuthService';
 import '../css/sidebar.css';
 
 const Sidebar: React.FC = () => {
   const location = useLocation();
+  const userInfo = getUserInfo();
+  const role = userInfo?.role;
 
   // checks if current route matches the given path
   const isActive = (path: string) => location.pathname === path;
@@ -12,6 +15,7 @@ const Sidebar: React.FC = () => {
   return (
     <div className="sidebar bg-light border-end">
       <Nav className="flex-column p-3">
+        {/* Dashboard - available to all roles */}
         <Nav.Link 
           as={Link} 
           to="/dashboard" 
@@ -19,41 +23,48 @@ const Sidebar: React.FC = () => {
         >
           Dashboard
         </Nav.Link>
-        <Nav.Link 
-          as={Link} 
-          to="/patients" 
-          className={isActive('/patients') ? 'active' : ''}
-        >
-          Patients
-        </Nav.Link>
-        <Nav.Link 
-          as={Link} 
-          to="/personnel" 
-          className={isActive('/personnel') ? 'active' : ''}
-        >
-          Personnel
-        </Nav.Link>
-        <Nav.Link 
-          as={Link} 
-          to="/appointments" 
-          className={isActive('/appointments') ? 'active' : ''}
-        >
-          Appointments
-        </Nav.Link>
-        <Nav.Link 
-          as={Link} 
-          to="/availability" 
-          className={isActive('/availability') ? 'active' : ''}
-        >
-          Availability
-        </Nav.Link>
-        <Nav.Link 
-          as={Link} 
-          to="/users" 
-          className={isActive('/users') ? 'active' : ''}
-        >
-          Users (Admin)
-        </Nav.Link>
+
+        {/* Patient navigation */}
+        {role === 'Patient' && (
+          <Nav.Link 
+            as={Link} 
+            to="/appointments" 
+            className={isActive('/appointments') ? 'active' : ''}
+          >
+            My Appointments
+          </Nav.Link>
+        )}
+
+        {/* Personnel navigation */}
+        {(role === 'Personnel' || role === 'Admin') && (
+          <>
+            <Nav.Link 
+              as={Link} 
+              to="/availability" 
+              className={isActive('/availability') ? 'active' : ''}
+            >
+              My Calendar
+            </Nav.Link>
+            <Nav.Link 
+              as={Link} 
+              to="/patients" 
+              className={isActive('/patients') ? 'active' : ''}
+            >
+              My Patients
+            </Nav.Link>
+          </>
+        )}
+
+        {/* Admin navigation */}
+        {role === 'Admin' && (
+          <Nav.Link 
+            as={Link} 
+            to="/users" 
+            className={isActive('/users') ? 'active' : ''}
+          >
+            Manage Users
+          </Nav.Link>
+        )}
       </Nav>
     </div>
   );
