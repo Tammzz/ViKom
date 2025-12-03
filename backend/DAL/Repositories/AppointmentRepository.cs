@@ -15,7 +15,7 @@ namespace backend.DAL.Repositories
         public async Task<IEnumerable<Appointment>> GetAllAsync()
         {
             return await _context.Appointments
-                .Include(a => a.Client)
+                .Include(a => a.Patient)
                 .Include(a => a.Availability)
                 .ThenInclude(av => av.Personnel)
                 .ToListAsync();
@@ -24,19 +24,19 @@ namespace backend.DAL.Repositories
         public async Task<Appointment?> GetByIdAsync(int id)
         {
             return await _context.Appointments
-                .Include(a => a.Client)
+                .Include(a => a.Patient)
                 .Include(a => a.Availability)
                 .ThenInclude(av => av.Personnel)
                 .FirstOrDefaultAsync(a => a.Id == id);
         }
 
-        public async Task<IEnumerable<Appointment>> GetByClientIdAsync(string clientId)
+        public async Task<IEnumerable<Appointment>> GetByPatientIdAsync(string patientId)
         {
             return await _context.Appointments
-                .Include(a => a.Client)
+                .Include(a => a.Patient)
                 .Include(a => a.Availability)
                 .ThenInclude(av => av.Personnel)
-                .Where(a => a.ClientId == clientId)
+                .Where(a => a.PatientId == patientId)
                 .ToListAsync();
         }
 

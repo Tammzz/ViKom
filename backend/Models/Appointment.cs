@@ -8,10 +8,10 @@ namespace backend.Models
         public int Id { get; set; }
 
         [Required]
-        public string ClientId { get; set; } = string.Empty;
+        public string PatientId { get; set; } = string.Empty;
 
-        [ForeignKey("ClientId")]
-        public User Client { get; set; } = null!;
+        [ForeignKey("PatientId")]
+        public User Patient { get; set; } = null!;
 
         [Required]
         public int AvailabilityId { get; set; }

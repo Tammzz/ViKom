@@ -31,9 +31,9 @@ namespace backend.Controllers
             return Ok();
         }
 
-        // GET: api/appointments/client/{clientId}
-        [HttpGet("client/{clientId}")]
-        public async Task<IActionResult> GetAppointmentsByClient(string clientId)
+        // GET: api/appointments/patient/{patientId}
+        [HttpGet("patient/{patientId}")]
+        public async Task<IActionResult> GetAppointmentsByPatient(string patientId)
         {
             // To be implemented
             return Ok();

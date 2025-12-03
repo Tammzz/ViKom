@@ -7,9 +7,9 @@ namespace backend.DTOs
         public int Id { get; set; }
         
         [Required]
-        public string ClientId { get; set; } = string.Empty;
+        public string PatientId { get; set; } = string.Empty;
         
-        public string? ClientName { get; set; }
+        public string? PatientName { get; set; }
         
         [Required]
         public int AvailabilityId { get; set; }
