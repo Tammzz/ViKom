@@ -21,6 +21,20 @@ const Sidebar: React.FC = () => {
         </Nav.Link>
         <Nav.Link 
           as={Link} 
+          to="/patients" 
+          className={isActive('/patients') ? 'active' : ''}
+        >
+          Patients
+        </Nav.Link>
+        <Nav.Link 
+          as={Link} 
+          to="/personnel" 
+          className={isActive('/personnel') ? 'active' : ''}
+        >
+          Personnel
+        </Nav.Link>
+        <Nav.Link 
+          as={Link} 
           to="/appointments" 
           className={isActive('/appointments') ? 'active' : ''}
         >
@@ -35,17 +49,10 @@ const Sidebar: React.FC = () => {
         </Nav.Link>
         <Nav.Link 
           as={Link} 
-          to="/patients" 
-          className={isActive('/patients') ? 'active' : ''}
+          to="/users" 
+          className={isActive('/users') ? 'active' : ''}
         >
-          Patients
-        </Nav.Link>
-        <Nav.Link 
-          as={Link} 
-          to="/personnel" 
-          className={isActive('/personnel') ? 'active' : ''}
-        >
-          Personnel
+          Users (Admin)
         </Nav.Link>
       </Nav>
     </div>

@@ -10,7 +10,7 @@ export interface User {
 
 // Login DTO
 export interface LoginDto {
-  email: string;
+  userName: string;
   password: string;
 }
 

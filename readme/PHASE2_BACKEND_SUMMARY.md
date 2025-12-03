@@ -49,11 +49,10 @@ Created 7 empty controllers with proper structure:
 |------------|-----------|---------|
 | **AuthController** | Register, Login, Logout | JWT authentication (FULLY IMPLEMENTED) |
 | **UsersController** | CRUD + GetByRole | User management |
-| **ClientsController** | CRUD | Patient management |
-| **StaffController** | CRUD | Personnel management |
+| **PatientController** | CRUD | Patient management |
+| **PersonnelController** | CRUD | Personnel management |
 | **AppointmentsController** | CRUD + GetByClient | Appointment management |
 | **AvailabilityController** | CRUD + GetByPersonnel | Availability management |
-| **ServiceRequestsController** | CRUD | Service request management |
 
 ### 6. ✅ Repository Pattern
 Implemented repository interfaces and base implementations:

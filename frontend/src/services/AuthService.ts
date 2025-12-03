@@ -1,6 +1,13 @@
 import { API_URL } from '../shared/config';
 import type { LoginDto, RegisterDto } from '../types';
 
+interface UserInfo {
+  userName: string;
+  fullName: string;
+  role: string;
+  userId: string;
+}
+
 // stores JWT token in localStorage
 export function setToken(token: string): void {
   localStorage.setItem('jwt', token);
@@ -11,9 +18,21 @@ export function getToken(): string | null {
   return localStorage.getItem('jwt');
 }
 
-// removes JWT token from localStorage
+// stores user info in localStorage
+export function setUserInfo(userInfo: UserInfo): void {
+  localStorage.setItem('userInfo', JSON.stringify(userInfo));
+}
+
+// retrieves user info from localStorage
+export function getUserInfo(): UserInfo | null {
+  const userInfo = localStorage.getItem('userInfo');
+  return userInfo ? JSON.parse(userInfo) : null;
+}
+
+// removes JWT token and user info from localStorage
 export function logout(): void {
   localStorage.removeItem('jwt');
+  localStorage.removeItem('userInfo');
 }
 
 // checks if user is currently authenticated
@@ -35,6 +54,12 @@ export async function login(loginDto: LoginDto): Promise<boolean> {
     if (response.ok) {
       const data = await response.json();
       setToken(data.token);
+      setUserInfo({
+        userName: data.userName,
+        fullName: data.fullName,
+        role: data.role,
+        userId: data.userId
+      });
       return true;
     }
     return false;

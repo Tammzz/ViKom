@@ -4,7 +4,7 @@ import { Container, Form, Button, Alert, Card } from 'react-bootstrap';
 import * as AuthService from '../services/AuthService';
 
 const LoginPage: React.FC = () => {
-  const [email, setEmail] = useState('');
+  const [userName, setUserName] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -14,12 +14,12 @@ const LoginPage: React.FC = () => {
     e.preventDefault();
     setError('');
 
-    const success = await AuthService.login({ email, password });
+    const success = await AuthService.login({ userName, password });
     
     if (success) {
       navigate('/dashboard');
     } else {
-      setError('Invalid email or password');
+      setError('Invalid username or password');
     }
   };
 
@@ -31,11 +31,11 @@ const LoginPage: React.FC = () => {
           {error && <Alert variant="danger">{error}</Alert>}
           <Form onSubmit={handleSubmit}>
             <Form.Group className="mb-3">
-              <Form.Label>Email</Form.Label>
+              <Form.Label>Username</Form.Label>
               <Form.Control
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                type="text"
+                value={userName}
+                onChange={(e) => setUserName(e.target.value)}
                 required
               />
             </Form.Group>

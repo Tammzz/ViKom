@@ -30,6 +30,14 @@ export async function fetchAvailabilityById(id: number): Promise<Availability> {
   return handleResponse(response);
 }
 
+// fetches availability by personnel ID
+export async function fetchAvailabilityByPersonnel(personnelId: string): Promise<Availability[]> {
+  const response = await fetch(`${API_URL}/api/availability/personnel/${personnelId}`, {
+    headers: { ...headers, ...getAuthHeader() },
+  });
+  return handleResponse(response);
+}
+
 // creates new availability slot
 export async function createAvailability(availability: AvailabilityDto): Promise<Availability> {
   const response = await fetch(`${API_URL}/api/availability`, {

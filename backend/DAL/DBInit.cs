@@ -25,8 +25,8 @@ namespace backend.DAL
             {
                 var personnel = new User
                 {
-                    UserName = "staff@homecare.com",
-                    Email = "staff@homecare.com",
+                    UserName = "personnel@homecare.local",
+                    Email = "personnel@homecare.local",
                     FullName = "Nurse Nora",
                     Role = "Personnel",
                     EmailConfirmed = true
@@ -34,8 +34,8 @@ namespace backend.DAL
 
                 var patient = new User
                 {
-                    UserName = "patient@homecare.com",
-                    Email = "patient@homecare.com",
+                    UserName = "patient@homecare.local",
+                    Email = "patient@homecare.local",
                     FullName = "Patient Peter",
                     Role = "Patient",
                     EmailConfirmed = true

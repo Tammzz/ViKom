@@ -16,7 +16,7 @@ async function handleResponse(response: Response) {
 
 // fetches all appointments
 export async function fetchAppointments(): Promise<Appointment[]> {
-  const response = await fetch(`${API_URL}/api/appointment`, {
+  const response = await fetch(`${API_URL}/api/appointments`, {
     headers: { ...headers, ...getAuthHeader() },
   });
   return handleResponse(response);
@@ -24,7 +24,15 @@ export async function fetchAppointments(): Promise<Appointment[]> {
 
 // fetches appointment by ID
 export async function fetchAppointmentById(id: number): Promise<Appointment> {
-  const response = await fetch(`${API_URL}/api/appointment/${id}`, {
+  const response = await fetch(`${API_URL}/api/appointments/${id}`, {
+    headers: { ...headers, ...getAuthHeader() },
+  });
+  return handleResponse(response);
+}
+
+// fetches appointments by patient ID
+export async function fetchAppointmentsByPatient(patientId: string): Promise<Appointment[]> {
+  const response = await fetch(`${API_URL}/api/appointments/patient/${patientId}`, {
     headers: { ...headers, ...getAuthHeader() },
   });
   return handleResponse(response);
@@ -32,7 +40,7 @@ export async function fetchAppointmentById(id: number): Promise<Appointment> {
 
 // creates new appointment
 export async function createAppointment(appointment: AppointmentCreateDto): Promise<Appointment> {
-  const response = await fetch(`${API_URL}/api/appointment`, {
+  const response = await fetch(`${API_URL}/api/appointments`, {
     method: 'POST',
     headers: { ...headers, ...getAuthHeader() },
     body: JSON.stringify(appointment),
@@ -42,7 +50,7 @@ export async function createAppointment(appointment: AppointmentCreateDto): Prom
 
 // updates existing appointment
 export async function updateAppointment(id: number, appointment: Appointment): Promise<void> {
-  const response = await fetch(`${API_URL}/api/appointment/${id}`, {
+  const response = await fetch(`${API_URL}/api/appointments/${id}`, {
     method: 'PUT',
     headers: { ...headers, ...getAuthHeader() },
     body: JSON.stringify(appointment),
@@ -54,7 +62,7 @@ export async function updateAppointment(id: number, appointment: Appointment): P
 
 // deletes appointment
 export async function deleteAppointment(id: number): Promise<void> {
-  const response = await fetch(`${API_URL}/api/appointment/${id}`, {
+  const response = await fetch(`${API_URL}/api/appointments/${id}`, {
     method: 'DELETE',
     headers: { ...headers, ...getAuthHeader() },
   });

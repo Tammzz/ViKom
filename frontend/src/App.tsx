@@ -8,6 +8,7 @@ import AppointmentListPage from './pages/AppointmentListPage';
 import AvailabilityPage from './pages/AvailabilityPage';
 import PatientListPage from './pages/PatientListPage';
 import PersonnelListPage from './pages/PersonnelListPage';
+import UsersPage from './pages/UsersPage';
 
 const App: React.FC = () => {
   return (
@@ -19,10 +20,11 @@ const App: React.FC = () => {
           
           {/* Protected routes */}
           <Route path="/dashboard" element={<PrivateRoute><DashboardPage /></PrivateRoute>} />
-          <Route path="/appointments" element={<PrivateRoute><AppointmentListPage /></PrivateRoute>} />
-          <Route path="/availability" element={<PrivateRoute><AvailabilityPage /></PrivateRoute>} />
           <Route path="/patients" element={<PrivateRoute><PatientListPage /></PrivateRoute>} />
           <Route path="/personnel" element={<PrivateRoute><PersonnelListPage /></PrivateRoute>} />
+          <Route path="/appointments" element={<PrivateRoute><AppointmentListPage /></PrivateRoute>} />
+          <Route path="/availability" element={<PrivateRoute><AvailabilityPage /></PrivateRoute>} />
+          <Route path="/users" element={<PrivateRoute><UsersPage /></PrivateRoute>} />
           
           {/* Default redirect */}
           <Route path="/" element={<Navigate to="/dashboard" replace />} />

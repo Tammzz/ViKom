@@ -16,7 +16,7 @@ async function handleResponse(response: Response) {
 
 // fetches all users
 export async function fetchUsers(): Promise<User[]> {
-  const response = await fetch(`${API_URL}/api/user`, {
+  const response = await fetch(`${API_URL}/api/users`, {
     headers: { ...headers, ...getAuthHeader() },
   });
   return handleResponse(response);
@@ -24,7 +24,7 @@ export async function fetchUsers(): Promise<User[]> {
 
 // fetches user by ID
 export async function fetchUserById(id: string): Promise<User> {
-  const response = await fetch(`${API_URL}/api/user/${id}`, {
+  const response = await fetch(`${API_URL}/api/users/${id}`, {
     headers: { ...headers, ...getAuthHeader() },
   });
   return handleResponse(response);
@@ -32,7 +32,7 @@ export async function fetchUserById(id: string): Promise<User> {
 
 // fetches users by role (Personnel or Patient)
 export async function fetchUsersByRole(role: 'Personnel' | 'Patient'): Promise<User[]> {
-  const response = await fetch(`${API_URL}/api/user/role/${role}`, {
+  const response = await fetch(`${API_URL}/api/users/role/${role}`, {
     headers: { ...headers, ...getAuthHeader() },
   });
   return handleResponse(response);
@@ -40,7 +40,7 @@ export async function fetchUsersByRole(role: 'Personnel' | 'Patient'): Promise<U
 
 // updates user information
 export async function updateUser(id: string, user: Partial<User>): Promise<void> {
-  const response = await fetch(`${API_URL}/api/user/${id}`, {
+  const response = await fetch(`${API_URL}/api/users/${id}`, {
     method: 'PUT',
     headers: { ...headers, ...getAuthHeader() },
     body: JSON.stringify(user),
@@ -52,7 +52,7 @@ export async function updateUser(id: string, user: Partial<User>): Promise<void>
 
 // deletes user
 export async function deleteUser(id: string): Promise<void> {
-  const response = await fetch(`${API_URL}/api/user/${id}`, {
+  const response = await fetch(`${API_URL}/api/users/${id}`, {
     method: 'DELETE',
     headers: { ...headers, ...getAuthHeader() },
   });
