@@ -37,6 +37,30 @@ namespace backend.DAL.Repositories
                 .ToListAsync();
         }
 
+        public async Task<IEnumerable<Availability>> GetFreeAsync()
+        {
+            return await _context.Availabilities
+                .Include(a => a.Personnel)
+                .Include(a => a.Appointment)
+                .Where(a => a.Appointment == null)
+                .OrderBy(a => a.Date)
+                .ThenBy(a => a.StartTime)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Availability>> GetUpcomingByPersonnelIdAsync(string personnelId, int count)
+        {
+            var today = DateTime.Today;
+            return await _context.Availabilities
+                .Include(a => a.Personnel)
+                .Include(a => a.Appointment)
+                .Where(a => a.PersonnelId == personnelId && a.Date >= today)
+                .OrderBy(a => a.Date)
+                .ThenBy(a => a.StartTime)
+                .Take(count)
+                .ToListAsync();
+        }
+
         public async Task<Availability> CreateAsync(Availability availability)
         {
             _context.Availabilities.Add(availability);

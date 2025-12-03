@@ -14,14 +14,20 @@ namespace backend.DTOs
         [Required]
         public int AvailabilityId { get; set; }
         
+        public string? PersonnelId { get; set; }
+        
+        public string? PersonnelName { get; set; }
+        
+        public string? Date { get; set; }
+        
         [Required]
         public string TaskDescription { get; set; } = string.Empty;
         
         [Required]
-        public TimeSpan StartTime { get; set; }
+        public string StartTime { get; set; } = string.Empty;
         
         [Required]
-        public TimeSpan EndTime { get; set; }
+        public string EndTime { get; set; } = string.Empty;
         
         [RegularExpression(@"^(Booked|Completed|Cancelled)$", ErrorMessage = "Invalid status value.")]
         public string Status { get; set; } = "Booked";

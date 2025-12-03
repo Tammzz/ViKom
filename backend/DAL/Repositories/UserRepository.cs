@@ -27,6 +27,35 @@ namespace backend.DAL.Repositories
             return await _context.Users.Where(u => u.Role == role).ToListAsync();
         }
 
+        public async Task<IEnumerable<User>> GetPatientsAsync()
+        {
+            return await _context.Users.Where(u => u.Role == "Patient").ToListAsync();
+        }
+
+        public async Task<IEnumerable<User>> GetPatientsByPersonnelAsync(string personnelId)
+        {
+            var patientIds = await _context.Appointments
+                .Where(a => a.Availability.PersonnelId == personnelId)
+                .Select(a => a.PatientId)
+                .Distinct()
+                .ToListAsync();
+
+            return await _context.Users
+                .Where(u => patientIds.Contains(u.Id))
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<User>> GetPersonnelAsync()
+        {
+            return await _context.Users.Where(u => u.Role == "Personnel").ToListAsync();
+        }
+
+        public async Task<string> GetFullNameAsync(string userId)
+        {
+            var user = await _context.Users.FindAsync(userId);
+            return user?.FullName ?? string.Empty;
+        }
+
         public async Task<User> CreateAsync(User user)
         {
             _context.Users.Add(user);

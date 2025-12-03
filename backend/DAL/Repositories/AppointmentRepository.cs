@@ -40,6 +40,121 @@ namespace backend.DAL.Repositories
                 .ToListAsync();
         }
 
+        public async Task<IEnumerable<Appointment>> GetByPersonnelIdAsync(string personnelId)
+        {
+            return await _context.Appointments
+                .Include(a => a.Patient)
+                .Include(a => a.Availability)
+                .ThenInclude(av => av.Personnel)
+                .Where(a => a.Availability.PersonnelId == personnelId)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Appointment>> GetUpcomingByPatientIdAsync(string patientId, int count)
+        {
+            var today = DateTime.Today;
+            return await _context.Appointments
+                .Include(a => a.Patient)
+                .Include(a => a.Availability)
+                .ThenInclude(av => av.Personnel)
+                .Where(a => a.PatientId == patientId && a.Availability.Date >= today && a.Status == "Booked")
+                .OrderBy(a => a.Availability.Date)
+                .ThenBy(a => a.StartTime)
+                .Take(count)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Appointment>> GetUpcomingByPersonnelIdAsync(string personnelId, int count)
+        {
+            var today = DateTime.Today;
+            return await _context.Appointments
+                .Include(a => a.Patient)
+                .Include(a => a.Availability)
+                .ThenInclude(av => av.Personnel)
+                .Where(a => a.Availability.PersonnelId == personnelId && a.Availability.Date >= today && a.Status == "Booked")
+                .OrderBy(a => a.Availability.Date)
+                .ThenBy(a => a.StartTime)
+                .Take(count)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Appointment>> GetRecentByPersonnelIdAsync(string personnelId, int count)
+        {
+            var today = DateTime.Today;
+            return await _context.Appointments
+                .Include(a => a.Patient)
+                .Include(a => a.Availability)
+                .ThenInclude(av => av.Personnel)
+                .Where(a => a.Availability.PersonnelId == personnelId && a.Availability.Date < today)
+                .OrderByDescending(a => a.Availability.Date)
+                .ThenByDescending(a => a.StartTime)
+                .Take(count)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Appointment>> GetHistoryByPatientIdAsync(string patientId)
+        {
+            var today = DateTime.Today;
+            return await _context.Appointments
+                .Include(a => a.Patient)
+                .Include(a => a.Availability)
+                .ThenInclude(av => av.Personnel)
+                .Where(a => a.PatientId == patientId && a.Availability.Date < today)
+                .OrderByDescending(a => a.Availability.Date)
+                .ThenByDescending(a => a.StartTime)
+                .ToListAsync();
+        }
+
+        public async Task<int> GetDistinctPatientCountAsync(string personnelId)
+        {
+            return await _context.Appointments
+                .Where(a => a.Availability.PersonnelId == personnelId)
+                .Select(a => a.PatientId)
+                .Distinct()
+                .CountAsync();
+        }
+
+        public async Task<int> GetThisWeekCountAsync(string personnelId)
+        {
+            var today = DateTime.Today;
+            var startOfWeek = today.AddDays(-(int)today.DayOfWeek);
+            var endOfWeek = startOfWeek.AddDays(7);
+
+            return await _context.Appointments
+                .Where(a => a.Availability.PersonnelId == personnelId && 
+                           a.Availability.Date >= startOfWeek && 
+                           a.Availability.Date < endOfWeek)
+                .CountAsync();
+        }
+
+        public async Task<int> GetPendingCountAsync(string personnelId)
+        {
+            return await _context.Appointments
+                .Where(a => a.Availability.PersonnelId == personnelId && a.Status == "Booked")
+                .CountAsync();
+        }
+
+        public async Task<int> GetCancelledCountAsync(string personnelId)
+        {
+            return await _context.Appointments
+                .Where(a => a.Availability.PersonnelId == personnelId && a.Status == "Cancelled")
+                .CountAsync();
+        }
+
+        public async Task<int> GetTotalByPatientIdAsync(string patientId)
+        {
+            return await _context.Appointments
+                .Where(a => a.PatientId == patientId)
+                .CountAsync();
+        }
+
+        public async Task<int> GetCompletedByPatientIdAsync(string patientId)
+        {
+            return await _context.Appointments
+                .Where(a => a.PatientId == patientId && a.Status == "Completed")
+                .CountAsync();
+        }
+
         public async Task<Appointment> CreateAsync(Appointment appointment)
         {
             _context.Appointments.Add(appointment);

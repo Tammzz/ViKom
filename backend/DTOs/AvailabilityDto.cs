@@ -12,13 +12,13 @@ namespace backend.DTOs
         public string? PersonnelName { get; set; }
         
         [Required]
-        public DateTime Date { get; set; } = DateTime.Today;
+        public string Date { get; set; } = string.Empty;
         
         [Required]
-        public TimeSpan StartTime { get; set; }
+        public string StartTime { get; set; } = string.Empty;
         
         [Required]
-        public TimeSpan EndTime { get; set; }
+        public string EndTime { get; set; } = string.Empty;
         
         public string? Notes { get; set; }
         

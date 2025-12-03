@@ -1,66 +1,178 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using backend.DTOs;
+using backend.Services;
+using System.Security.Claims;
 
 namespace backend.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class AppointmentsController : ControllerBase
     {
+        private readonly IAppointmentService _appointmentService;
         private readonly ILogger<AppointmentsController> _logger;
 
-        public AppointmentsController(ILogger<AppointmentsController> logger)
+        public AppointmentsController(
+            IAppointmentService appointmentService,
+            ILogger<AppointmentsController> logger)
         {
+            _appointmentService = appointmentService;
             _logger = logger;
         }
 
         // GET: api/appointments
         [HttpGet]
-        public async Task<IActionResult> GetAppointments()
+        public async Task<ActionResult<IEnumerable<AppointmentDto>>> GetAppointments()
         {
-            // To be implemented
-            return Ok();
+            try
+            {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var role = User.FindFirstValue(ClaimTypes.Role);
+
+                if (string.IsNullOrEmpty(userId))
+                    return Unauthorized();
+
+                IEnumerable<AppointmentDto> appointments;
+
+                if (role == "Patient")
+                {
+                    appointments = await _appointmentService.GetByPatientIdAsync(userId);
+                }
+                else
+                {
+                    appointments = await _appointmentService.GetAllAsync();
+                }
+
+                return Ok(appointments);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting appointments");
+                return StatusCode(500, "An error occurred while retrieving appointments");
+            }
         }
 
         // GET: api/appointments/{id}
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetAppointment(int id)
+        public async Task<ActionResult<AppointmentDto>> GetAppointment(int id)
         {
-            // To be implemented
-            return Ok();
+            try
+            {
+                var appointment = await _appointmentService.GetByIdAsync(id);
+                if (appointment == null)
+                    return NotFound();
+
+                return Ok(appointment);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting appointment {Id}", id);
+                return StatusCode(500, "An error occurred while retrieving the appointment");
+            }
         }
 
         // GET: api/appointments/patient/{patientId}
         [HttpGet("patient/{patientId}")]
-        public async Task<IActionResult> GetAppointmentsByPatient(string patientId)
+        public async Task<ActionResult<IEnumerable<AppointmentDto>>> GetAppointmentsByPatient(string patientId)
         {
-            // To be implemented
-            return Ok();
+            try
+            {
+                var appointments = await _appointmentService.GetByPatientIdAsync(patientId);
+                return Ok(appointments);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting appointments for patient {PatientId}", patientId);
+                return StatusCode(500, "An error occurred while retrieving appointments");
+            }
+        }
+
+        // GET: api/appointments/personnel/{personnelId}
+        [HttpGet("personnel/{personnelId}")]
+        public async Task<ActionResult<IEnumerable<AppointmentDto>>> GetAppointmentsByPersonnel(string personnelId)
+        {
+            try
+            {
+                var appointments = await _appointmentService.GetByPersonnelIdAsync(personnelId);
+                return Ok(appointments);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting appointments for personnel {PersonnelId}", personnelId);
+                return StatusCode(500, "An error occurred while retrieving appointments");
+            }
         }
 
         // POST: api/appointments
         [HttpPost]
-        public async Task<IActionResult> CreateAppointment([FromBody] AppointmentDto appointmentDto)
+        public async Task<ActionResult<AppointmentDto>> CreateAppointment([FromBody] AppointmentDto appointmentDto)
         {
-            // To be implemented
-            return Ok();
+            try
+            {
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
+                var created = await _appointmentService.CreateAsync(appointmentDto);
+                return CreatedAtAction(nameof(GetAppointment), new { id = created.Id }, created);
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogWarning(ex, "Invalid operation when creating appointment");
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating appointment");
+                return StatusCode(500, "An error occurred while creating the appointment");
+            }
         }
 
         // PUT: api/appointments/{id}
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateAppointment(int id, [FromBody] AppointmentDto appointmentDto)
         {
-            // To be implemented
-            return Ok();
+            try
+            {
+                if (id != appointmentDto.Id)
+                    return BadRequest("ID mismatch");
+
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
+                await _appointmentService.UpdateAsync(id, appointmentDto);
+                return NoContent();
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogWarning(ex, "Invalid operation when updating appointment {Id}", id);
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating appointment {Id}", id);
+                return StatusCode(500, "An error occurred while updating the appointment");
+            }
         }
 
         // DELETE: api/appointments/{id}
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteAppointment(int id)
         {
-            // To be implemented
-            return Ok();
+            try
+            {
+                var result = await _appointmentService.DeleteAsync(id);
+                if (!result)
+                    return NotFound();
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting appointment {Id}", id);
+                return StatusCode(500, "An error occurred while deleting the appointment");
+            }
         }
     }
 }
