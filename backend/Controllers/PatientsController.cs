@@ -36,24 +36,5 @@ namespace backend.Controllers
                 return StatusCode(500, "An error occurred while retrieving patients");
             }
         }
-
-        // GET: api/patients/{id}
-        [HttpGet("{id}")]
-        public async Task<ActionResult<PatientDetailsDto>> GetPatient(string id)
-        {
-            try
-            {
-                var patient = await _patientService.GetPatientDetailsAsync(id);
-                if (patient == null)
-                    return NotFound();
-
-                return Ok(patient);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting patient {Id}", id);
-                return StatusCode(500, "An error occurred while retrieving the patient");
-            }
-        }
     }
 }
