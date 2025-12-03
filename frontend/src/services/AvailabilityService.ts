@@ -38,6 +38,14 @@ export async function fetchAvailabilityByPersonnel(personnelId: string): Promise
   return handleResponse(response);
 }
 
+// fetches free availability slots (not booked)
+export async function fetchFreeAvailability(): Promise<Availability[]> {
+  const response = await fetch(`${API_URL}/api/availability/free`, {
+    headers: { ...headers, ...getAuthHeader() },
+  });
+  return handleResponse(response);
+}
+
 // creates new availability slot
 export async function createAvailability(availability: AvailabilityDto): Promise<Availability> {
   const response = await fetch(`${API_URL}/api/availability`, {
@@ -56,7 +64,7 @@ export async function updateAvailability(id: number, availability: AvailabilityD
     body: JSON.stringify(availability),
   });
   if (!response.ok) {
-    throw new Error('Failed to update availability');
+    throw new Error('Network response was not ok');
   }
 }
 
@@ -67,6 +75,6 @@ export async function deleteAvailability(id: number): Promise<void> {
     headers: { ...headers, ...getAuthHeader() },
   });
   if (!response.ok) {
-    throw new Error('Failed to delete availability');
+    throw new Error('Network response was not ok');
   }
 }

@@ -14,7 +14,10 @@ async function handleResponse(response: Response) {
   return response.json();
 }
 
-// fetches all personnel
+// Note: Personnel management endpoints are placeholders for Admin phase
+// These will be fully implemented in Phase 7 (Admin Module)
+
+// fetches all personnel (Admin only)
 export async function fetchPersonnel(): Promise<User[]> {
   const response = await fetch(`${API_URL}/api/personnel`, {
     headers: { ...headers, ...getAuthHeader() },
@@ -22,7 +25,7 @@ export async function fetchPersonnel(): Promise<User[]> {
   return handleResponse(response);
 }
 
-// fetches personnel member by ID
+// fetches personnel member by ID (Admin only)
 export async function fetchPersonnelById(id: string): Promise<User> {
   const response = await fetch(`${API_URL}/api/personnel/${id}`, {
     headers: { ...headers, ...getAuthHeader() },
@@ -30,7 +33,7 @@ export async function fetchPersonnelById(id: string): Promise<User> {
   return handleResponse(response);
 }
 
-// creates new personnel member
+// creates new personnel member (Admin only)
 export async function createPersonnel(personnel: Partial<User>): Promise<void> {
   const response = await fetch(`${API_URL}/api/personnel`, {
     method: 'POST',
@@ -38,11 +41,11 @@ export async function createPersonnel(personnel: Partial<User>): Promise<void> {
     body: JSON.stringify(personnel),
   });
   if (!response.ok) {
-    throw new Error('Failed to create personnel');
+    throw new Error('Network response was not ok');
   }
 }
 
-// updates personnel member information
+// updates personnel member information (Admin only)
 export async function updatePersonnel(id: string, personnel: Partial<User>): Promise<void> {
   const response = await fetch(`${API_URL}/api/personnel/${id}`, {
     method: 'PUT',
@@ -50,17 +53,17 @@ export async function updatePersonnel(id: string, personnel: Partial<User>): Pro
     body: JSON.stringify(personnel),
   });
   if (!response.ok) {
-    throw new Error('Failed to update personnel');
+    throw new Error('Network response was not ok');
   }
 }
 
-// deletes personnel member
+// deletes personnel member (Admin only)
 export async function deletePersonnel(id: string): Promise<void> {
   const response = await fetch(`${API_URL}/api/personnel/${id}`, {
     method: 'DELETE',
     headers: { ...headers, ...getAuthHeader() },
   });
   if (!response.ok) {
-    throw new Error('Failed to delete personnel');
+    throw new Error('Network response was not ok');
   }
 }

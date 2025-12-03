@@ -14,7 +14,7 @@ async function handleResponse(response: Response) {
   return response.json();
 }
 
-// fetches all appointments
+// fetches all appointments (role-filtered by backend)
 export async function fetchAppointments(): Promise<Appointment[]> {
   const response = await fetch(`${API_URL}/api/appointments`, {
     headers: { ...headers, ...getAuthHeader() },
@@ -38,6 +38,14 @@ export async function fetchAppointmentsByPatient(patientId: string): Promise<App
   return handleResponse(response);
 }
 
+// fetches appointments by personnel ID
+export async function fetchAppointmentsByPersonnel(personnelId: string): Promise<Appointment[]> {
+  const response = await fetch(`${API_URL}/api/appointments/personnel/${personnelId}`, {
+    headers: { ...headers, ...getAuthHeader() },
+  });
+  return handleResponse(response);
+}
+
 // creates new appointment
 export async function createAppointment(appointment: AppointmentCreateDto): Promise<Appointment> {
   const response = await fetch(`${API_URL}/api/appointments`, {
@@ -56,7 +64,7 @@ export async function updateAppointment(id: number, appointment: Appointment): P
     body: JSON.stringify(appointment),
   });
   if (!response.ok) {
-    throw new Error('Failed to update appointment');
+    throw new Error('Network response was not ok');
   }
 }
 
@@ -67,6 +75,6 @@ export async function deleteAppointment(id: number): Promise<void> {
     headers: { ...headers, ...getAuthHeader() },
   });
   if (!response.ok) {
-    throw new Error('Failed to delete appointment');
+    throw new Error('Network response was not ok');
   }
 }
