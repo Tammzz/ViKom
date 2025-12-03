@@ -1,16 +1,19 @@
-// Availability model based on HomeCareApp.Models.Availability
+// Availability model based on backend.DTOs.AvailabilityDto
 export interface Availability {
   id?: number;
   personnelId: string;
+  personnelName?: string;
   date: string; // ISO date string
-  startTime: string; // TimeSpan represented as string "HH:mm:ss"
+  startTime: string; // TimeSpan represented as string "HH:mm:ss" or "HH:mm"
   endTime: string;
   notes?: string;
+  isBooked?: boolean;
 }
 
 // Availability create/update DTO
 export interface AvailabilityDto {
   personnelId?: string;
+  personnelName?: string;
   date: string;
   startTime: string;
   endTime: string;

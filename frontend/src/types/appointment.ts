@@ -1,17 +1,21 @@
-// Appointment model based on HomeCareApp.Models.Appointment
+// Appointment model based on backend.DTOs.AppointmentDto
 export interface Appointment {
   id?: number;
-  clientId: string;
+  patientId: string;
+  patientName?: string;
   availabilityId: number;
+  personnelId?: string;
+  personnelName?: string;
+  date?: string;
   taskDescription: string;
-  startTime: string; // TimeSpan represented as string "HH:mm:ss"
+  startTime: string; // TimeSpan represented as string "HH:mm:ss" or "HH:mm"
   endTime: string;
   status: 'Booked' | 'Completed' | 'Cancelled';
 }
 
 // Appointment create DTO
 export interface AppointmentCreateDto {
-  clientId?: string;
+  patientId?: string;
   availabilityId: number;
   taskDescription: string;
   startTime: string;
