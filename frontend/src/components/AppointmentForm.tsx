@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Button, Spinner } from 'react-bootstrap';
 import { getUserInfo } from '../services/AuthService';
-import { fetchPatients } from '../services/PatientService';
+import PatientService from '../services/PatientService';
 import { fetchFreeAvailability } from '../services/AvailabilityService';
 import type { Appointment, PatientListDto, Availability } from '../types';
 
@@ -40,7 +40,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ initialData, onSubmit
         
         // Load patients if personnel
         if (isPersonnel) {
-          const patientList = await fetchPatients();
+          const patientList = await PatientService.getAll();
           setPatients(patientList);
         }
 

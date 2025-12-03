@@ -1,6 +1,6 @@
 import { API_URL } from '../shared/config';
 import { getAuthHeader } from './AuthService';
-import type { PatientListDto, PatientDetailsDto } from '../types';
+import type { PatientListDto } from '../types';
 
 const headers = {
   'Content-Type': 'application/json',
@@ -14,18 +14,15 @@ async function handleResponse(response: Response) {
   return response.json();
 }
 
-// fetches all patients (Personnel/Admin only)
-export async function fetchPatients(): Promise<PatientListDto[]> {
-  const response = await fetch(`${API_URL}/api/patients`, {
-    headers: { ...headers, ...getAuthHeader() },
-  });
-  return handleResponse(response);
-}
+// Service object following demo pattern
+const PatientService = {
+  // fetches all patients (Personnel/Admin only)
+  async getAll(): Promise<PatientListDto[]> {
+    const response = await fetch(`${API_URL}/api/patients`, {
+      headers: { ...headers, ...getAuthHeader() },
+    });
+    return handleResponse(response);
+  }
+};
 
-// fetches patient details with appointments
-export async function fetchPatientById(id: string): Promise<PatientDetailsDto> {
-  const response = await fetch(`${API_URL}/api/patients/${id}`, {
-    headers: { ...headers, ...getAuthHeader() },
-  });
-  return handleResponse(response);
-}
+export default PatientService;

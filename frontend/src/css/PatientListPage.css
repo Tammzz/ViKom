@@ -1,0 +1,142 @@
+/* ===================================
+   Patient List Page Styles
+   Matches MVC table layout
+   ================================== */
+
+/* Card Styles */
+.card {
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.card-body {
+  background-color: #f8f9fa; /* bg-light */
+}
+
+/* Border Styles */
+.border-dark {
+  border-color: #212529 !important;
+}
+
+.border-1 {
+  border-width: 1px !important;
+}
+
+.bg-white {
+  background-color: #ffffff !important;
+}
+
+.bg-light {
+  background-color: #f8f9fa !important;
+}
+
+/* Table Styles - Matching MVC */
+.patient-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.patient-table thead th {
+  background-color: #f8f9fa !important; /* table-light */
+  border-bottom: 1px solid #212529 !important; /* border-dark */
+  font-weight: 600;
+  color: #212529;
+  padding: 0.75rem 1rem !important;
+}
+
+.patient-table tbody td {
+  padding: 0.75rem 1rem !important;
+  color: #212529;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.patient-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.patient-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Empty State Styling */
+.text-center.py-4 {
+  padding-top: 1.5rem !important;
+  padding-bottom: 1.5rem !important;
+}
+
+.display-4 {
+  font-size: 3.5rem;
+  font-weight: 300;
+  line-height: 1.2;
+}
+
+.bi {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* Personnel Page Styling */
+.personnel-page .card {
+  border-width: 1px;
+}
+
+/* Text Utilities */
+.text-dark {
+  color: #212529 !important;
+}
+
+.text-muted {
+  color: #6c757d !important;
+}
+
+.fs-5 {
+  font-size: 1.25rem !important;
+}
+
+.lh-base {
+  line-height: 1.5 !important;
+}
+
+/* Spacing */
+.mb-0 {
+  margin-bottom: 0 !important;
+}
+
+.mb-3 {
+  margin-bottom: 1rem !important;
+}
+
+.mb-4 {
+  margin-bottom: 1.5rem !important;
+}
+
+.mt-3 {
+  margin-top: 1rem !important;
+}
+
+.p-0 {
+  padding: 0 !important;
+}
+
+.p-4 {
+  padding: 1.5rem !important;
+}
+
+.py-3 {
+  padding-top: 0.75rem !important;
+  padding-bottom: 0.75rem !important;
+}
+
+.py-4 {
+  padding-top: 1.5rem !important;
+  padding-bottom: 1.5rem !important;
+}
+
+.px-4 {
+  padding-left: 1.5rem !important;
+  padding-right: 1.5rem !important;
+}
+
+/* Overflow */
+.overflow-hidden {
+  overflow: hidden !important;
+}
