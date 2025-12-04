@@ -31,9 +31,8 @@ const AppointmentListPage: React.FC = () => {
       setError('');
       const data = await AppointmentService.getAll();
       setAppointments(data);
-    } catch (err) {
+    } catch {
       setError('Failed to load appointments');
-      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -118,9 +117,8 @@ const AppointmentListPage: React.FC = () => {
       try {
         await AppointmentService.delete(appointmentToDelete.id);
         await loadAppointments();
-      } catch (err) {
+      } catch {
         setError('Failed to delete appointment');
-        console.error(err);
       }
     }
   };

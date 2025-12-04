@@ -19,8 +19,6 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({ show, onClose, init
       await onSubmit(data);
       onClose();
     } catch (error: any) {
-      console.error('Error submitting appointment:', error);
-      
       // Extract error message from response
       let errorMessage = 'Failed to submit appointment. Please try again.';
       if (error.response?.data) {

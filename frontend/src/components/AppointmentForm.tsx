@@ -55,8 +55,8 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ initialData, onSubmit
         // Loads all personnel for selection
         const personnelList = await fetchPersonnel();
         setPersonnel(personnelList.filter(p => p.role === 'Personnel'));
-      } catch (err) {
-        console.error('Failed to load form data:', err);
+      } catch {
+        // Failed to load form data
       } finally {
         setLoading(false);
       }
@@ -97,8 +97,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ initialData, onSubmit
         
         setAvailableDates(datesWithSlots);
         setAllDaysData(weekData.days);
-      } catch (err) {
-        console.error('Failed to load available dates:', err);
+      } catch {
         setAvailableDates([]);
         setAllDaysData([]);
       } finally {
@@ -136,8 +135,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ initialData, onSubmit
       });
 
       setAvailableSlots(slots);
-    } catch (err) {
-      console.error('Failed to load time slots:', err);
+    } catch {
       setAvailableSlots([]);
     } finally {
       setLoadingSlots(false);
