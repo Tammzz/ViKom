@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { fetchPatientDashboard } from '../services/DashboardService';
+import TaskBadges from './TaskBadges';
 import type { PatientViewModel } from '../types';
 import '../css/PatientDashboard.css';
 
@@ -104,9 +105,9 @@ const PatientDashboard: React.FC = () => {
                       className="bg-white border rounded p-3 d-flex justify-content-between align-items-start"
                     >
                       <div>
-                        <h5 className="mb-2 fw-semibold text-dark lh-base">
-                          {appointment.taskDescription}
-                        </h5>
+                        <div className="mb-2">
+                          <TaskBadges tasks={appointment.tasks} variant="secondary" />
+                        </div>
                         <p className="mb-0 text-muted lh-lg">{appointment.personnelName}</p>
                       </div>
                       <div className="text-end">

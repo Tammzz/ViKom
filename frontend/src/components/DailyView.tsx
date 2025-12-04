@@ -2,6 +2,7 @@ import React from 'react';
 import { Table, Badge, Button } from 'react-bootstrap';
 import type { DayAvailability, AvailabilityWindow } from '../types';
 import { formatTime12Hour } from '../utils/dateUtils';
+import TaskBadges from './TaskBadges';
 
 interface DailyViewProps {
   dayData: DayAvailability;
@@ -122,6 +123,7 @@ const DailyView: React.FC<DailyViewProps> = ({ dayData, onEdit, onDelete }) => {
                   <tr>
                     <th className="fw-bold text-dark py-3 px-4 border-bottom border-dark">Time</th>
                     <th className="fw-bold text-dark py-3 px-4 border-bottom border-dark">Patient</th>
+                    <th className="fw-bold text-dark py-3 px-4 border-bottom border-dark">Task(s)</th>
                     <th className="fw-bold text-dark py-3 px-4 border-bottom border-dark">Status</th>
                   </tr>
                 </thead>
@@ -132,6 +134,9 @@ const DailyView: React.FC<DailyViewProps> = ({ dayData, onEdit, onDelete }) => {
                         {formatTime12Hour(appointment.startTime)} - {formatTime12Hour(appointment.endTime)}
                       </td>
                       <td className="py-3 px-4 text-dark">{appointment.patientName}</td>
+                      <td className="py-3 px-4 text-dark">
+                        <TaskBadges tasks={appointment.tasks} variant="secondary" />
+                      </td>
                       <td className="py-3 px-4 text-dark">
                         <span className={getStatusBadgeClass(appointment.status)}>
                           {appointment.status}

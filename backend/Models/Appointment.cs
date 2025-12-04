@@ -19,8 +19,9 @@ namespace backend.Models
         [ForeignKey("AvailabilityId")]
         public Availability Availability { get; set; } = null!;
 
-        [Required(ErrorMessage = "Task description is required.")]
-        public string TaskDescription { get; set; } = string.Empty;
+        // Stores comma-separated list of tasks (e.g., "Medication, Vitals, Exercises")
+        [Required(ErrorMessage = "At least one task is required.")]
+        public string Tasks { get; set; } = string.Empty;
 
         [DataType(DataType.Time)]
         public TimeSpan StartTime { get; set; }

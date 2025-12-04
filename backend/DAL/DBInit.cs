@@ -126,11 +126,12 @@ namespace backend.DAL
 
                         if (availabilitySlot != null)
                         {
+                            // Creates appointment with comma-separated task list
                             var appointment = new Appointment
                             {
                                 PatientId = patient.Id,
                                 AvailabilityId = availabilitySlot.Id,
-                                TaskDescription = "Home care visit - Health checkup",
+                                Tasks = "Cleaning, Groceries, Medication",
                                 StartTime = new TimeSpan(10, 0, 0),
                                 EndTime = new TimeSpan(11, 0, 0),
                                 Status = "Booked"

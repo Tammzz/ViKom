@@ -340,6 +340,7 @@ namespace backend.Services
             {
                 Id = appointment.Id,
                 PatientName = appointment.Patient?.FullName ?? "Unknown",
+                Tasks = appointment.Tasks,
                 StartTime = appointment.StartTime.ToString(@"hh\:mm"),
                 EndTime = appointment.EndTime.ToString(@"hh\:mm"),
                 Status = appointment.Status

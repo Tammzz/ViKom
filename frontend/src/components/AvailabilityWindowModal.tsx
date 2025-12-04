@@ -81,6 +81,7 @@ const AvailabilityWindowModal: React.FC<AvailabilityWindowModalProps> = ({
           onSubmit={handleSubmit}
           onCancel={handleClose}
           onDelete={onDelete ? handleDelete : undefined}
+          isSubmitting={isSubmitting}
         />
       </Modal.Body>
     </Modal>

@@ -98,7 +98,7 @@ namespace backend.Services
                 Id = appointment.Id,
                 PatientName = appointment.Patient?.FullName ?? string.Empty,
                 PersonnelName = appointment.Availability?.Personnel?.FullName ?? string.Empty,
-                TaskDescription = appointment.TaskDescription,
+                Tasks = appointment.Tasks,
                 Date = appointment.Availability?.Date ?? DateTime.MinValue,
                 StartTime = appointment.StartTime.ToString(@"hh\:mm"),
                 EndTime = appointment.EndTime.ToString(@"hh\:mm"),

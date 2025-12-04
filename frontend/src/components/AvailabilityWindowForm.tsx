@@ -9,6 +9,7 @@ interface AvailabilityWindowFormProps {
   onSubmit: (data: CreateAvailabilityWindowDto | UpdateAvailabilityWindowDto) => void;
   onCancel: () => void;
   onDelete?: () => void;
+  isSubmitting?: boolean;
 }
 
 const AvailabilityWindowForm: React.FC<AvailabilityWindowFormProps> = ({
@@ -17,6 +18,7 @@ const AvailabilityWindowForm: React.FC<AvailabilityWindowFormProps> = ({
   onSubmit,
   onCancel,
   onDelete,
+  isSubmitting = false,
 }) => {
   const hourOptions = generateHourOptions();
   
@@ -186,18 +188,18 @@ const AvailabilityWindowForm: React.FC<AvailabilityWindowFormProps> = ({
             <Button
               variant="danger"
               onClick={onDelete}
-              disabled={hasBookedSlots}
+              disabled={hasBookedSlots || isSubmitting}
             >
               <i className="bi bi-trash me-2"></i>Delete
             </Button>
           )}
         </div>
         <div className="d-flex gap-2">
-          <Button variant="secondary" onClick={onCancel}>
+          <Button variant="secondary" onClick={onCancel} disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button variant="primary" type="submit">
-            {initialData ? 'Update' : 'Create'}
+          <Button variant="primary" type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'Saving...' : (initialData ? 'Update' : 'Create')}
           </Button>
         </div>
       </div>

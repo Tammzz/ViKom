@@ -7,7 +7,8 @@ export interface Appointment {
   personnelId?: string;
   personnelName?: string;
   date?: string;
-  taskDescription: string;
+  // Stores comma-separated list of tasks (e.g., "Medication, Vitals, Exercises")
+  tasks: string;
   startTime: string; // TimeSpan represented as string "HH:mm:ss" or "HH:mm"
   endTime: string;
   status: 'Booked' | 'Completed' | 'Cancelled';
@@ -17,7 +18,8 @@ export interface Appointment {
 export interface AppointmentCreateDto {
   patientId?: string;
   availabilityId: number;
-  taskDescription: string;
+  // Stores comma-separated list of tasks (e.g., "Medication, Vitals, Exercises")
+  tasks: string;
   startTime: string;
   endTime: string;
   status?: string;
@@ -28,7 +30,8 @@ export interface AppointmentSummary {
   id: number;
   patientName: string;
   personnelName: string;
-  taskDescription: string;
+  // Stores comma-separated list of tasks (e.g., "Medication, Vitals, Exercises")
+  tasks: string;
   date: string; // ISO date string
   startTime: string;
   endTime: string;

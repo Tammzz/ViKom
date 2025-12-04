@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Table } from 'react-bootstrap';
 import { fetchPersonnelDashboard } from '../services/DashboardService';
+import TaskBadges from './TaskBadges';
 import type { PersonnelViewModel } from '../types';
 import '../css/PersonnelDashboard.css';
 
@@ -140,7 +141,9 @@ const PersonnelDashboard: React.FC = () => {
                       {dashboard.upcomingAppointments.map((appointment) => (
                         <tr key={appointment.id}>
                           <td className="py-3 px-4 text-dark border-0">{appointment.patientName}</td>
-                          <td className="py-3 px-4 text-dark border-0">{appointment.taskDescription}</td>
+                          <td className="py-3 px-4 text-dark border-0">
+                            <TaskBadges tasks={appointment.tasks} variant="secondary" />
+                          </td>
                           <td className="py-3 px-4 text-dark border-0">
                             {new Date(appointment.date).toLocaleDateString('en-GB', {
                               day: '2-digit',
@@ -184,7 +187,9 @@ const PersonnelDashboard: React.FC = () => {
                       {dashboard.recentAppointments.map((appointment) => (
                         <tr key={appointment.id}>
                           <td className="py-3 px-4 text-dark border-0">{appointment.patientName}</td>
-                          <td className="py-3 px-4 text-dark border-0">{appointment.taskDescription}</td>
+                          <td className="py-3 px-4 text-dark border-0">
+                            <TaskBadges tasks={appointment.tasks} variant="secondary" />
+                          </td>
                           <td className="py-3 px-4 text-dark border-0">
                             {new Date(appointment.date).toLocaleDateString('en-GB', {
                               day: '2-digit',

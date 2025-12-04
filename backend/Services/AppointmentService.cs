@@ -61,7 +61,7 @@ namespace backend.Services
             {
                 PatientId = appointmentDto.PatientId,
                 AvailabilityId = appointmentDto.AvailabilityId,
-                TaskDescription = appointmentDto.TaskDescription,
+                Tasks = appointmentDto.Tasks,
                 StartTime = availability.StartTime,
                 EndTime = availability.EndTime,
                 Status = "Booked" // Always set to Booked on creation
@@ -85,8 +85,8 @@ namespace backend.Services
             if (hoursUntilAppointment < 24)
                 throw new InvalidOperationException("Appointments cannot be modified less than 24 hours before the scheduled time");
 
-            // Only allow updating task description
-            existing.TaskDescription = appointmentDto.TaskDescription;
+            // Only allows updating tasks field
+            existing.Tasks = appointmentDto.Tasks;
 
             var updated = await _appointmentRepository.UpdateAsync(existing);
             var result = await _appointmentRepository.GetByIdAsync(updated.Id);
@@ -135,7 +135,7 @@ namespace backend.Services
                 PersonnelId = appointment.Availability?.PersonnelId ?? string.Empty,
                 PersonnelName = appointment.Availability?.Personnel?.FullName ?? string.Empty,
                 Date = appointment.Availability?.Date.ToString("yyyy-MM-dd") ?? string.Empty,
-                TaskDescription = appointment.TaskDescription,
+                Tasks = appointment.Tasks,
                 StartTime = appointment.StartTime.ToString(@"hh\:mm"),
                 EndTime = appointment.EndTime.ToString(@"hh\:mm"),
                 Status = status

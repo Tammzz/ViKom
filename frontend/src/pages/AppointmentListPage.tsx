@@ -4,6 +4,7 @@ import { getUserInfo } from '../services/AuthService';
 import AppointmentService from '../services/AppointmentService';
 import AppointmentModal from '../components/AppointmentModal';
 import AppointmentDeleteModal from '../components/AppointmentDeleteModal';
+import TaskBadges from '../components/TaskBadges';
 import type { Appointment } from '../types';
 import '../css/AppointmentListPage.css';
 
@@ -83,7 +84,7 @@ const AppointmentListPage: React.FC = () => {
     if (appointment.id) {
       setAppointmentToDelete({
         id: appointment.id,
-        description: appointment.taskDescription,
+        description: appointment.tasks,
       });
       setShowDeleteModal(true);
     }
@@ -96,7 +97,7 @@ const AppointmentListPage: React.FC = () => {
       await AppointmentService.create({
         patientId: data.patientId,
         availabilityId: data.availabilityId,
-        taskDescription: data.taskDescription,
+        tasks: data.tasks,
         startTime: data.startTime,
         endTime: data.endTime,
         status: data.status,
@@ -229,12 +230,12 @@ const AppointmentListPage: React.FC = () => {
                                     </div>
                                     <div className="flex-grow-1">
                                       <div className="d-flex align-items-center gap-2 mb-2">
-                                        <h5 className="mb-0 fw-semibold text-dark lh-base">
-                                          {appointment.taskDescription}
-                                        </h5>
                                         <span className={`badge ${getStatusBadgeClass(appointment.status)}`}>
                                           {appointment.status}
                                         </span>
+                                      </div>
+                                      <div className="mb-2">
+                                        <TaskBadges tasks={appointment.tasks} variant="secondary" />
                                       </div>
                                       <p className="mb-2 text-dark lh-lg">
                                         {appointment.date && new Date(appointment.date).toLocaleDateString('en-GB', {
@@ -324,12 +325,14 @@ const AppointmentListPage: React.FC = () => {
                                     <i className="bi bi-calendar-check text-success fs-2"></i>
                                   </div>
                                   <div>
-                                    <h5 className="mb-2 fw-semibold text-dark lh-base">
-                                      {appointment.taskDescription}
-                                      <span className={`badge ${getStatusBadgeClass(appointment.status)} ms-2`}>
+                                    <div className="mb-2">
+                                      <span className={`badge ${getStatusBadgeClass(appointment.status)}`}>
                                         {appointment.status}
                                       </span>
-                                    </h5>
+                                    </div>
+                                    <div className="mb-2">
+                                      <TaskBadges tasks={appointment.tasks} variant="secondary" />
+                                    </div>
                                     <p className="mb-2 text-dark lh-lg">
                                       {appointment.date && new Date(appointment.date).toLocaleDateString('en-GB', {
                                         day: '2-digit',

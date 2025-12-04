@@ -20,8 +20,9 @@ namespace backend.DTOs
         
         public string? Date { get; set; }
         
-        [Required]
-        public string TaskDescription { get; set; } = string.Empty;
+        // Stores comma-separated list of tasks (e.g., "Medication, Vitals, Exercises")
+        [Required(ErrorMessage = "At least one task is required.")]
+        public string Tasks { get; set; } = string.Empty;
         
         // Auto-filled from availability slot - not user input
         public string? StartTime { get; set; }

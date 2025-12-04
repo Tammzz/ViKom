@@ -71,21 +71,20 @@ export interface UpdateAvailabilityWindowDto {
   isAvailable: boolean;
 }
 
-// Appointment Summary (for day/week views)
-export interface AppointmentSummary {
-  id: number;
-  patientName: string;
-  startTime: string;
-  endTime: string;
-  status: string;
-}
-
 // Day Availability (single day view)
+// Note: Uses AppointmentSummary from appointment.ts to avoid duplication
 export interface DayAvailability {
   date: string;
   status: 'Free' | 'Available' | 'Unavailable';
   windows: AvailabilityWindow[];
-  appointments: AppointmentSummary[];
+  appointments: Array<{
+    id: number;
+    patientName: string;
+    startTime: string;
+    endTime: string;
+    status: string;
+    tasks: string;
+  }>;
 }
 
 // Week Availability (7-day view)

@@ -3,8 +3,8 @@ import { Form, Button, Spinner, Alert } from 'react-bootstrap';
 import { getUserInfo } from '../services/AuthService';
 import PatientService from '../services/PatientService';
 import { fetchPersonnel } from '../services/PersonnelService';
-import { fetchAvailabilityByPersonnel } from '../services/AvailabilityService';
-import type { Appointment, PatientListDto, Availability, User } from '../types';
+import { fetchWeekAvailability } from '../services/AvailabilityService';
+import type { Appointment, PatientListDto, User, AvailabilitySlot, DayAvailability } from '../types';
 
 interface AppointmentFormProps {
   initialData?: Appointment;
@@ -21,7 +21,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ initialData, onSubmit
     id: initialData?.id,
     patientId: initialData?.patientId || userInfo?.userId || '',
     availabilityId: initialData?.availabilityId || 0,
-    taskDescription: initialData?.taskDescription || '',
+    tasks: initialData?.tasks || '',
     startTime: '',
     endTime: '',
     status: 'Booked',
@@ -31,24 +31,28 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ initialData, onSubmit
   const [patients, setPatients] = useState<PatientListDto[]>([]);
   const [personnel, setPersonnel] = useState<User[]>([]);
   const [selectedPersonnelId, setSelectedPersonnelId] = useState<string>('');
-  const [availabilities, setAvailabilities] = useState<Availability[]>([]);
+  const [selectedDate, setSelectedDate] = useState<string>('');
+  const [availableDates, setAvailableDates] = useState<string[]>([]);
+  const [availableSlots, setAvailableSlots] = useState<AvailabilitySlot[]>([]);
+  const [allDaysData, setAllDaysData] = useState<DayAvailability[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [loadingAvailabilities, setLoadingAvailabilities] = useState<boolean>(false);
+  const [loadingDates, setLoadingDates] = useState<boolean>(false);
+  const [loadingSlots, setLoadingSlots] = useState<boolean>(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
-  // Load initial data on mount
+  // Loads initial data on mount
   useEffect(() => {
     const loadData = async () => {
       try {
         setLoading(true);
         
-        // Load patients if personnel
+        // Loads patients if personnel
         if (isPersonnel) {
           const patientList = await PatientService.getAll();
           setPatients(patientList);
         }
 
-        // Load all personnel for selection
+        // Loads all personnel for selection
         const personnelList = await fetchPersonnel();
         setPersonnel(personnelList.filter(p => p.role === 'Personnel'));
       } catch (err) {
@@ -61,65 +65,144 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ initialData, onSubmit
     loadData();
   }, [isPersonnel]);
 
-  // Load availabilities when personnel is selected
+  // Loads available dates when personnel is selected
   useEffect(() => {
-    const loadAvailabilities = async () => {
+    const loadAvailableDates = async () => {
       if (!selectedPersonnelId) {
-        setAvailabilities([]);
+        setAvailableDates([]);
+        setAllDaysData([]);
         return;
       }
 
       try {
-        setLoadingAvailabilities(true);
-        const slots = await fetchAvailabilityByPersonnel(selectedPersonnelId);
+        setLoadingDates(true);
         
-        // Filter for future, unbooked slots
-        const now = new Date();
-        const futureSlots = slots.filter(slot => {
-          const slotDate = new Date(slot.date);
-          return !slot.isBooked && slotDate >= now;
-        });
+        // Fetches next 4 weeks of availability data
+        const today = new Date();
+        const startDate = today.toISOString().split('T')[0];
+        const weekData = await fetchWeekAvailability(selectedPersonnelId, startDate);
         
-        setAvailabilities(futureSlots);
+        // Extracts dates that have available (unbooked) slots
+        const datesWithSlots = weekData.days
+          .filter(day => {
+            // Checks if day has windows with available slots
+            const hasAvailableSlots = day.windows.some(window => 
+              window.isAvailable && 
+              window.slots && 
+              window.slots.some(slot => !slot.isBooked)
+            );
+            return hasAvailableSlots;
+          })
+          .map(day => day.date);
+        
+        setAvailableDates(datesWithSlots);
+        setAllDaysData(weekData.days);
       } catch (err) {
-        console.error('Failed to load availabilities:', err);
-        setAvailabilities([]);
+        console.error('Failed to load available dates:', err);
+        setAvailableDates([]);
+        setAllDaysData([]);
       } finally {
-        setLoadingAvailabilities(false);
+        setLoadingDates(false);
       }
     };
 
-    loadAvailabilities();
+    loadAvailableDates();
   }, [selectedPersonnelId]);
 
-  // Handle personnel selection
+  // Loads available time slots when date is selected
+  useEffect(() => {
+    if (!selectedDate || allDaysData.length === 0) {
+      setAvailableSlots([]);
+      return;
+    }
+
+    try {
+      setLoadingSlots(true);
+      
+      // Finds the day data for selected date
+      const dayData = allDaysData.find(day => day.date === selectedDate);
+      if (!dayData) {
+        setAvailableSlots([]);
+        return;
+      }
+
+      // Extracts all unbooked slots from available windows
+      const slots: AvailabilitySlot[] = [];
+      dayData.windows.forEach(window => {
+        if (window.isAvailable && window.slots) {
+          const unbookedSlots = window.slots.filter(slot => !slot.isBooked);
+          slots.push(...unbookedSlots);
+        }
+      });
+
+      setAvailableSlots(slots);
+    } catch (err) {
+      console.error('Failed to load time slots:', err);
+      setAvailableSlots([]);
+    } finally {
+      setLoadingSlots(false);
+    }
+  }, [selectedDate, allDaysData]);
+
+  // Handles personnel selection
   const handlePersonnelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const personnelId = e.target.value;
     setSelectedPersonnelId(personnelId);
-    // Reset availability selection when personnel changes
+    // Resets date and slot selection when personnel changes
+    setSelectedDate('');
     setFormData(prev => ({ ...prev, availabilityId: 0 }));
+    if (errors.personnelId || errors.date || errors.availabilityId) {
+      setErrors(prev => ({ 
+        ...prev, 
+        personnelId: '', 
+        date: '', 
+        availabilityId: '' 
+      }));
+    }
+  };
+
+  // Handles date selection
+  const handleDateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const date = e.target.value;
+    setSelectedDate(date);
+    // Resets slot selection when date changes
+    setFormData(prev => ({ ...prev, availabilityId: 0 }));
+    if (errors.date || errors.availabilityId) {
+      setErrors(prev => ({ ...prev, date: '', availabilityId: '' }));
+    }
+  };
+
+  // Handles time slot selection
+  const handleSlotChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const slotId = Number(e.target.value);
+    setFormData(prev => ({ ...prev, availabilityId: slotId }));
     if (errors.availabilityId) {
       setErrors(prev => ({ ...prev, availabilityId: '' }));
     }
   };
 
-  // Handle input changes
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-        ...prev,
-        [name]: name === 'availabilityId' ? Number(value) : value,
-    }));
-    // Clear error for this field
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: '' }));
+  // Handles task input changes
+  const handleTaskChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const { value } = e.target;
+    setFormData(prev => ({ ...prev, tasks: value }));
+    if (errors.tasks) {
+      setErrors(prev => ({ ...prev, tasks: '' }));
     }
   };
 
-  // Get selected availability details for display
-  const selectedAvailability = availabilities.find(a => a.id === formData.availabilityId);
+  // Handles patient selection
+  const handlePatientChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const { value } = e.target;
+    setFormData(prev => ({ ...prev, patientId: value }));
+    if (errors.patientId) {
+      setErrors(prev => ({ ...prev, patientId: '' }));
+    }
+  };
 
-  // Validate form
+  // Gets selected slot details for display
+  const selectedSlot = availableSlots.find(slot => slot.id === formData.availabilityId);
+
+  // Validates form before submission
   const validate = (): boolean => {
     const newErrors: { [key: string]: string } = {};
 
@@ -131,12 +214,23 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ initialData, onSubmit
       newErrors.personnelId = 'Please select personnel';
     }
 
-    if (!formData.availabilityId || formData.availabilityId === 0) {
-      newErrors.availabilityId = 'Please select an available slot';
+    if (!selectedDate) {
+      newErrors.date = 'Please select a date';
     }
 
-    if (!formData.taskDescription.trim()) {
-      newErrors.taskDescription = 'Task description is required';
+    if (!formData.availabilityId || formData.availabilityId === 0) {
+      newErrors.availabilityId = 'Please select a time slot';
+    }
+
+    // Validates that tasks field contains at least one task
+    if (!formData.tasks.trim()) {
+      newErrors.tasks = 'At least one task is required';
+    } else {
+      // Checks that tasks are comma-separated and not empty
+      const taskList = formData.tasks.split(',').map(t => t.trim()).filter(t => t.length > 0);
+      if (taskList.length === 0) {
+        newErrors.tasks = 'At least one valid task is required';
+      }
     }
 
     setErrors(newErrors);
@@ -169,11 +263,10 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ initialData, onSubmit
       {/* Patient selection (Personnel only) */}
       {isPersonnel && (
         <Form.Group className="mb-3">
-          <Form.Label>Client</Form.Label>
+          <Form.Label>Client <span className="text-danger">*</span></Form.Label>
           <Form.Select
-            name="patientId"
             value={formData.patientId}
-            onChange={handleChange}
+            onChange={handlePatientChange}
             isInvalid={!!errors.patientId}
           >
             <option value="">-- Select Patient --</option>
@@ -191,7 +284,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ initialData, onSubmit
 
       {/* Personnel selection */}
       <Form.Group className="mb-3">
-        <Form.Label>Personnel</Form.Label>
+        <Form.Label>Personnel <span className="text-danger">*</span></Form.Label>
         <Form.Select
           value={selectedPersonnelId}
           onChange={handlePersonnelChange}
@@ -209,41 +302,85 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ initialData, onSubmit
         </Form.Control.Feedback>
       </Form.Group>
 
-      {/* Availability slot selection */}
+      {/* Date selection - populated after personnel selection */}
       <Form.Group className="mb-3">
-        <Form.Label>Availability Slot</Form.Label>
-        {loadingAvailabilities ? (
+        <Form.Label>Date <span className="text-danger">*</span></Form.Label>
+        {loadingDates ? (
           <div className="text-center py-2">
             <Spinner animation="border" size="sm" role="status">
-              <span className="visually-hidden">Loading slots...</span>
+              <span className="visually-hidden">Loading dates...</span>
             </Spinner>
           </div>
         ) : (
           <>
             <Form.Select
-              name="availabilityId"
-              value={formData.availabilityId}
-              onChange={handleChange}
-              isInvalid={!!errors.availabilityId}
+              value={selectedDate}
+              onChange={handleDateChange}
+              isInvalid={!!errors.date}
               disabled={!selectedPersonnelId}
             >
-              <option value="0">
+              <option value="">
                 {selectedPersonnelId 
-                  ? '-- Select Availability Slot --' 
+                  ? '-- Select Date --' 
                   : '-- First select personnel --'}
               </option>
-              {availabilities.map((slot) => (
+              {availableDates.map((date) => (
+                <option key={date} value={date}>
+                  {new Date(date).toLocaleDateString('en-GB', { 
+                    weekday: 'short', 
+                    day: '2-digit', 
+                    month: 'short', 
+                    year: 'numeric' 
+                  })}
+                </option>
+              ))}
+            </Form.Select>
+            <Form.Control.Feedback type="invalid">
+              {errors.date}
+            </Form.Control.Feedback>
+            {selectedPersonnelId && availableDates.length === 0 && !loadingDates && (
+              <Form.Text className="text-muted">
+                No available dates for this personnel member.
+              </Form.Text>
+            )}
+          </>
+        )}
+      </Form.Group>
+
+      {/* Time slot selection - populated after date selection */}
+      <Form.Group className="mb-3">
+        <Form.Label>Time Slot <span className="text-danger">*</span></Form.Label>
+        {loadingSlots ? (
+          <div className="text-center py-2">
+            <Spinner animation="border" size="sm" role="status">
+              <span className="visually-hidden">Loading time slots...</span>
+            </Spinner>
+          </div>
+        ) : (
+          <>
+            <Form.Select
+              value={formData.availabilityId}
+              onChange={handleSlotChange}
+              isInvalid={!!errors.availabilityId}
+              disabled={!selectedDate}
+            >
+              <option value="0">
+                {selectedDate 
+                  ? '-- Select Time Slot --' 
+                  : '-- First select date --'}
+              </option>
+              {availableSlots.map((slot) => (
                 <option key={slot.id} value={slot.id}>
-                  {new Date(slot.date).toLocaleDateString('en-GB')} — {slot.startTime} to {slot.endTime}
+                  {slot.startTime} - {slot.endTime}
                 </option>
               ))}
             </Form.Select>
             <Form.Control.Feedback type="invalid">
               {errors.availabilityId}
             </Form.Control.Feedback>
-            {selectedPersonnelId && availabilities.length === 0 && !loadingAvailabilities && (
+            {selectedDate && availableSlots.length === 0 && !loadingSlots && (
               <Form.Text className="text-muted">
-                No available slots for this personnel member.
+                No available time slots for this date.
               </Form.Text>
             )}
           </>
@@ -251,29 +388,31 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ initialData, onSubmit
       </Form.Group>
 
       {/* Display selected slot time info */}
-      {selectedAvailability && (
+      {selectedSlot && (
         <Alert variant="info" className="mb-3">
           <small>
             <i className="bi bi-info-circle me-2"></i>
-            This appointment will be scheduled from <strong>{selectedAvailability.startTime}</strong> to <strong>{selectedAvailability.endTime}</strong>
+            Appointment will be scheduled from <strong>{selectedSlot.startTime}</strong> to <strong>{selectedSlot.endTime}</strong>
           </small>
         </Alert>
       )}
 
-      {/* Task description */}
+      {/* Tasks field - comma-separated list */}
       <Form.Group className="mb-3">
-        <Form.Label>Task(s)</Form.Label>
+        <Form.Label>Task(s) <span className="text-danger">*</span></Form.Label>
         <Form.Control
           as="textarea"
-          rows={3}
-          name="taskDescription"
-          value={formData.taskDescription}
-          onChange={handleChange}
-          placeholder="e.g., medication reminder, wound care"
-          isInvalid={!!errors.taskDescription}
+          rows={2}
+          value={formData.tasks}
+          onChange={handleTaskChange}
+          placeholder="Enter tasks separated by commas (e.g., Groceries, Medication, Vitals)"
+          isInvalid={!!errors.tasks}
         />
+        <Form.Text className="text-muted">
+          Separate multiple tasks with commas. Each task will display as a badge.
+        </Form.Text>
         <Form.Control.Feedback type="invalid">
-          {errors.taskDescription}
+          {errors.tasks}
         </Form.Control.Feedback>
       </Form.Group>
 
