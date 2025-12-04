@@ -131,7 +131,7 @@ namespace backend.DAL
                             {
                                 PatientId = patient.Id,
                                 AvailabilityId = availabilitySlot.Id,
-                                Tasks = "Cleaning, Groceries, Medication",
+                                Tasks = "Cleaning, Medication",
                                 StartTime = new TimeSpan(10, 0, 0),
                                 EndTime = new TimeSpan(11, 0, 0),
                                 Status = "Booked"

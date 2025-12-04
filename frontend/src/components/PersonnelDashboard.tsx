@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Table } from 'react-bootstrap';
 import { fetchPersonnelDashboard } from '../services/DashboardService';
 import TaskBadges from './TaskBadges';
 import type { PersonnelViewModel } from '../types';
@@ -29,244 +28,234 @@ const PersonnelDashboard: React.FC = () => {
     loadDashboard();
   }, []);
 
+  // renders loading state while fetching data
   if (loading) {
     return (
-      <Container className="mt-4">
+      <div className="personnel-dashboard">
         <p>Loading dashboard...</p>
-      </Container>
+      </div>
     );
   }
 
+  // renders error state if data fetch fails
   if (error || !dashboard) {
     return (
-      <Container className="mt-4">
-        <p className="text-danger">{error || 'Unable to load dashboard'}</p>
-      </Container>
+      <div className="personnel-dashboard">
+        <p className="error-text">{error || 'Unable to load dashboard'}</p>
+      </div>
     );
   }
 
   return (
-    <Container fluid className="personnel-dashboard">
-      {/* Welcome Section */}
-      <div className="mb-4">
-        <h2 className="fw-bold mb-2">Welcome back, {dashboard.personnelName}!</h2>
-        <p className="text-muted mb-0">Here's an overview of your schedule and patients</p>
+    <div className="personnel-dashboard">
+      {/* renders welcome section with personnel name */}
+      <div className="welcome-section">
+        <h1 className="welcome-title">Welcome back, {dashboard.personnelName}!</h1>
+        <p className="welcome-subtitle">Here's an overview of your schedule and patients</p>
       </div>
 
-      {/* Quick Stats Overview */}
-      <Row className="g-3 mb-4">
-        <Col md={3}>
-          <Card className="stat-card border-1 border-dark bg-light bg-gradient h-100">
-            <Card.Body className="p-4 text-dark">
-              <div className="d-flex justify-content-between align-items-center">
-                <div>
-                  <h2 className="fw-bold mb-1">{dashboard.totalPatients}</h2>
-                  <p className="mb-0">Patients</p>
-                </div>
-                <div>
-                  <i className="bi bi-people-fill fs-1 opacity-75"></i>
-                </div>
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
+      {/* displays quick stats overview with key metrics */}
+      <div className="stats-grid">
+        <div className="stat-card">
+          <div className="stat-content">
+            <div className="stat-info">
+              <div className="stat-number">{dashboard.totalPatients}</div>
+              <p className="stat-label">Patients</p>
+            </div>
+            <div className="stat-icon">
+              <i className="bi bi-people-fill"></i>
+            </div>
+          </div>
+        </div>
 
-        <Col md={3}>
-          <Card className="stat-card border-1 border-dark bg-light bg-gradient h-100">
-            <Card.Body className="p-4 text-dark">
-              <div className="d-flex justify-content-between align-items-center">
-                <div>
-                  <h2 className="fw-bold mb-1">{dashboard.appointmentsThisWeek}</h2>
-                  <p className="mb-0">This Week</p>
-                </div>
-                <div>
-                  <i className="bi bi-calendar-check-fill fs-1 opacity-75"></i>
-                </div>
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
+        <div className="stat-card">
+          <div className="stat-content">
+            <div className="stat-info">
+              <div className="stat-number">{dashboard.appointmentsThisWeek}</div>
+              <p className="stat-label">This Week</p>
+            </div>
+            <div className="stat-icon">
+              <i className="bi bi-calendar-check-fill"></i>
+            </div>
+          </div>
+        </div>
 
-        <Col md={3}>
-          <Card className="stat-card border-1 border-dark bg-light bg-gradient h-100">
-            <Card.Body className="p-4 text-dark">
-              <div className="d-flex justify-content-between align-items-center">
-                <div>
-                  <h2 className="fw-bold mb-1">{dashboard.pendingAppointments}</h2>
-                  <p className="mb-0">Pending</p>
-                </div>
-                <div>
-                  <i className="bi bi-clock-fill fs-1 opacity-75"></i>
-                </div>
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
+        <div className="stat-card">
+          <div className="stat-content">
+            <div className="stat-info">
+              <div className="stat-number">{dashboard.pendingAppointments}</div>
+              <p className="stat-label">Pending</p>
+            </div>
+            <div className="stat-icon">
+              <i className="bi bi-clock-fill"></i>
+            </div>
+          </div>
+        </div>
 
-        <Col md={3}>
-          <Card className="stat-card border-1 border-dark bg-light bg-gradient h-100">
-            <Card.Body className="p-4 text-dark">
-              <div className="d-flex justify-content-between align-items-center">
-                <div>
-                  <h2 className="fw-bold mb-1">{dashboard.cancelledAppointments}</h2>
-                  <p className="mb-0">Cancelled</p>
-                </div>
-                <div>
-                  <i className="bi bi-x-circle-fill fs-1 opacity-75"></i>
-                </div>
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
+        <div className="stat-card">
+          <div className="stat-content">
+            <div className="stat-info">
+              <div className="stat-number">{dashboard.cancelledAppointments}</div>
+              <p className="stat-label">Cancelled</p>
+            </div>
+            <div className="stat-icon">
+              <i className="bi bi-x-circle-fill"></i>
+            </div>
+          </div>
+        </div>
+      </div>
 
-      <Row className="g-4 mb-4">
-        {/* Upcoming Appointments */}
-        <Col md={7}>
-          <Card className="border bg-light h-100">
-            <Card.Body className="p-4">
-              <h5 className="fw-bold mb-4 text-dark">Upcoming Appointments</h5>
+      {/* displays two-column layout for appointments and activity */}
+      <div className="dashboard-content">
+        <div className="dashboard-left">
+          {/* shows upcoming appointments table */}
+          <div className="card">
+            <div className="card-header">
+              <h2 className="card-title">Upcoming Appointments</h2>
+            </div>
+            <div className="card-body">
               {dashboard.upcomingAppointments.length > 0 ? (
-                <div className="table-responsive rounded overflow-hidden border border-dark">
-                  <Table hover className="bg-white mb-0">
-                    <thead className="table-light">
+                <div className="table-wrapper">
+                  <table className="data-table">
+                    <thead>
                       <tr>
-                        <th className="fw-bold text-dark py-3 px-4 border-bottom border-dark">Patient Name</th>
-                        <th className="fw-bold text-dark py-3 px-4 border-bottom border-dark">Task</th>
-                        <th className="fw-bold text-dark py-3 px-4 border-bottom border-dark">Date</th>
-                        <th className="fw-bold text-dark py-3 px-4 border-bottom border-dark">Time</th>
+                        <th>Patient Name</th>
+                        <th>Task</th>
+                        <th>Date</th>
+                        <th>Time</th>
                       </tr>
                     </thead>
                     <tbody>
                       {dashboard.upcomingAppointments.map((appointment) => (
                         <tr key={appointment.id}>
-                          <td className="py-3 px-4 text-dark border-0">{appointment.patientName}</td>
-                          <td className="py-3 px-4 text-dark border-0">
+                          <td>{appointment.patientName}</td>
+                          <td>
                             <TaskBadges tasks={appointment.tasks} variant="secondary" />
                           </td>
-                          <td className="py-3 px-4 text-dark border-0">
+                          <td>
                             {new Date(appointment.date).toLocaleDateString('en-GB', {
                               day: '2-digit',
                               month: '2-digit',
                               year: '2-digit',
                             })}
                           </td>
-                          <td className="py-3 px-4 text-dark border-0">{appointment.startTime}</td>
+                          <td>{appointment.startTime}</td>
                         </tr>
                       ))}
                     </tbody>
-                  </Table>
+                  </table>
                 </div>
               ) : (
-                <div className="text-center py-4">
-                  <i className="bi bi-calendar-x display-4 text-muted mb-3 d-block"></i>
-                  <p className="text-dark mb-0">No upcoming appointments scheduled.</p>
+                <div className="empty-state">
+                  <i className="bi bi-calendar-x empty-icon"></i>
+                  <p className="empty-text">No upcoming appointments scheduled.</p>
                 </div>
               )}
-            </Card.Body>
-          </Card>
-        </Col>
+            </div>
+          </div>
+        </div>
 
-        {/* Recent Activity */}
-        <Col md={5}>
-          <Card className="border bg-light h-100">
-            <Card.Body className="p-4">
-              <h5 className="fw-bold mb-4 text-dark">Recent Activity</h5>
+        <div className="dashboard-right">
+          {/* shows recent activity table */}
+          <div className="card">
+            <div className="card-header">
+              <h2 className="card-title">Recent Activity</h2>
+            </div>
+            <div className="card-body">
               {dashboard.recentAppointments.length > 0 ? (
-                <div className="table-responsive rounded overflow-hidden border border-dark">
-                  <Table hover className="bg-white mb-0">
-                    <thead className="table-light">
+                <div className="table-wrapper">
+                  <table className="data-table">
+                    <thead>
                       <tr>
-                        <th className="fw-bold text-dark py-3 px-4 border-bottom border-dark">Patient Name</th>
-                        <th className="fw-bold text-dark py-3 px-4 border-bottom border-dark">Task</th>
-                        <th className="fw-bold text-dark py-3 px-4 border-bottom border-dark">Date</th>
-                        <th className="fw-bold text-dark py-3 px-4 border-bottom border-dark">Time</th>
+                        <th>Patient Name</th>
+                        <th>Task</th>
+                        <th>Date</th>
+                        <th>Time</th>
                       </tr>
                     </thead>
                     <tbody>
                       {dashboard.recentAppointments.map((appointment) => (
                         <tr key={appointment.id}>
-                          <td className="py-3 px-4 text-dark border-0">{appointment.patientName}</td>
-                          <td className="py-3 px-4 text-dark border-0">
+                          <td>{appointment.patientName}</td>
+                          <td>
                             <TaskBadges tasks={appointment.tasks} variant="secondary" />
                           </td>
-                          <td className="py-3 px-4 text-dark border-0">
+                          <td>
                             {new Date(appointment.date).toLocaleDateString('en-GB', {
                               day: '2-digit',
                               month: '2-digit',
                               year: '2-digit',
                             })}
                           </td>
-                          <td className="py-3 px-4 text-dark border-0">{appointment.startTime}</td>
+                          <td>{appointment.startTime}</td>
                         </tr>
                       ))}
                     </tbody>
-                  </Table>
+                  </table>
                 </div>
               ) : (
-                <div className="text-center py-4">
-                  <i className="bi bi-clock-history display-4 text-muted mb-3 d-block"></i>
-                  <p className="text-dark mb-0">No recent activity to display.</p>
+                <div className="empty-state">
+                  <i className="bi bi-clock-history empty-icon"></i>
+                  <p className="empty-text">No recent activity to display.</p>
                 </div>
               )}
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-
-      {/* This Week's Schedule */}
-      <Card className="border bg-light">
-        <Card.Body className="p-4">
-          <div className="d-flex justify-content-between align-items-center mb-4">
-            <h5 className="fw-bold mb-0 text-dark">Upcoming Availability</h5>
+            </div>
           </div>
+        </div>
+      </div>
 
+      {/* displays upcoming availability schedule */}
+      <div className="card">
+        <div className="card-header">
+          <h2 className="card-title">Upcoming Availability</h2>
+        </div>
+        <div className="card-body">
           {dashboard.upcomingAvailability.length > 0 ? (
-            <div className="table-responsive rounded overflow-hidden border border-dark">
-              <Table hover className="bg-white mb-0">
-                <thead className="table-light">
+            <div className="table-wrapper">
+              <table className="data-table">
+                <thead>
                   <tr>
-                    <th className="fw-bold text-dark py-3 px-4 border-bottom border-dark">Date</th>
-                    <th className="fw-bold text-dark py-3 px-4 border-bottom border-dark">Start Time</th>
-                    <th className="fw-bold text-dark py-3 px-4 border-bottom border-dark">End Time</th>
-                    <th className="fw-bold text-dark py-3 px-4 border-bottom border-dark">Notes</th>
-                    <th className="fw-bold text-dark py-3 px-4 border-bottom border-dark">Status</th>
+                    <th>Date</th>
+                    <th>Start Time</th>
+                    <th>End Time</th>
+                    <th>Notes</th>
+                    <th>Status</th>
                   </tr>
                 </thead>
                 <tbody>
                   {dashboard.upcomingAvailability.map((availability) => (
                     <tr key={availability.id}>
-                      <td className="py-3 px-4 text-dark border-0">
+                      <td>
                         {new Date(availability.date).toLocaleDateString('en-GB', {
                           day: '2-digit',
                           month: '2-digit',
                           year: '2-digit',
                         })}
                       </td>
-                      <td className="py-3 px-4 text-dark border-0">{availability.startTime}</td>
-                      <td className="py-3 px-4 text-dark border-0">{availability.endTime}</td>
-                      <td className="py-3 px-4 text-dark border-0">{availability.notes || '-'}</td>
-                      <td className="py-3 px-4 text-dark border-0">
+                      <td>{availability.startTime}</td>
+                      <td>{availability.endTime}</td>
+                      <td>{availability.notes || '-'}</td>
+                      <td>
                         {availability.isBooked ? (
-                          <span className="badge bg-secondary">Booked</span>
+                          <span className="status-badge status-booked">Booked</span>
                         ) : (
-                          <span className="badge bg-success">Available</span>
+                          <span className="status-badge status-available">Available</span>
                         )}
                       </td>
                     </tr>
                   ))}
                 </tbody>
-              </Table>
+              </table>
             </div>
           ) : (
-            <div className="text-center py-4">
-              <i className="bi bi-calendar-x display-4 text-muted mb-3 d-block"></i>
-              <p className="text-dark mb-0">No upcoming availability scheduled.</p>
+            <div className="empty-state">
+              <i className="bi bi-calendar-x empty-icon"></i>
+              <p className="empty-text">No upcoming availability scheduled.</p>
             </div>
           )}
-        </Card.Body>
-      </Card>
-    </Container>
+        </div>
+      </div>
+    </div>
   );
 };
 

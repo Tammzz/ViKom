@@ -89,8 +89,8 @@
 }
 
 .dropdown-logout:hover {
-    background-color: var(--bs-danger);
-    color: var(--bs-white);
+    background-color: var(--bs-white);
+    color: var(--bs-danger);
 }
 
 /* ===== MOBILE SIDEBAR MENU ===== */

@@ -1,104 +1,406 @@
-/* ===================================
-   Appointment List Page Styles
-   Converted from MVC SCSS
-   ================================== */
+/* ===== APPOINTMENT LIST PAGE CONTAINER ===== */
+.appointment-list-page {
+  padding: 2rem;
+}
 
-/* Nav Tabs Styling (from _navs.scss) */
-.nav-tabs .nav-link {
+.appointment-list-page.personnel-page {
+  background-color: var(--bs-light);
+}
+
+/* ===== ERROR ALERT ===== */
+.appointment-list-page .error-alert {
+  background-color: #f8d7da;
+  color: #842029;
+  border: 1px solid #f5c2c7;
+  border-radius: var(--radius-default);
+  padding: 1rem 1.5rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.appointment-list-page .error-close {
+  background: none;
   border: none;
-  border-bottom: 3px solid transparent;
-  color: #212529; /* $dark */
-  font-weight: 600;
+  font-size: 1.5rem;
+  color: #842029;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  transition: opacity 0.2s ease;
+}
+
+.appointment-list-page .error-close:hover {
+  opacity: 0.7;
+}
+
+/* ===== PAGE SUBTITLE ===== */
+.appointment-list-page .page-subtitle {
+  margin-bottom: 1.5rem;
+}
+
+.appointment-list-page .page-subtitle p {
+  margin-bottom: 0;
+  font-size: 1.25rem;
+  line-height: 1.5;
+  color: var(--bs-dark);
+}
+
+/* ===== CREATE BUTTON ===== */
+.appointment-list-page .create-btn-wrapper {
+  margin-bottom: 1.5rem;
+}
+
+.appointment-list-page .btn-create {
+  background-color: var(--bs-primary);
+  color: var(--bs-white);
+  border: none;
   padding: 0.75rem 1.5rem;
-  transition: color 0.15s ease-in-out, border-bottom-color 0.15s ease-in-out;
+  font-size: 1rem;
+  font-weight: 500;
+  border-radius: var(--radius-default);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: background-color 0.2s ease;
 }
 
-.nav-tabs .nav-link:hover {
-  border-bottom-color: #dee2e6; /* $border-color */
+.appointment-list-page .btn-create:hover {
+  background-color: var(--bs-primary-hover);
 }
 
-.nav-tabs .nav-link.active {
-  border-bottom-color: #6c757d; /* $secondary */
-  color: #6c757d; /* $secondary */
-  background-color: transparent;
+.appointment-list-page .btn-create i {
+  font-size: 1.2rem;
 }
 
-/* Card Styles */
-.card {
-  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+/* ===== TAB NAVIGATION ===== */
+.appointment-list-page .tabs-container {
+  margin-top: 1.5rem;
 }
 
-.card-body {
-  background-color: #f8f9fa; /* bg-light */
+.appointment-list-page .tab-navigation {
+  display: flex;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  border-bottom: 1px solid #dee2e6;
+  margin-bottom: 1.5rem;
 }
 
-/* Appointment Card Items */
-.border-dark {
-  border-color: #212529 !important;
+.appointment-list-page .tab-item {
+  margin-right: 1rem;
 }
 
-.bg-white {
-  background-color: #ffffff !important;
+.appointment-list-page .tab-button {
+  background: none;
+  border: none;
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+  color: var(--bs-dark);
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s ease;
 }
 
-/* Icon Styles */
-.bi {
-  display: inline-block;
-  vertical-align: middle;
+.appointment-list-page .tab-button:hover {
+  color: var(--bs-secondary);
 }
 
-/* Personnel Page Styling */
-.personnel-page .card {
-  border-width: 1px;
+.appointment-list-page .tab-button.active {
+  color: var(--bs-secondary);
+  border-bottom-color: var(--bs-secondary);
 }
 
-/* Empty State Styling */
-.text-center.py-5 {
-  padding-top: 3rem !important;
-  padding-bottom: 3rem !important;
+/* ===== TAB CONTENT ===== */
+.appointment-list-page .tab-content {
+  display: block;
 }
 
-.display-4 {
-  font-size: 3.5rem;
-  font-weight: 300;
-  line-height: 1.2;
+.appointment-list-page .tab-panel {
+  display: block;
 }
 
-/* Button Spacing */
-.gap-2 {
-  gap: 0.5rem !important;
+/* ===== APPOINTMENTS CARD ===== */
+.appointment-list-page .appointments-card {
+  border: 1px solid var(--bs-dark);
+  background-color: var(--bs-light);
+  border-radius: var(--radius-default);
 }
 
-.gap-3 {
-  gap: 1rem !important;
+.appointment-list-page .appointments-body {
+  padding: 1.5rem;
 }
 
-/* Vertical Stack */
-.vstack {
+/* ===== APPOINTMENTS LIST ===== */
+.appointment-list-page .appointments-list {
   display: flex;
   flex-direction: column;
+  gap: 1rem;
 }
 
-/* Badge Styles */
-.badge {
-  padding: 0.25em 0.6em;
-  font-size: 0.875em;
+/* ===== APPOINTMENT ITEM ===== */
+.appointment-list-page .appointment-item {
+  border: 1px solid var(--bs-dark);
+  background-color: var(--bs-white);
+  border-radius: var(--radius-default);
+  padding: 1rem;
+}
+
+.appointment-list-page .appointment-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.appointment-list-page .appointment-main {
+  display: flex;
+  gap: 1rem;
+  flex: 1;
+}
+
+.appointment-list-page .appointment-icon {
+  font-size: 2rem;
+  color: var(--bs-dark);
+}
+
+.appointment-list-page .appointment-icon.success {
+  color: var(--bs-success);
+}
+
+.appointment-list-page .appointment-details {
+  flex: 1;
+}
+
+.appointment-list-page .appointment-status-badges {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.appointment-list-page .status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-default);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--bs-white);
+}
+
+.appointment-list-page .status-badge.status-completed {
+  background-color: var(--bs-success);
+}
+
+.appointment-list-page .status-badge.status-cancelled {
+  background-color: var(--bs-secondary);
+}
+
+.appointment-list-page .status-badge.status-booked {
+  background-color: var(--bs-primary);
+}
+
+.appointment-list-page .status-badge.status-default {
+  background-color: var(--bs-secondary);
+}
+
+.appointment-list-page .appointment-tasks {
+  margin-bottom: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.appointment-list-page .appointment-datetime {
+  margin-bottom: 0.5rem;
+  color: var(--bs-dark);
+  line-height: 1.75;
+}
+
+.appointment-list-page .appointment-personnel,
+.appointment-list-page .appointment-patient {
+  margin-bottom: 0;
+  color: var(--bs-dark);
+  line-height: 1.75;
+}
+
+.appointment-list-page .appointment-warning {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+  border-radius: var(--radius-default);
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.appointment-list-page .appointment-warning i {
+  margin-right: 0.25rem;
+}
+
+/* ===== APPOINTMENT ACTIONS ===== */
+.appointment-list-page .appointment-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.appointment-list-page .btn-edit,
+.appointment-list-page .btn-delete {
+  padding: 0.625rem 1.25rem;
+  font-size: 0.9375rem;
   font-weight: 500;
-  line-height: 1;
-  border-radius: 0.25rem;
+  border-radius: var(--radius-default);
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
 }
 
-.bg-success {
-  background-color: #198754 !important;
-  color: white;
+.appointment-list-page .btn-edit {
+  background-color: var(--bs-secondary);
+  color: var(--bs-white);
 }
 
-.bg-danger {
-  background-color: #dc3545 !important;
-  color: white;
+.appointment-list-page .btn-edit:hover:not(:disabled) {
+  background-color: #5a6268;
 }
 
-.bg-primary {
-  background-color: #0d6efd !important;
-  color: white;
+.appointment-list-page .btn-delete {
+  background-color: var(--bs-danger);
+  color: var(--bs-white);
+}
+
+.appointment-list-page .btn-delete:hover:not(:disabled) {
+  background-color: #c82333;
+}
+
+.appointment-list-page .btn-edit:disabled,
+.appointment-list-page .btn-delete:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ===== EMPTY STATE ===== */
+.appointment-list-page .appointments-empty {
+  text-align: center;
+  padding: 3rem 1rem;
+}
+
+.appointment-list-page .appointments-empty .empty-icon {
+  font-size: 4rem;
+  color: var(--bs-dark);
+  margin-bottom: 1rem;
+  display: block;
+}
+
+.appointment-list-page .appointments-empty .empty-title {
+  color: var(--bs-dark);
+  margin-bottom: 1rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.appointment-list-page .appointments-empty .empty-text {
+  color: var(--bs-dark);
+  font-size: 1.25rem;
+  line-height: 1.5;
+  margin-bottom: 1.5rem;
+}
+
+/* ===== MEDIA QUERIES ===== */
+
+/* Tablet and below */
+@media (max-width: 991px) {
+  .appointment-list-page {
+    padding: 1.5rem;
+  }
+
+  .appointment-list-page .appointment-content {
+    flex-direction: column;
+  }
+
+  .appointment-list-page .appointment-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+/* Mobile */
+@media (max-width: 767px) {
+  .appointment-list-page {
+    padding: 1rem;
+  }
+
+  .appointment-list-page .page-subtitle p {
+    font-size: 1rem;
+  }
+
+  .appointment-list-page .btn-create {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .appointment-list-page .tab-navigation {
+    flex-wrap: wrap;
+  }
+
+  .appointment-list-page .tab-item {
+    margin-right: 0;
+    flex: 1;
+  }
+
+  .appointment-list-page .tab-button {
+    width: 100%;
+    text-align: center;
+  }
+
+  .appointment-list-page .appointments-body {
+    padding: 1rem;
+  }
+
+  .appointment-list-page .appointment-item {
+    padding: 0.75rem;
+  }
+
+  .appointment-list-page .appointment-main {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .appointment-list-page .appointment-icon {
+    font-size: 1.5rem;
+  }
+
+  .appointment-list-page .appointment-actions {
+    flex-direction: column;
+  }
+
+  .appointment-list-page .btn-edit,
+  .appointment-list-page .btn-delete {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .appointment-list-page .appointments-empty {
+    padding: 2rem 1rem;
+  }
+
+  .appointment-list-page .appointments-empty .empty-icon {
+    font-size: 3rem;
+  }
+
+  .appointment-list-page .appointments-empty .empty-title {
+    font-size: 1.1rem;
+  }
+
+  .appointment-list-page .appointments-empty .empty-text {
+    font-size: 1rem;
+  }
 }

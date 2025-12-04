@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Alert, Button, ButtonGroup } from 'react-bootstrap';
 import { getUserInfo } from '../auth/AuthService';
 import {
   fetchWeekAvailability,
@@ -155,76 +154,84 @@ const AvailabilityCalendarPage: React.FC = () => {
     }
   };
 
+  // renders loading state while fetching availability data
   if (loading && !weekData && !dayData) {
     return (
-      <Container fluid>
+      <div className="availability-calendar-page">
         <p>Loading availability...</p>
-      </Container>
+      </div>
     );
   }
 
   return (
-    <Container fluid>
+    <div className="availability-calendar-page">
+      {/* displays error message if data fetch fails */}
       {error && (
-        <Alert variant="danger" dismissible onClose={() => setError('')}>
-          {error}
-        </Alert>
+        <div className="error-alert">
+          <span>{error}</span>
+          <button className="error-close" onClick={() => setError('')}>
+            <i className="bi bi-x"></i>
+          </button>
+        </div>
       )}
 
-      <div className="mb-4">
-        <p className="text-muted mb-0 fs-5 lh-base">
-          Manage your weekly and daily availability schedule.
-        </p>
+      {/* renders page title */}
+      <h1 className="page-title">My Calendar</h1>
+
+      {/* displays page subtitle */}
+      <div className="page-subtitle">
+        <p>Manage your weekly and daily availability schedule.</p>
       </div>
 
-      {/* View Mode Toggle and Navigation */}
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <div className="d-flex gap-3 align-items-center">
-          {/* View Mode Toggle */}
-          <ButtonGroup>
-            <Button
-              variant={viewMode === 'day' ? 'primary' : 'outline-primary'}
+      {/* provides view mode toggle and navigation controls */}
+      <div className="calendar-controls">
+        <div className="controls-left">
+          {/* allows switching between day and week views */}
+          <div className="view-toggle">
+            <button
+              className={`view-btn ${viewMode === 'day' ? 'active' : ''}`}
               onClick={() => {
                 setViewMode('day');
                 setCurrentDate(new Date());
               }}
             >
               Day
-            </Button>
-            <Button
-              variant={viewMode === 'week' ? 'primary' : 'outline-primary'}
+            </button>
+            <button
+              className={`view-btn ${viewMode === 'week' ? 'active' : ''}`}
               onClick={() => {
                 setViewMode('week');
                 setCurrentDate(new Date());
               }}
             >
               Week
-            </Button>
-          </ButtonGroup>
+            </button>
+          </div>
 
-          {/* Today Button */}
-          <Button variant="outline-secondary" onClick={handleToday}>
+          {/* navigates to current date */}
+          <button className="today-btn" onClick={handleToday}>
             Today
-          </Button>
+          </button>
         </div>
 
-        {/* Date Display and Navigation */}
-        <div className="d-flex gap-2 align-items-center">
-          <Button variant="outline-secondary" size="sm" onClick={handlePrevious}>
+        {/* displays current date range and navigation arrows */}
+        <div className="controls-right">
+          <button className="nav-btn" onClick={handlePrevious}>
             <i className="bi bi-chevron-left"></i>
-          </Button>
-          <h5 className="mb-0 px-3">{getHeaderText()}</h5>
-          <Button variant="outline-secondary" size="sm" onClick={handleNext}>
+          </button>
+          <h2 className="date-header">{getHeaderText()}</h2>
+          <button className="nav-btn" onClick={handleNext}>
             <i className="bi bi-chevron-right"></i>
-          </Button>
+          </button>
         </div>
       </div>
 
-      {/* Content */}
+      {/* renders weekly calendar view with day cards */}
       {viewMode === 'week' && weekData && (
         <WeeklyView weekData={weekData} onDayClick={handleDayClick} />
       )}
 
+      {/* renders daily schedule view with time slots */}
       {viewMode === 'day' && dayData && (
         <DailyView
           dayData={dayData}
@@ -233,7 +240,7 @@ const AvailabilityCalendarPage: React.FC = () => {
         />
       )}
 
-      {/* Modal */}
+      {/* shows modal for creating or editing availability windows */}
       <AvailabilityWindowModal
         show={showModal}
         onClose={() => {
@@ -245,7 +252,7 @@ const AvailabilityCalendarPage: React.FC = () => {
         onSubmit={handleCreateOrUpdate}
         onDelete={selectedWindow ? handleDelete : undefined}
       />
-    </Container>
+    </div>
   );
 };
 

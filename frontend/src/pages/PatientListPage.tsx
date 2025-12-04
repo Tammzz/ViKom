@@ -56,8 +56,10 @@ const PatientListPage: React.FC = () => {
           </Alert>
         )}
 
+        <h1 className="mb-3 fw-bold">My Patients</h1>
+
         <div className="mb-4">
-          <p className="text-muted mb-0 fs-5 lh-base">
+          <p className="text-dark mb-0 fs-5 lh-base">
             View and manage all your patients.
           </p>
         </div>
