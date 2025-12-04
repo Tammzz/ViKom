@@ -14,7 +14,19 @@ const Sidebar: React.FC = () => {
 
   return (
     <div className="sidebar bg-light border-end">
-      <Nav className="flex-column p-3">
+      {/* Brand logo at the top of sidebar */}
+      <div className="sidebar-brand">
+        <Link to="/dashboard">
+          <img 
+            src="/HomeCareApp-Logo.png" 
+            alt="HomeCareApp Logo" 
+            className="sidebar-logo"
+          />
+        </Link>
+      </div>
+
+      {/* Navigation links */}
+      <Nav className="flex-column sidebar-nav">
         {/* Dashboard - available to all roles */}
         <Nav.Link 
           as={Link} 

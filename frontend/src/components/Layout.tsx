@@ -3,6 +3,7 @@ import { Outlet, useLocation } from 'react-router-dom';
 import NavBar from './NavBar';
 import Sidebar from './Sidebar';
 import * as AuthService from '../auth/AuthService';
+import '../css/Layout.css';
 
 /**
  * Main layout component that wraps all pages in the application.
@@ -34,14 +35,16 @@ const Layout: React.FC = () => {
       
       {/* renders sidebar with content or content alone based on authentication and route */}
       {showSidebar ? (
-        <div className="d-flex">
+        <div className="layout-with-sidebar">
           <Sidebar />
-          <div className="content-with-sidebar flex-grow-1">
+          <div className="content-with-sidebar">
             <Outlet />
           </div>
         </div>
       ) : (
-        <Outlet />
+        <div className={showNavBar ? "content-with-navbar" : ""}>
+          <Outlet />
+        </div>
       )}
     </>
   );

@@ -1,13 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Navbar, Container, Nav, NavDropdown } from 'react-bootstrap';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import * as AuthService from '../auth/AuthService';
 import '../css/NavBar.css';
 
 const NavBar: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const isAuthenticated = AuthService.isAuthenticated();
   const userInfo = AuthService.getUserInfo();
+  const role = userInfo?.role;
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   // handles logout action
   const handleLogout = () => {
@@ -15,35 +18,122 @@ const NavBar: React.FC = () => {
     navigate('/login');
   };
 
+  // toggles mobile menu visibility
+  const toggleMobileMenu = () => {
+    setShowMobileMenu(!showMobileMenu);
+  };
+
+  // closes mobile menu when a link is clicked
+  const closeMobileMenu = () => {
+    setShowMobileMenu(false);
+  };
+
+  // checks if current route matches the given path
+  const isActive = (path: string) => location.pathname === path;
+
+  // determines if logo should be shown in navbar (only when not authenticated)
+  const showLogoInNavbar = !isAuthenticated;
+
   return (
-    <Navbar bg="white" expand="lg" className="navbar-container">
+    <Navbar bg="white" expand="lg" className={`navbar-container ${isAuthenticated ? 'navbar-with-sidebar' : ''}`}>
       <Container fluid>
-        <Navbar.Brand as={Link} to="/">
-          <img 
-            src="/HomeCareApp-Logo.png" 
-            alt="Carely Logo" 
-            className="navbar-logo d-inline-block align-top"
-          />
-        </Navbar.Brand>
+        {/* Conditionally renders logo only when user is not authenticated */}
+        {showLogoInNavbar && (
+          <Navbar.Brand as={Link} to="/">
+            <img 
+              src="/HomeCareApp-Logo.png" 
+              alt="HomeCareApp Logo" 
+              className="navbar-logo d-inline-block align-top"
+            />
+          </Navbar.Brand>
+        )}
         
-        <Navbar.Toggle aria-controls="navbar-nav" />
+        <Navbar.Toggle 
+          aria-controls="navbar-nav" 
+          onClick={toggleMobileMenu}
+          className="ms-auto"
+        />
         
-        <Navbar.Collapse id="navbar-nav">
+        <Navbar.Collapse id="navbar-nav" in={showMobileMenu}>
           <Nav className="ms-auto">
             {isAuthenticated && userInfo ? (
-              // displays user dropdown when authenticated
-              <div className="user-dropdown-wrapper">
-                <NavDropdown 
-                  title={userInfo.fullName} 
-                  id="account-dropdown" 
-                  align="end"
-                  className="user-dropdown"
-                >
-                  <NavDropdown.Item onClick={handleLogout} className="dropdown-logout">
+              <>
+                {/* Mobile menu - shows sidebar items in dropdown on mobile */}
+                <div className="mobile-sidebar-menu d-lg-none">
+                  <Nav.Link 
+                    as={Link} 
+                    to="/dashboard" 
+                    onClick={closeMobileMenu}
+                    className={isActive('/dashboard') ? 'active' : ''}
+                  >
+                    Dashboard
+                  </Nav.Link>
+
+                  {role === 'Patient' && (
+                    <Nav.Link 
+                      as={Link} 
+                      to="/appointments" 
+                      onClick={closeMobileMenu}
+                      className={isActive('/appointments') ? 'active' : ''}
+                    >
+                      My Appointments
+                    </Nav.Link>
+                  )}
+
+                  {(role === 'Personnel' || role === 'Admin') && (
+                    <>
+                      <Nav.Link 
+                        as={Link} 
+                        to="/availability" 
+                        onClick={closeMobileMenu}
+                        className={isActive('/availability') ? 'active' : ''}
+                      >
+                        My Calendar
+                      </Nav.Link>
+                      <Nav.Link 
+                        as={Link} 
+                        to="/patients" 
+                        onClick={closeMobileMenu}
+                        className={isActive('/patients') ? 'active' : ''}
+                      >
+                        My Patients
+                      </Nav.Link>
+                    </>
+                  )}
+
+                  {role === 'Admin' && (
+                    <Nav.Link 
+                      as={Link} 
+                      to="/users" 
+                      onClick={closeMobileMenu}
+                      className={isActive('/users') ? 'active' : ''}
+                    >
+                      Manage Users
+                    </Nav.Link>
+                  )}
+                </div>
+
+                {/* Desktop: User dropdown with fullName */}
+                <div className="user-dropdown-wrapper d-none d-lg-flex">
+                  <NavDropdown 
+                    title={userInfo.fullName} 
+                    id="account-dropdown" 
+                    align="end"
+                    className="user-dropdown"
+                  >
+                    <NavDropdown.Item onClick={handleLogout} className="dropdown-logout">
+                      Logout
+                    </NavDropdown.Item>
+                  </NavDropdown>
+                </div>
+
+                {/* Mobile: Direct logout button without dropdown */}
+                <div className="d-lg-none mobile-logout-wrapper">
+                  <Nav.Link onClick={handleLogout} className="mobile-logout-btn">
                     Logout
-                  </NavDropdown.Item>
-                </NavDropdown>
-              </div>
+                  </Nav.Link>
+                </div>
+              </>
             ) : (
               // displays login and register buttons when not authenticated
               <div className="auth-buttons-wrapper">

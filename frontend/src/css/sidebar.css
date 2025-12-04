@@ -1,44 +1,72 @@
-/* Sidebar styling */
+/* ===== SIDEBAR STYLES ===== */
+
+/* Sidebar container - fixed on left side, spans full height */
 .sidebar {
-  min-height: calc(100vh - 56px);
-  width: 250px;
+  width: 16.25rem; /* 260px converted to rem */
+  height: 100vh;
   position: fixed;
-  top: 56px;
+  top: 0;
   left: 0;
+  background-color: var(--bs-light);
+  border-right: 1px solid var(--bs-secondary);
   overflow-y: auto;
+  overflow-x: hidden;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
 }
 
+/* Brand logo section at top of sidebar */
+.sidebar-brand {
+  padding: 1.5rem 1rem;
+  text-align: center;
+  border-bottom: 1px solid var(--bs-secondary);
+  background-color: var(--bs-white);
+}
+
+.sidebar-logo {
+  max-width: 100%;
+  height: auto;
+  max-height: 50px;
+}
+
+/* Navigation links container */
+.sidebar-nav {
+  padding: 1rem 0.5rem;
+  flex-grow: 1;
+}
+
+/* Individual navigation links */
 .sidebar .nav-link {
-  color: #333;
-  padding: 0.75rem 1rem;
-  border-radius: 0.25rem;
-  transition: background-color 0.2s;
+  color: var(--bs-dark);
+  padding: 0.875rem 1.25rem;
+  margin-bottom: 0.5rem;
+  border-radius: var(--radius-default);
+  font-family: var(--font-primary);
+  font-size: 1rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  text-decoration: none;
 }
 
+/* Navigation link hover state */
 .sidebar .nav-link:hover {
   background-color: #e9ecef;
+  color: var(--bs-dark);
 }
 
+/* Active navigation link - highlights current page */
 .sidebar .nav-link.active {
-  background-color: #0d6efd;
-  color: white;
+  background-color: var(--bs-secondary);
+  color: var(--bs-white);
 }
 
-/* Main content offset when sidebar is present */
-.content-with-sidebar {
-  margin-left: 250px;
-  padding: 1rem;
-}
+/* ===== RESPONSIVE DESIGN ===== */
 
-@media (max-width: 768px) {
+/* Mobile layout - sidebar hidden, content takes full width */
+@media (max-width: 991px) {
+  /* Hides sidebar on mobile - replaced by navbar dropdown */
   .sidebar {
-    position: relative;
-    width: 100%;
-    min-height: auto;
-    top: 0;
-  }
-
-  .content-with-sidebar {
-    margin-left: 0;
+    display: none;
   }
 }
