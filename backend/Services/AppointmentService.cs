@@ -43,7 +43,7 @@ namespace backend.Services
 
         public async Task<AppointmentDto> CreateAsync(AppointmentDto appointmentDto)
         {
-            // Validate that availability is free
+            // Validate that availability exists and is free
             var availability = await _availabilityRepository.GetByIdAsync(appointmentDto.AvailabilityId);
             if (availability == null)
                 throw new InvalidOperationException("Availability not found");
@@ -51,14 +51,20 @@ namespace backend.Services
             if (availability.Appointment != null)
                 throw new InvalidOperationException("Availability slot is already booked");
 
+            // Ensure the availability is in the future
+            var appointmentDateTime = availability.Date.Date + availability.StartTime;
+            if (appointmentDateTime <= DateTime.Now)
+                throw new InvalidOperationException("Cannot book appointments in the past");
+
+            // Auto-fill start and end times from availability slot
             var appointment = new Appointment
             {
                 PatientId = appointmentDto.PatientId,
                 AvailabilityId = appointmentDto.AvailabilityId,
                 TaskDescription = appointmentDto.TaskDescription,
-                StartTime = TimeSpan.Parse(appointmentDto.StartTime!),
-                EndTime = TimeSpan.Parse(appointmentDto.EndTime!),
-                Status = appointmentDto.Status ?? "Booked"
+                StartTime = availability.StartTime,
+                EndTime = availability.EndTime,
+                Status = "Booked" // Always set to Booked on creation
             };
 
             var created = await _appointmentRepository.CreateAsync(appointment);
@@ -72,10 +78,15 @@ namespace backend.Services
             if (existing == null)
                 throw new InvalidOperationException("Appointment not found");
 
+            // Enforce 24-hour restriction for edits
+            var appointmentDateTime = existing.Availability.Date.Date + existing.StartTime;
+            var hoursUntilAppointment = (appointmentDateTime - DateTime.Now).TotalHours;
+            
+            if (hoursUntilAppointment < 24)
+                throw new InvalidOperationException("Appointments cannot be modified less than 24 hours before the scheduled time");
+
+            // Only allow updating task description
             existing.TaskDescription = appointmentDto.TaskDescription;
-            existing.StartTime = TimeSpan.Parse(appointmentDto.StartTime!);
-            existing.EndTime = TimeSpan.Parse(appointmentDto.EndTime!);
-            existing.Status = appointmentDto.Status ?? existing.Status;
 
             var updated = await _appointmentRepository.UpdateAsync(existing);
             var result = await _appointmentRepository.GetByIdAsync(updated.Id);
@@ -84,11 +95,37 @@ namespace backend.Services
 
         public async Task<bool> DeleteAsync(int id)
         {
-            return await _appointmentRepository.DeleteAsync(id);
+            var appointment = await _appointmentRepository.GetByIdAsync(id);
+            if (appointment == null)
+                throw new InvalidOperationException("Appointment not found");
+
+            // Enforce 24-hour restriction for cancellation
+            var appointmentDateTime = appointment.Availability.Date.Date + appointment.StartTime;
+            var hoursUntilAppointment = (appointmentDateTime - DateTime.Now).TotalHours;
+            
+            if (hoursUntilAppointment < 24)
+                throw new InvalidOperationException("Appointments cannot be cancelled less than 24 hours before the scheduled time");
+
+            // Mark appointment as cancelled (soft delete)
+            appointment.Status = "Cancelled";
+            await _appointmentRepository.UpdateAsync(appointment);
+
+            return true;
         }
 
         private static AppointmentDto MapToDto(Appointment appointment)
         {
+            // Compute status dynamically: if past end time and status is Booked, treat as Completed
+            var status = appointment.Status;
+            if (status == "Booked")
+            {
+                var appointmentEndDateTime = appointment.Availability.Date.Date + appointment.EndTime;
+                if (appointmentEndDateTime < DateTime.Now)
+                {
+                    status = "Completed";
+                }
+            }
+
             return new AppointmentDto
             {
                 Id = appointment.Id,
@@ -101,7 +138,7 @@ namespace backend.Services
                 TaskDescription = appointment.TaskDescription,
                 StartTime = appointment.StartTime.ToString(@"hh\:mm"),
                 EndTime = appointment.EndTime.ToString(@"hh\:mm"),
-                Status = appointment.Status
+                Status = status
             };
         }
     }

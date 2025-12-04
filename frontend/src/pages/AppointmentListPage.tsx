@@ -122,10 +122,28 @@ const AppointmentListPage: React.FC = () => {
       case 'Completed':
         return 'bg-success';
       case 'Cancelled':
-        return 'bg-danger';
-      default:
+        return 'bg-secondary';
+      case 'Booked':
         return 'bg-primary';
+      default:
+        return 'bg-secondary';
     }
+  };
+
+  // Check if appointment is within 24 hours
+  const isWithin24Hours = (appointment: Appointment): boolean => {
+    if (!appointment.date || !appointment.startTime) return false;
+    
+    const appointmentDateTime = new Date(`${appointment.date}T${appointment.startTime}`);
+    const now = new Date();
+    const hoursUntil = (appointmentDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
+    
+    return hoursUntil < 24;
+  };
+
+  // Check if appointment can be modified
+  const canModify = (appointment: Appointment): boolean => {
+    return !isWithin24Hours(appointment) && appointment.status === 'Booked';
   };
 
   if (loading) {
@@ -197,61 +215,81 @@ const AppointmentListPage: React.FC = () => {
                   <div className="card-body p-4">
                     {upcomingAppointments.length > 0 ? (
                       <div className="vstack gap-3">
-                        {upcomingAppointments.map((appointment) => (
-                          <div key={appointment.id} className="border border-dark rounded p-3 bg-white">
-                            <div className="row align-items-center">
-                              <div className="col-md-8">
-                                <div className="d-flex align-items-start gap-3">
-                                  <div>
-                                    <i className="bi bi-calendar-event text-dark fs-2"></i>
-                                  </div>
-                                  <div>
-                                    <h5 className="mb-2 fw-semibold text-dark lh-base">
-                                      {appointment.taskDescription}
-                                    </h5>
-                                    <p className="mb-2 text-dark lh-lg">
-                                      {appointment.date && new Date(appointment.date).toLocaleDateString('en-GB', {
-                                        day: '2-digit',
-                                        month: 'short',
-                                        year: 'numeric',
-                                      })}{' '}
-                                      at {appointment.startTime} - {appointment.endTime}
-                                    </p>
-                                    {appointment.personnelName && (
-                                      <p className="mb-0 text-muted lh-lg">
-                                        With {appointment.personnelName}
+                        {upcomingAppointments.map((appointment) => {
+                          const within24Hours = isWithin24Hours(appointment);
+                          const modifiable = canModify(appointment);
+                          
+                          return (
+                            <div key={appointment.id} className="border border-dark rounded p-3 bg-white">
+                              <div className="row align-items-center">
+                                <div className="col-md-8">
+                                  <div className="d-flex align-items-start gap-3">
+                                    <div>
+                                      <i className="bi bi-calendar-event text-dark fs-2"></i>
+                                    </div>
+                                    <div className="flex-grow-1">
+                                      <div className="d-flex align-items-center gap-2 mb-2">
+                                        <h5 className="mb-0 fw-semibold text-dark lh-base">
+                                          {appointment.taskDescription}
+                                        </h5>
+                                        <span className={`badge ${getStatusBadgeClass(appointment.status)}`}>
+                                          {appointment.status}
+                                        </span>
+                                      </div>
+                                      <p className="mb-2 text-dark lh-lg">
+                                        {appointment.date && new Date(appointment.date).toLocaleDateString('en-GB', {
+                                          day: '2-digit',
+                                          month: 'short',
+                                          year: 'numeric',
+                                        })}{' '}
+                                        at {appointment.startTime} - {appointment.endTime}
                                       </p>
-                                    )}
-                                    {isPersonnel && appointment.patientName && (
-                                      <p className="mb-0 text-muted lh-lg">
-                                        Patient: {appointment.patientName}
-                                      </p>
-                                    )}
+                                      {appointment.personnelName && (
+                                        <p className="mb-0 text-muted lh-lg">
+                                          With {appointment.personnelName}
+                                        </p>
+                                      )}
+                                      {isPersonnel && appointment.patientName && (
+                                        <p className="mb-0 text-muted lh-lg">
+                                          Patient: {appointment.patientName}
+                                        </p>
+                                      )}
+                                      {within24Hours && appointment.status === 'Booked' && (
+                                        <small className="text-warning d-block mt-2">
+                                          <i className="bi bi-exclamation-triangle me-1"></i>
+                                          Cancellations must be made at least 24 hours before
+                                        </small>
+                                      )}
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
-                              <div className="col-md-4 text-end">
-                                <div className="d-flex gap-2 justify-content-end mt-2">
-                                  <Button
-                                    variant="outline-secondary"
-                                    size="sm"
-                                    onClick={() => handleEdit(appointment)}
-                                  >
-                                    <i className="bi bi-pencil"></i> Change
-                                  </Button>
-                                  <Button
-                                    variant="outline-danger"
-                                    size="sm"
-                                    onClick={() => handleDelete(appointment)}
-                                  >
-                                    <i className="bi bi-trash"></i>{' '}
-                                    {isPersonnel ? 'Delete' : 'Cancel'}
-                                  </Button>
+                                <div className="col-md-4 text-end">
+                                  <div className="d-flex gap-2 justify-content-end mt-2">
+                                    <Button
+                                      variant="outline-secondary"
+                                      size="sm"
+                                      onClick={() => handleEdit(appointment)}
+                                      disabled={!modifiable}
+                                      title={!modifiable ? 'Cannot edit within 24 hours or if not booked' : 'Edit appointment'}
+                                    >
+                                      <i className="bi bi-pencil"></i> Change
+                                    </Button>
+                                    <Button
+                                      variant="outline-danger"
+                                      size="sm"
+                                      onClick={() => handleDelete(appointment)}
+                                      disabled={!modifiable}
+                                      title={!modifiable ? 'Cannot cancel within 24 hours or if not booked' : 'Cancel appointment'}
+                                    >
+                                      <i className="bi bi-trash"></i>{' '}
+                                      {isPersonnel ? 'Delete' : 'Cancel'}
+                                    </Button>
+                                  </div>
                                 </div>
                               </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     ) : (
                       <div className="text-center py-5">

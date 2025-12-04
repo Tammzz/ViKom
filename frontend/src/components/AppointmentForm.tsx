@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Button, Spinner } from 'react-bootstrap';
+import { Form, Button, Spinner, Alert } from 'react-bootstrap';
 import { getUserInfo } from '../services/AuthService';
 import PatientService from '../services/PatientService';
-import { fetchFreeAvailability } from '../services/AvailabilityService';
-import type { Appointment, PatientListDto, Availability } from '../types';
+import { fetchPersonnel } from '../services/PersonnelService';
+import { fetchAvailabilityByPersonnel } from '../services/AvailabilityService';
+import type { Appointment, PatientListDto, Availability, User } from '../types';
 
 interface AppointmentFormProps {
   initialData?: Appointment;
@@ -21,18 +22,21 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ initialData, onSubmit
     patientId: initialData?.patientId || userInfo?.userId || '',
     availabilityId: initialData?.availabilityId || 0,
     taskDescription: initialData?.taskDescription || '',
-    startTime: initialData?.startTime || '',
-    endTime: initialData?.endTime || '',
-    status: initialData?.status || 'Booked',
+    startTime: '',
+    endTime: '',
+    status: 'Booked',
   });
 
   // Dropdown options
   const [patients, setPatients] = useState<PatientListDto[]>([]);
+  const [personnel, setPersonnel] = useState<User[]>([]);
+  const [selectedPersonnelId, setSelectedPersonnelId] = useState<string>('');
   const [availabilities, setAvailabilities] = useState<Availability[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [loadingAvailabilities, setLoadingAvailabilities] = useState<boolean>(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
-  // Load dropdown data on mount
+  // Load initial data on mount
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -44,9 +48,9 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ initialData, onSubmit
           setPatients(patientList);
         }
 
-        // Load free availability slots
-        const freeSlots = await fetchFreeAvailability();
-        setAvailabilities(freeSlots);
+        // Load all personnel for selection
+        const personnelList = await fetchPersonnel();
+        setPersonnel(personnelList.filter(p => p.role === 'Personnel'));
       } catch (err) {
         console.error('Failed to load form data:', err);
       } finally {
@@ -56,6 +60,48 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ initialData, onSubmit
 
     loadData();
   }, [isPersonnel]);
+
+  // Load availabilities when personnel is selected
+  useEffect(() => {
+    const loadAvailabilities = async () => {
+      if (!selectedPersonnelId) {
+        setAvailabilities([]);
+        return;
+      }
+
+      try {
+        setLoadingAvailabilities(true);
+        const slots = await fetchAvailabilityByPersonnel(selectedPersonnelId);
+        
+        // Filter for future, unbooked slots
+        const now = new Date();
+        const futureSlots = slots.filter(slot => {
+          const slotDate = new Date(slot.date);
+          return !slot.isBooked && slotDate >= now;
+        });
+        
+        setAvailabilities(futureSlots);
+      } catch (err) {
+        console.error('Failed to load availabilities:', err);
+        setAvailabilities([]);
+      } finally {
+        setLoadingAvailabilities(false);
+      }
+    };
+
+    loadAvailabilities();
+  }, [selectedPersonnelId]);
+
+  // Handle personnel selection
+  const handlePersonnelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const personnelId = e.target.value;
+    setSelectedPersonnelId(personnelId);
+    // Reset availability selection when personnel changes
+    setFormData(prev => ({ ...prev, availabilityId: 0 }));
+    if (errors.availabilityId) {
+      setErrors(prev => ({ ...prev, availabilityId: '' }));
+    }
+  };
 
   // Handle input changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -70,6 +116,9 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ initialData, onSubmit
     }
   };
 
+  // Get selected availability details for display
+  const selectedAvailability = availabilities.find(a => a.id === formData.availabilityId);
+
   // Validate form
   const validate = (): boolean => {
     const newErrors: { [key: string]: string } = {};
@@ -78,24 +127,16 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ initialData, onSubmit
       newErrors.patientId = 'Please select a patient';
     }
 
+    if (!selectedPersonnelId) {
+      newErrors.personnelId = 'Please select personnel';
+    }
+
     if (!formData.availabilityId || formData.availabilityId === 0) {
       newErrors.availabilityId = 'Please select an available slot';
     }
 
     if (!formData.taskDescription.trim()) {
       newErrors.taskDescription = 'Task description is required';
-    }
-
-    if (!formData.startTime) {
-      newErrors.startTime = 'Start time is required';
-    }
-
-    if (!formData.endTime) {
-      newErrors.endTime = 'End time is required';
-    }
-
-    if (formData.startTime && formData.endTime && formData.startTime >= formData.endTime) {
-      newErrors.endTime = 'End time must be after start time';
     }
 
     setErrors(newErrors);
@@ -148,26 +189,76 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ initialData, onSubmit
         </Form.Group>
       )}
 
-      {/* Availability slot selection */}
+      {/* Personnel selection */}
       <Form.Group className="mb-3">
-        <Form.Label>Available Day/Slot</Form.Label>
+        <Form.Label>Personnel</Form.Label>
         <Form.Select
-          name="availabilityId"
-          value={formData.availabilityId}
-          onChange={handleChange}
-          isInvalid={!!errors.availabilityId}
+          value={selectedPersonnelId}
+          onChange={handlePersonnelChange}
+          isInvalid={!!errors.personnelId}
         >
-          <option value="0">-- Select Availability --</option>
-          {availabilities.map((slot) => (
-            <option key={slot.id} value={slot.id}>
-              {slot.personnelName || 'Unknown'} - {new Date(slot.date).toLocaleDateString('en-GB')} {slot.startTime} - {slot.endTime}
+          <option value="">-- Select Personnel --</option>
+          {personnel.map((person) => (
+            <option key={person.id} value={person.id}>
+              {person.fullName}
             </option>
           ))}
         </Form.Select>
         <Form.Control.Feedback type="invalid">
-          {errors.availabilityId}
+          {errors.personnelId}
         </Form.Control.Feedback>
       </Form.Group>
+
+      {/* Availability slot selection */}
+      <Form.Group className="mb-3">
+        <Form.Label>Availability Slot</Form.Label>
+        {loadingAvailabilities ? (
+          <div className="text-center py-2">
+            <Spinner animation="border" size="sm" role="status">
+              <span className="visually-hidden">Loading slots...</span>
+            </Spinner>
+          </div>
+        ) : (
+          <>
+            <Form.Select
+              name="availabilityId"
+              value={formData.availabilityId}
+              onChange={handleChange}
+              isInvalid={!!errors.availabilityId}
+              disabled={!selectedPersonnelId}
+            >
+              <option value="0">
+                {selectedPersonnelId 
+                  ? '-- Select Availability Slot --' 
+                  : '-- First select personnel --'}
+              </option>
+              {availabilities.map((slot) => (
+                <option key={slot.id} value={slot.id}>
+                  {new Date(slot.date).toLocaleDateString('en-GB')} — {slot.startTime} to {slot.endTime}
+                </option>
+              ))}
+            </Form.Select>
+            <Form.Control.Feedback type="invalid">
+              {errors.availabilityId}
+            </Form.Control.Feedback>
+            {selectedPersonnelId && availabilities.length === 0 && !loadingAvailabilities && (
+              <Form.Text className="text-muted">
+                No available slots for this personnel member.
+              </Form.Text>
+            )}
+          </>
+        )}
+      </Form.Group>
+
+      {/* Display selected slot time info */}
+      {selectedAvailability && (
+        <Alert variant="info" className="mb-3">
+          <small>
+            <i className="bi bi-info-circle me-2"></i>
+            This appointment will be scheduled from <strong>{selectedAvailability.startTime}</strong> to <strong>{selectedAvailability.endTime}</strong>
+          </small>
+        </Alert>
+      )}
 
       {/* Task description */}
       <Form.Group className="mb-3">
@@ -178,56 +269,12 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ initialData, onSubmit
           name="taskDescription"
           value={formData.taskDescription}
           onChange={handleChange}
-          placeholder="e.g., medication reminder"
+          placeholder="e.g., medication reminder, wound care"
           isInvalid={!!errors.taskDescription}
         />
         <Form.Control.Feedback type="invalid">
           {errors.taskDescription}
         </Form.Control.Feedback>
-      </Form.Group>
-
-      {/* Start time */}
-      <Form.Group className="mb-3">
-        <Form.Label>Start</Form.Label>
-        <Form.Control
-          type="time"
-          name="startTime"
-          value={formData.startTime}
-          onChange={handleChange}
-          isInvalid={!!errors.startTime}
-        />
-        <Form.Control.Feedback type="invalid">
-          {errors.startTime}
-        </Form.Control.Feedback>
-      </Form.Group>
-
-      {/* End time */}
-      <Form.Group className="mb-3">
-        <Form.Label>End</Form.Label>
-        <Form.Control
-          type="time"
-          name="endTime"
-          value={formData.endTime}
-          onChange={handleChange}
-          isInvalid={!!errors.endTime}
-        />
-        <Form.Control.Feedback type="invalid">
-          {errors.endTime}
-        </Form.Control.Feedback>
-      </Form.Group>
-
-      {/* Status */}
-      <Form.Group className="mb-3">
-        <Form.Label>Status</Form.Label>
-        <Form.Select
-          name="status"
-          value={formData.status}
-          onChange={handleChange}
-        >
-          <option value="Booked">Booked</option>
-          <option value="Completed">Completed</option>
-          <option value="Cancelled">Cancelled</option>
-        </Form.Select>
       </Form.Group>
 
       {/* Buttons */}

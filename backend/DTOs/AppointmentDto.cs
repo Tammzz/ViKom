@@ -23,12 +23,13 @@ namespace backend.DTOs
         [Required]
         public string TaskDescription { get; set; } = string.Empty;
         
-        [Required]
-        public string StartTime { get; set; } = string.Empty;
+        // Auto-filled from availability slot - not user input
+        public string? StartTime { get; set; }
         
-        [Required]
-        public string EndTime { get; set; } = string.Empty;
+        // Auto-filled from availability slot - not user input
+        public string? EndTime { get; set; }
         
+        // System-controlled - computed dynamically
         [RegularExpression(@"^(Booked|Completed|Cancelled)$", ErrorMessage = "Invalid status value.")]
         public string Status { get; set; } = "Booked";
     }
