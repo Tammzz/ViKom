@@ -90,7 +90,7 @@ namespace backend.Controllers
         }
 
         // POST: api/availability
-        [Authorize(Roles = "Personnel,Admin")]
+        [Authorize(Roles = "Personnel")]
         [HttpPost]
         public async Task<ActionResult<AvailabilityDto>> CreateAvailability([FromBody] AvailabilityDto availabilityDto)
         {
@@ -117,7 +117,7 @@ namespace backend.Controllers
         }
 
         // PUT: api/availability/{id}
-        [Authorize(Roles = "Personnel,Admin")]
+        [Authorize(Roles = "Personnel")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateAvailability(int id, [FromBody] AvailabilityDto availabilityDto)
         {
@@ -145,7 +145,7 @@ namespace backend.Controllers
         }
 
         // DELETE: api/availability/{id}
-        [Authorize(Roles = "Personnel,Admin")]
+        [Authorize(Roles = "Personnel")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteAvailability(int id)
         {
@@ -214,7 +214,7 @@ namespace backend.Controllers
         }
 
         // POST: api/availability/window
-        [Authorize(Roles = "Personnel,Admin")]
+        [Authorize(Roles = "Personnel")]
         [HttpPost("window")]
         public async Task<ActionResult<AvailabilityWindowDto>> CreateAvailabilityWindow(
             [FromBody] CreateAvailabilityWindowDto dto)
@@ -242,7 +242,7 @@ namespace backend.Controllers
         }
 
         // PUT: api/availability/window/{id}
-        [Authorize(Roles = "Personnel,Admin")]
+        [Authorize(Roles = "Personnel")]
         [HttpPut("window/{id}")]
         public async Task<IActionResult> UpdateAvailabilityWindow(
             int id,
@@ -269,7 +269,7 @@ namespace backend.Controllers
         }
 
         // DELETE: api/availability/window/{id}
-        [Authorize(Roles = "Personnel,Admin")]
+        [Authorize(Roles = "Personnel")]
         [HttpDelete("window/{id}")]
         public async Task<IActionResult> DeleteAvailabilityWindow(int id)
         {

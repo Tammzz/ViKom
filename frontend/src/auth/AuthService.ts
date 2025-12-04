@@ -30,8 +30,7 @@ export function getUserInfo(): UserInfo | null {
   
   try {
     return JSON.parse(userInfo);
-  } catch (error) {
-    console.error('Failed to parse user info:', error);
+  } catch {
     localStorage.removeItem('userInfo');
     return null;
   }
@@ -70,8 +69,7 @@ export async function login(loginDto: LoginDto): Promise<boolean> {
       return true;
     }
     return false;
-  } catch (error) {
-    console.error('Login error:', error);
+  } catch {
     return false;
   }
 }
@@ -110,8 +108,7 @@ export async function register(registerDto: RegisterDto): Promise<{ success: boo
 
     // returns generic error message
     return { success: false, message: errorData.message || 'Registration failed' };
-  } catch (error) {
-    console.error('Register error:', error);
+  } catch {
     return { success: false, message: 'Network error. Please try again.' };
   }
 }

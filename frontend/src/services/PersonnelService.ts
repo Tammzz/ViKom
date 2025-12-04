@@ -14,10 +14,7 @@ async function handleResponse(response: Response) {
   return response.json();
 }
 
-// Note: Personnel management endpoints are placeholders for Admin phase
-// These will be fully implemented in Phase 7 (Admin Module)
-
-// fetches all personnel (Admin only)
+// fetches all personnel
 export async function fetchPersonnel(): Promise<User[]> {
   const response = await fetch(`${API_URL}/api/personnel`, {
     headers: { ...headers, ...getAuthHeader() },
@@ -25,7 +22,7 @@ export async function fetchPersonnel(): Promise<User[]> {
   return handleResponse(response);
 }
 
-// fetches personnel member by ID (Admin only)
+// fetches personnel member by ID
 export async function fetchPersonnelById(id: string): Promise<User> {
   const response = await fetch(`${API_URL}/api/personnel/${id}`, {
     headers: { ...headers, ...getAuthHeader() },
@@ -33,7 +30,7 @@ export async function fetchPersonnelById(id: string): Promise<User> {
   return handleResponse(response);
 }
 
-// creates new personnel member (Admin only)
+// creates new personnel member
 export async function createPersonnel(personnel: Partial<User>): Promise<void> {
   const response = await fetch(`${API_URL}/api/personnel`, {
     method: 'POST',
@@ -45,7 +42,7 @@ export async function createPersonnel(personnel: Partial<User>): Promise<void> {
   }
 }
 
-// updates personnel member information (Admin only)
+// updates personnel member information
 export async function updatePersonnel(id: string, personnel: Partial<User>): Promise<void> {
   const response = await fetch(`${API_URL}/api/personnel/${id}`, {
     method: 'PUT',
@@ -57,7 +54,7 @@ export async function updatePersonnel(id: string, personnel: Partial<User>): Pro
   }
 }
 
-// deletes personnel member (Admin only)
+// deletes personnel member
 export async function deletePersonnel(id: string): Promise<void> {
   const response = await fetch(`${API_URL}/api/personnel/${id}`, {
     method: 'DELETE',

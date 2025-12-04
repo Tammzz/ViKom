@@ -16,7 +16,7 @@ async function handleResponse(response: Response) {
 
 // Service object following demo pattern
 const PatientService = {
-  // fetches all patients (Personnel/Admin only)
+  // fetches all patients (Personnel only)
   async getAll(): Promise<PatientListDto[]> {
     const response = await fetch(`${API_URL}/api/patients`, {
       headers: { ...headers, ...getAuthHeader() },

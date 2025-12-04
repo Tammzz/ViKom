@@ -103,10 +103,9 @@ const RegisterPage: React.FC = () => {
         setError(result.message || 'Registration failed. Please try again.');
         setIsLoading(false);
       }
-    } catch (err) {
+    } catch {
       // handles any unexpected errors during registration process
       setError('An error occurred during registration. Please try again.');
-      console.error('Registration error:', err);
       setIsLoading(false);
     }
   };

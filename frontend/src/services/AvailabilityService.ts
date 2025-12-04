@@ -18,7 +18,6 @@ const headers = {
 async function handleResponse(response: Response) {
   if (!response.ok) {
     const errorData = await response.text();
-    console.error('API Error Response:', errorData);
     throw new Error(`Network response was not ok: ${response.status} - ${errorData}`);
   }
   return response.json();

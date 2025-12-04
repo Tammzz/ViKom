@@ -81,10 +81,6 @@ To test the application, the following default accounts are available:
   * Username: nurse@homecare.local
   * Password: Pass123!
 
-* **Admin User**
-  * Username: admin@homecare.local
-  * Password: Pass123!
-
 You can also register your own account(s) through the application interface!
 
 ## Technology Stack
@@ -103,9 +99,9 @@ You can also register your own account(s) through the application interface!
 * React Bootstrap components
 
 ## Features
-* Role-based authentication (Patient, Personnel, Admin)
-* Personnel availability management
+* Role-based authentication (Patient, Personnel)
+* Personnel availability management with weekly and daily calendar views
 * Appointment booking and scheduling
 * User-specific dashboards
-* Real-time availability slots
+* Real-time availability slots generation
 * Responsive design for mobile and desktop

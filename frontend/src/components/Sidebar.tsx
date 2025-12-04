@@ -48,7 +48,7 @@ const Sidebar: React.FC = () => {
         )}
 
         {/* Personnel navigation */}
-        {(role === 'Personnel' || role === 'Admin') && (
+        {role === 'Personnel' && (
           <>
             <Nav.Link 
               as={Link} 
@@ -65,17 +65,6 @@ const Sidebar: React.FC = () => {
               My Patients
             </Nav.Link>
           </>
-        )}
-
-        {/* Admin navigation */}
-        {role === 'Admin' && (
-          <Nav.Link 
-            as={Link} 
-            to="/users" 
-            className={isActive('/users') ? 'active' : ''}
-          >
-            Manage Users
-          </Nav.Link>
         )}
       </Nav>
     </div>

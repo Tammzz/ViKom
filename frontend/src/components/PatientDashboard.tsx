@@ -18,9 +18,8 @@ const PatientDashboard: React.FC = () => {
         setLoading(true);
         const data = await fetchPatientDashboard();
         setDashboard(data);
-      } catch (err) {
+      } catch {
         setError('Failed to load dashboard data');
-        console.error(err);
       } finally {
         setLoading(false);
       }

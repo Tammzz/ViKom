@@ -115,7 +115,7 @@ namespace backend.Services
                 Date = availability.Date,
                 StartTime = availability.StartTime.ToString(@"hh\:mm"),
                 EndTime = availability.EndTime.ToString(@"hh\:mm"),
-                Notes = availability.Notes,
+                Notes = availability.Notes ?? string.Empty,
                 IsBooked = availability.Appointment != null
             };
         }

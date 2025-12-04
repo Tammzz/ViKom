@@ -10,7 +10,6 @@ import AppointmentListPage from './pages/AppointmentListPage';
 import AvailabilityCalendarPage from './pages/AvailabilityCalendarPage';
 import PatientListPage from './pages/PatientListPage';
 import PersonnelListPage from './pages/PersonnelListPage';
-import UsersPage from './pages/UsersPage';
 
 const App: React.FC = () => {
   return (
@@ -28,7 +27,6 @@ const App: React.FC = () => {
           <Route path="/personnel" element={<PrivateRoute><PersonnelListPage /></PrivateRoute>} />
           <Route path="/appointments" element={<PrivateRoute><AppointmentListPage /></PrivateRoute>} />
           <Route path="/availability" element={<PrivateRoute><AvailabilityCalendarPage /></PrivateRoute>} />
-          <Route path="/users" element={<PrivateRoute><UsersPage /></PrivateRoute>} />
         </Route>
       </Routes>
     </Router>

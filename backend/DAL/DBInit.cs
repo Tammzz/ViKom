@@ -20,23 +20,9 @@ namespace backend.DAL
                 await roleManager.CreateAsync(new IdentityRole("Patient"));
             }
 
-            if (!await roleManager.RoleExistsAsync("Admin"))
-            {
-                await roleManager.CreateAsync(new IdentityRole("Admin"));
-            }
-
             // Seed users if none exist
             if (!context.Users.Any())
             {
-                var admin = new User
-                {
-                    UserName = "admin@homecare.local",
-                    Email = "admin@homecare.local",
-                    FullName = "Admin Alice",
-                    Role = "Admin",
-                    EmailConfirmed = true
-                };
-
                 var personnel = new User
                 {
                     UserName = "nurse@homecare.local",
@@ -55,11 +41,9 @@ namespace backend.DAL
                     EmailConfirmed = true
                 };
 
-                await userManager.CreateAsync(admin, "Pass123!");
                 await userManager.CreateAsync(personnel, "Pass123!");
                 await userManager.CreateAsync(patient, "Pass123!");
 
-                await userManager.AddToRoleAsync(admin, "Admin");
                 await userManager.AddToRoleAsync(personnel, "Personnel");
                 await userManager.AddToRoleAsync(patient, "Patient");
             }

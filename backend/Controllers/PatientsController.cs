@@ -5,7 +5,7 @@ using backend.Services;
 
 namespace backend.Controllers
 {
-    [Authorize(Roles = "Personnel,Admin")]
+    [Authorize(Roles = "Personnel")]
     [ApiController]
     [Route("api/[controller]")]
     public class PatientsController : ControllerBase
