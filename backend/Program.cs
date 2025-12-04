@@ -75,6 +75,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
 builder.Services.AddScoped<IAvailabilityRepository, AvailabilityRepository>();
+builder.Services.AddScoped<IAvailabilityWindowRepository, AvailabilityWindowRepository>();
 
 // Register services
 builder.Services.AddScoped<backend.Services.IAppointmentService, backend.Services.AppointmentService>();

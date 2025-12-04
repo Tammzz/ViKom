@@ -8,6 +8,7 @@ namespace backend.DAL.Repositories
         Task<Appointment?> GetByIdAsync(int id);
         Task<IEnumerable<Appointment>> GetByPatientIdAsync(string patientId);
         Task<IEnumerable<Appointment>> GetByPersonnelIdAsync(string personnelId);
+        Task<IEnumerable<Appointment>> GetByPersonnelIdAndDateRangeAsync(string personnelId, DateTime startDate, DateTime endDate);
         Task<IEnumerable<Appointment>> GetUpcomingByPatientIdAsync(string patientId, int count);
         Task<IEnumerable<Appointment>> GetUpcomingByPersonnelIdAsync(string personnelId, int count);
         Task<IEnumerable<Appointment>> GetRecentByPersonnelIdAsync(string personnelId, int count);

@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace backend.Models
 {
-    public class Availability
+    public class AvailabilityWindow
     {
         public int Id { get; set; }
 
@@ -27,13 +27,10 @@ namespace backend.Models
 
         public string? Notes { get; set; }
 
-        // Parent window reference
-        public int? AvailabilityWindowId { get; set; }
-        
-        [ForeignKey("AvailabilityWindowId")]
-        public AvailabilityWindow? AvailabilityWindow { get; set; }
+        [Required]
+        public bool IsAvailable { get; set; } = true;
 
-        // Booking reference
-        public Appointment? Appointment { get; set; }
+        // Navigation property to generated slots
+        public List<Availability> Slots { get; set; } = new();
     }
 }

@@ -11,6 +11,7 @@ namespace backend.DAL
         }
 
         public DbSet<Availability> Availabilities => Set<Availability>();
+        public DbSet<AvailabilityWindow> AvailabilityWindows => Set<AvailabilityWindow>();
         public DbSet<Appointment> Appointments => Set<Appointment>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -22,6 +23,13 @@ namespace backend.DAL
                 .HasOne(a => a.Availability)
                 .WithOne(av => av.Appointment)
                 .HasForeignKey<Appointment>(a => a.AvailabilityId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Configure one-to-many relationship between AvailabilityWindow and Availability
+            modelBuilder.Entity<AvailabilityWindow>()
+                .HasMany(w => w.Slots)
+                .WithOne(a => a.AvailabilityWindow)
+                .HasForeignKey(a => a.AvailabilityWindowId)
                 .OnDelete(DeleteBehavior.Cascade);
         }
     }

@@ -50,6 +50,20 @@ namespace backend.DAL.Repositories
                 .ToListAsync();
         }
 
+        public async Task<IEnumerable<Appointment>> GetByPersonnelIdAndDateRangeAsync(string personnelId, DateTime startDate, DateTime endDate)
+        {
+            return await _context.Appointments
+                .Include(a => a.Patient)
+                .Include(a => a.Availability)
+                .ThenInclude(av => av.Personnel)
+                .Where(a => a.Availability.PersonnelId == personnelId 
+                    && a.Availability.Date >= startDate 
+                    && a.Availability.Date <= endDate)
+                .OrderBy(a => a.Availability.Date)
+                .ThenBy(a => a.StartTime)
+                .ToListAsync();
+        }
+
         public async Task<IEnumerable<Appointment>> GetUpcomingByPatientIdAsync(string patientId, int count)
         {
             var today = DateTime.Today;

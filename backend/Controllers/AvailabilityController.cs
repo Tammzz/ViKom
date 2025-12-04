@@ -168,5 +168,129 @@ namespace backend.Controllers
                 return StatusCode(500, "An error occurred while deleting the availability");
             }
         }
+
+        // ============ NEW WINDOW-BASED ENDPOINTS ============
+
+        // GET: api/availability/week/{personnelId}?startDate=2025-12-01
+        [HttpGet("week/{personnelId}")]
+        public async Task<ActionResult<WeekAvailabilityDto>> GetWeekAvailability(
+            string personnelId,
+            [FromQuery] string startDate)
+        {
+            try
+            {
+                if (!DateTime.TryParse(startDate, out var parsedDate))
+                    return BadRequest("Invalid date format");
+
+                var weekData = await _availabilityService.GetWeekAvailabilityAsync(personnelId, parsedDate);
+                return Ok(weekData);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting week availability for personnel {PersonnelId}", personnelId);
+                return StatusCode(500, "An error occurred while retrieving week availability");
+            }
+        }
+
+        // GET: api/availability/day/{personnelId}?date=2025-12-04
+        [HttpGet("day/{personnelId}")]
+        public async Task<ActionResult<DayAvailabilityDto>> GetDayAvailability(
+            string personnelId,
+            [FromQuery] string date)
+        {
+            try
+            {
+                if (!DateTime.TryParse(date, out var parsedDate))
+                    return BadRequest("Invalid date format");
+
+                var dayData = await _availabilityService.GetDayAvailabilityAsync(personnelId, parsedDate);
+                return Ok(dayData);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting day availability for personnel {PersonnelId}", personnelId);
+                return StatusCode(500, "An error occurred while retrieving day availability");
+            }
+        }
+
+        // POST: api/availability/window
+        [Authorize(Roles = "Personnel,Admin")]
+        [HttpPost("window")]
+        public async Task<ActionResult<AvailabilityWindowDto>> CreateAvailabilityWindow(
+            [FromBody] CreateAvailabilityWindowDto dto)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
+                // Auto-assign personnel ID from logged-in user
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrEmpty(userId))
+                    return Unauthorized();
+
+                var created = await _availabilityService.CreateWindowAsync(userId, dto);
+                return CreatedAtAction(nameof(GetWeekAvailability), 
+                    new { personnelId = userId, startDate = created.Date }, 
+                    created);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating availability window");
+                return StatusCode(500, "An error occurred while creating the availability window");
+            }
+        }
+
+        // PUT: api/availability/window/{id}
+        [Authorize(Roles = "Personnel,Admin")]
+        [HttpPut("window/{id}")]
+        public async Task<IActionResult> UpdateAvailabilityWindow(
+            int id,
+            [FromBody] UpdateAvailabilityWindowDto dto)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
+                var updated = await _availabilityService.UpdateWindowAsync(id, dto);
+                return Ok(updated);
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogWarning(ex, "Invalid operation when updating availability window {Id}", id);
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating availability window {Id}", id);
+                return StatusCode(500, "An error occurred while updating the availability window");
+            }
+        }
+
+        // DELETE: api/availability/window/{id}
+        [Authorize(Roles = "Personnel,Admin")]
+        [HttpDelete("window/{id}")]
+        public async Task<IActionResult> DeleteAvailabilityWindow(int id)
+        {
+            try
+            {
+                var result = await _availabilityService.DeleteWindowAsync(id);
+                if (!result)
+                    return NotFound();
+
+                return NoContent();
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogWarning(ex, "Invalid operation when deleting availability window {Id}", id);
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting availability window {Id}", id);
+                return StatusCode(500, "An error occurred while deleting the availability window");
+            }
+        }
     }
 }
