@@ -1,5 +1,5 @@
 import { API_URL } from '../shared/config';
-import { getAuthHeader } from './AuthService';
+import { getAuthHeader } from '../auth/AuthService';
 import type { Appointment, AppointmentCreateDto } from '../types';
 
 const BASE_URL = `${API_URL}/api/appointments`;

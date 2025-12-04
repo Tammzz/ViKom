@@ -1,5 +1,5 @@
 import React from 'react';
-import { getUserInfo } from '../services/AuthService';
+import { getUserInfo } from '../auth/AuthService';
 import PersonnelDashboard from '../components/PersonnelDashboard';
 import PatientDashboard from '../components/PatientDashboard';
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Nav } from 'react-bootstrap';
 import { Link, useLocation } from 'react-router-dom';
-import { getUserInfo } from '../services/AuthService';
+import { getUserInfo } from '../auth/AuthService';
 import '../css/sidebar.css';
 
 const Sidebar: React.FC = () => {

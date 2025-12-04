@@ -1,5 +1,5 @@
 // Central export for all services
-export * as AuthService from './AuthService';
+export * as AuthService from '../auth/AuthService';
 export { default as AppointmentService } from './AppointmentService';
 export * as AvailabilityService from './AvailabilityService';
 export * as UserService from './UserService';

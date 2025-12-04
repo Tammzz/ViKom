@@ -14,10 +14,12 @@ export interface LoginDto {
   password: string;
 }
 
-// Register DTO
+// Register DTO - matches backend RegisterDto structure
 export interface RegisterDto {
+  userName: string;
   email: string;
   password: string;
   fullName: string;
-  role?: string;
+  role: 'Personnel' | 'Patient';
+  phoneNumber?: string;
 }

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
-import * as AuthService from '../services/AuthService';
+import * as AuthService from './AuthService';
 
 interface PrivateRouteProps {
   children: React.ReactElement;

@@ -1,5 +1,5 @@
-import { API_URL } from '../shared/config';
-import { getAuthHeader } from './AuthService';
+import { API_URL } from "../shared/config";
+import { getAuthHeader } from '../auth/AuthService';
 import type { PatientViewModel, PersonnelViewModel } from '../types';
 
 const headers = {

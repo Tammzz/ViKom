@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Table, Alert } from 'react-bootstrap';
-import { getUserInfo } from '../services/AuthService';
+import { getUserInfo } from '../auth/AuthService';
 import PatientService from '../services/PatientService';
 import type { PatientListDto } from '../types';
 import '../css/PatientListPage.css';

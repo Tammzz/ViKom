@@ -2,7 +2,7 @@ import React from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import NavBar from './NavBar';
 import Sidebar from './Sidebar';
-import * as AuthService from '../services/AuthService';
+import * as AuthService from '../auth/AuthService';
 
 /**
  * Main layout component that wraps all pages in the application.

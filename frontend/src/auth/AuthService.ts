@@ -26,9 +26,16 @@ export function setUserInfo(userInfo: UserInfo): void {
 // retrieves user info from localStorage
 export function getUserInfo(): UserInfo | null {
   const userInfo = localStorage.getItem('userInfo');
-  return userInfo ? JSON.parse(userInfo) : null;
+  if (!userInfo) return null;
+  
+  try {
+    return JSON.parse(userInfo);
+  } catch (error) {
+    console.error('Failed to parse user info:', error);
+    localStorage.removeItem('userInfo');
+    return null;
+  }
 }
-
 // removes JWT token and user info from localStorage
 export function logout(): void {
   localStorage.removeItem('jwt');
@@ -69,9 +76,16 @@ export async function login(loginDto: LoginDto): Promise<boolean> {
   }
 }
 
-// registers new user
-export async function register(registerDto: RegisterDto): Promise<boolean> {
+/**
+ * Registers a new user account.
+ * Sends user information to backend and returns result with error details if applicable.
+ * 
+ * @param registerDto - User registration data including username, email, password, role, etc.
+ * @returns Promise with success status and optional error message
+ */
+export async function register(registerDto: RegisterDto): Promise<{ success: boolean; message?: string }> {
   try {
+    // sends POST request to registration endpoint
     const response = await fetch(`${API_URL}/api/auth/register`, {
       method: 'POST',
       headers: {
@@ -80,10 +94,25 @@ export async function register(registerDto: RegisterDto): Promise<boolean> {
       body: JSON.stringify(registerDto),
     });
 
-    return response.ok;
+    // handles successful registration
+    if (response.ok) {
+      return { success: true };
+    }
+
+    // extracts error details from response
+    const errorData = await response.json();
+    
+    // formats validation errors if present
+    if (errorData.errors) {
+      const errorMessages = Object.values(errorData.errors).flat().join(', ');
+      return { success: false, message: errorMessages };
+    }
+
+    // returns generic error message
+    return { success: false, message: errorData.message || 'Registration failed' };
   } catch (error) {
     console.error('Register error:', error);
-    return false;
+    return { success: false, message: 'Network error. Please try again.' };
   }
 }
 

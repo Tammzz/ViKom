@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Container, Form, Button, Alert, Card } from 'react-bootstrap';
-import * as AuthService from '../services/AuthService';
+import * as AuthService from './AuthService';
 
 /**
  * Login page component that handles user authentication.

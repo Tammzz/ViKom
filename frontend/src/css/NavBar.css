@@ -1,0 +1,13 @@
+/* ===== NAVBAR STYLES ====== */
+
+/* Navbar Container */
+.navbar-container {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--secondary);
+}
+
+/* Logo */
+.navbar-logo {
+    height: 50px;
+}

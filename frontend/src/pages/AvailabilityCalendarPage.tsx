@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Alert, Button, ButtonGroup } from 'react-bootstrap';
-import { getUserInfo } from '../services/AuthService';
+import { getUserInfo } from '../auth/AuthService';
 import {
   fetchWeekAvailability,
   fetchDayAvailability,

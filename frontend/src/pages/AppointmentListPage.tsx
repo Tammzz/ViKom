@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Button, Alert } from 'react-bootstrap';
-import { getUserInfo } from '../services/AuthService';
+import { getUserInfo } from '../auth/AuthService';
 import AppointmentService from '../services/AppointmentService';
 import AppointmentModal from '../components/AppointmentModal';
 import AppointmentDeleteModal from '../components/AppointmentDeleteModal';

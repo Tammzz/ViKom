@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Button, Alert } from 'react-bootstrap';
-import { getUserInfo } from '../services/AuthService';
+import { getUserInfo } from '../auth/AuthService';
 import { fetchAvailabilityByPersonnel, createAvailability, updateAvailability, deleteAvailability } from '../services/AvailabilityService';
 import AvailabilityModal from '../components/AvailabilityModal';
 import AvailabilityDeleteModal from '../components/AvailabilityDeleteModal';

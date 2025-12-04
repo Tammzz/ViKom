@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Button, Spinner, Alert } from 'react-bootstrap';
-import { getUserInfo } from '../services/AuthService';
+import { getUserInfo } from '../auth/AuthService';
 import PatientService from '../services/PatientService';
 import { fetchPersonnel } from '../services/PersonnelService';
 import { fetchWeekAvailability } from '../services/AvailabilityService';
