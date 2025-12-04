@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { fetchPatientDashboard } from '../services/DashboardService';
 import TaskBadges from './TaskBadges';
@@ -32,140 +31,132 @@ const PatientDashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <Container className="mt-4">
+      <div className="patient-dashboard">
         <p>Loading dashboard...</p>
-      </Container>
+      </div>
     );
   }
 
   if (error || !dashboard) {
     return (
-      <Container className="mt-4">
-        <p className="text-danger">{error || 'Unable to load dashboard'}</p>
-      </Container>
+      <div className="patient-dashboard">
+        <p className="error-message">{error || 'Unable to load dashboard'}</p>
+      </div>
     );
   }
 
   return (
-    <Container fluid className="patient-dashboard">
+    <div className="patient-dashboard">
       {/* Welcome Section */}
-      <div className="mb-5">
-        <h2 className="fw-bold mb-3">Welcome back, {dashboard.patientName}!</h2>
+      <div className="welcome-section">
+        <h1 className="welcome-title">Welcome back, {dashboard.patientName}!</h1>
         {dashboard.upcomingAppointments.length > 0 ? (
-          <p className="text-muted mb-0 fs-5 lh-base">
+          <p className="welcome-subtitle">
             You have {dashboard.upcomingAppointments.length} appointment
             {dashboard.upcomingAppointments.length > 1 ? 's' : ''} coming up.
           </p>
         ) : (
-          <p className="text-muted mb-0 fs-5 lh-base">You have no appointments scheduled today.</p>
+          <p className="welcome-subtitle">You have no appointments scheduled today.</p>
         )}
       </div>
 
-      <Row className="g-4">
+      <div className="dashboard-content">
         {/* Left Column */}
-        <Col lg={8}>
+        <div className="dashboard-left">
           {/* Action Cards */}
-          <Row className="g-3 mb-4">
-            <Col md={6}>
-              <Link to="/appointments" className="text-decoration-none">
-                <Card className="cta-card border-1 border-dark bg-light h-100 text-center py-4">
-                  <Card.Body>
-                    <i className="bi bi-calendar-check display-1 text-secondary mb-3"></i>
-                    <h5 className="card-title text-dark mb-0">Book appointment</h5>
-                  </Card.Body>
-                </Card>
-              </Link>
-            </Col>
-            <Col md={6}>
-              <a href="#careTeam" className="text-decoration-none">
-                <Card className="cta-card border-1 border-dark bg-light h-100 text-center py-4">
-                  <Card.Body>
-                    <i className="bi bi-envelope display-1 text-secondary mb-3"></i>
-                    <h5 className="card-title text-dark mb-0">Contact caregiver</h5>
-                  </Card.Body>
-                </Card>
-              </a>
-            </Col>
-          </Row>
+          <div className="action-cards-row">
+            <Link to="/appointments" className="cta-link">
+              <div className="cta-card">
+                <i className="cta-icon bi bi-calendar-check"></i>
+                <h3 className="cta-title">Book appointment</h3>
+              </div>
+            </Link>
+            <a href="" className="cta-link">
+              <div className="cta-card">
+                <i className="cta-icon bi bi-envelope"></i>
+                <h3 className="cta-title">Contact caregiver</h3>
+              </div>
+            </a>
+          </div>
 
           {/* Upcoming Appointments */}
-          <Card className="border-1 border-dark bg-light">
-            <Card.Body className="p-4">
-              <div className="d-flex justify-content-between align-items-center mb-4">
-                <h5 className="fw-bold mb-0 text-dark">Upcoming Appointments</h5>
-                <Link to="/appointments" className="btn btn-secondary btn-sm">
+          <div className="appointments-card">
+            <div className="appointments-body">
+              <div className="appointments-header">
+                <h2 className="appointments-title">Upcoming Appointments</h2>
+                <Link to="/appointments" className="view-all-btn">
                   view all
                 </Link>
               </div>
               {dashboard.upcomingAppointments.length > 0 ? (
-                <div className="vstack gap-3">
+                <div className="appointments-list">
                   {dashboard.upcomingAppointments.map((appointment) => (
                     <div
                       key={appointment.id}
-                      className="bg-white border rounded p-3 d-flex justify-content-between align-items-start"
+                      className="appointment-item"
                     >
-                      <div>
-                        <div className="mb-2">
+                      <div className="appointment-left">
+                        <div className="appointment-badges">
                           <TaskBadges tasks={appointment.tasks} variant="secondary" />
                         </div>
-                        <p className="mb-0 text-muted lh-lg">{appointment.personnelName}</p>
+                        <p className="appointment-personnel">{appointment.personnelName}</p>
                       </div>
-                      <div className="text-end">
-                        <div className="text-dark fw-semibold lh-lg">
+                      <div className="appointment-right">
+                        <div className="appointment-date">
                           {new Date(appointment.date).toLocaleDateString('en-GB', {
                             day: '2-digit',
                             month: '2-digit',
                             year: '2-digit',
                           })}
                         </div>
-                        <div className="text-dark lh-lg">{appointment.startTime}</div>
+                        <div className="appointment-time">{appointment.startTime}</div>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-5">
-                  <i className="bi bi-calendar-x display-4 text-muted mb-3 d-block"></i>
-                  <p className="text-muted mb-3">No upcoming appointments scheduled.</p>
-                  <Link to="/appointments" className="btn btn-primary">
-                    <i className="bi bi-plus-circle me-2"></i>Book appointment
+                <div className="appointments-empty">
+                  <i className="empty-icon bi bi-calendar-x"></i>
+                  <p className="empty-text">No upcoming appointments scheduled.</p>
+                  <Link to="/appointments" className="book-btn">
+                    <i className="bi bi-plus-circle"></i>Book appointment
                   </Link>
                 </div>
               )}
-            </Card.Body>
-          </Card>
-        </Col>
+            </div>
+          </div>
+        </div>
 
         {/* Right Column - Care Team */}
-        <Col lg={4}>
-          <Card className="border-1 border-dark bg-light h-100" id="careTeam">
-            <Card.Body className="p-4">
-              <h5 className="fw-bold mb-4 text-dark">My Care Team</h5>
+        <div className="dashboard-right">
+          <div className="care-team-card" id="careTeam">
+            <div className="care-team-body">
+              <h2 className="care-team-title">My Care Team</h2>
               {dashboard.availableCaregivers.length > 0 ? (
-                <div className="vstack gap-3">
+                <div className="caregivers-list">
                   {dashboard.availableCaregivers.map((caregiver) => (
-                    <div key={caregiver.personnelId} className="bg-white border rounded p-3">
-                      <h5 className="mb-2 fw-semibold text-dark lh-base">
+                    <div key={caregiver.personnelId} className="caregiver-item">
+                      <p className="caregiver-name">
                         {caregiver.personnelName}
-                      </h5>
-                      <p className="mb-2 text-dark lh-lg">{caregiver.email}</p>
-                      <p className="mb-0 text-muted lh-lg">
+                      </p>
+                      <p className="caregiver-email">{caregiver.email}</p>
+                      <p className="caregiver-availability">
                         Next: {caregiver.formattedNextAvailable || caregiver.nextAvailableDate}
                       </p>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-4">
-                  <i className="bi bi-people display-4 text-muted mb-3 d-block"></i>
-                  <p className="text-muted mb-0 small">No caregivers currently available.</p>
+                <div className="care-team-empty">
+                  <i className="empty-icon bi bi-people"></i>
+                  <p className="empty-text">No caregivers currently available.</p>
                 </div>
               )}
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-    </Container>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 
