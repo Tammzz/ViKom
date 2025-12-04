@@ -187,8 +187,8 @@ namespace backend.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting week availability for personnel {PersonnelId}", personnelId);
-                return StatusCode(500, "An error occurred while retrieving week availability");
+                _logger.LogError(ex, "Error getting week availability for personnel {PersonnelId}: {Message}", personnelId, ex.Message);
+                return StatusCode(500, new { error = "An error occurred while retrieving week availability", details = ex.Message, stackTrace = ex.StackTrace });
             }
         }
 
@@ -208,8 +208,8 @@ namespace backend.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting day availability for personnel {PersonnelId}", personnelId);
-                return StatusCode(500, "An error occurred while retrieving day availability");
+                _logger.LogError(ex, "Error getting day availability for personnel {PersonnelId}: {Message}", personnelId, ex.Message);
+                return StatusCode(500, new { error = "An error occurred while retrieving day availability", details = ex.Message, stackTrace = ex.StackTrace });
             }
         }
 

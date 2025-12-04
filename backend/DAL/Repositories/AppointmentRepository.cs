@@ -52,7 +52,7 @@ namespace backend.DAL.Repositories
 
         public async Task<IEnumerable<Appointment>> GetByPersonnelIdAndDateRangeAsync(string personnelId, DateTime startDate, DateTime endDate)
         {
-            return await _context.Appointments
+            var appointments = await _context.Appointments
                 .Include(a => a.Patient)
                 .Include(a => a.Availability)
                 .ThenInclude(av => av.Personnel)
@@ -60,8 +60,9 @@ namespace backend.DAL.Repositories
                     && a.Availability.Date >= startDate 
                     && a.Availability.Date <= endDate)
                 .OrderBy(a => a.Availability.Date)
-                .ThenBy(a => a.StartTime)
                 .ToListAsync();
+            
+            return appointments.OrderBy(a => a.Availability.Date).ThenBy(a => a.StartTime).ToList();
         }
 
         public async Task<IEnumerable<Appointment>> GetUpcomingByPatientIdAsync(string patientId, int count)

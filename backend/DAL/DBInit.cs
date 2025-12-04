@@ -64,36 +64,128 @@ namespace backend.DAL
                 await userManager.AddToRoleAsync(patient, "Patient");
             }
 
-            // Seed availabilities if none exist
-            if (!context.Availabilities.Any())
+            // Seed availability windows if none exist (NEW SYSTEM)
+            if (!context.AvailabilityWindows.Any())
             {
                 var personnel = context.Users.FirstOrDefault(u => u.Role == "Personnel");
                 if (personnel != null)
                 {
-                    var availabilities = new List<Availability>
+                    var windows = new List<AvailabilityWindow>
                     {
-                        new Availability
+                        new AvailabilityWindow
                         {
                             PersonnelId = personnel.Id,
                             Date = DateTime.Today.AddDays(1),
                             StartTime = new TimeSpan(9, 0, 0),
-                            EndTime = new TimeSpan(12, 0, 0),
-                            Notes = "Morning shift"
+                            EndTime = new TimeSpan(17, 0, 0),
+                            IsAvailable = true,
+                            Notes = "Available for appointments"
                         },
-                        new Availability
+                        new AvailabilityWindow
                         {
                             PersonnelId = personnel.Id,
                             Date = DateTime.Today.AddDays(2),
-                            StartTime = new TimeSpan(13, 0, 0),
+                            StartTime = new TimeSpan(9, 0, 0),
                             EndTime = new TimeSpan(17, 0, 0),
-                            Notes = "Afternoon shift"
+                            IsAvailable = true,
+                            Notes = "Available for appointments"
+                        },
+                        new AvailabilityWindow
+                        {
+                            PersonnelId = personnel.Id,
+                            Date = DateTime.Today.AddDays(3),
+                            StartTime = new TimeSpan(0, 0, 0),
+                            EndTime = new TimeSpan(0, 0, 0),
+                            IsAvailable = false,
+                            Notes = "Day off"
                         }
                     };
 
-                    context.Availabilities.AddRange(availabilities);
+                    context.AvailabilityWindows.AddRange(windows);
                     await context.SaveChangesAsync();
+
+                    // Generate slots for each window
+                    foreach (var window in windows)
+                    {
+                        var slots = GenerateSlots(window);
+                        context.Availabilities.AddRange(slots);
+                    }
+                    await context.SaveChangesAsync();
+
+                    // Seed a test appointment for December 5, 2025, 10:00-11:00
+                    var patient = context.Users.FirstOrDefault(u => u.Role == "Patient");
+                    if (patient != null)
+                    {
+                        // Find the availability slot for Dec 5, 10:00-11:00
+                        var targetDate = DateTime.Today.AddDays(1); // Dec 5, 2025
+                        var availabilitySlot = context.Availabilities
+                            .FirstOrDefault(a => a.PersonnelId == personnel.Id 
+                                && a.Date == targetDate 
+                                && a.StartTime == new TimeSpan(10, 0, 0)
+                                && a.EndTime == new TimeSpan(11, 0, 0));
+
+                        if (availabilitySlot != null)
+                        {
+                            var appointment = new Appointment
+                            {
+                                PatientId = patient.Id,
+                                AvailabilityId = availabilitySlot.Id,
+                                TaskDescription = "Home care visit - Health checkup",
+                                StartTime = new TimeSpan(10, 0, 0),
+                                EndTime = new TimeSpan(11, 0, 0),
+                                Status = "Booked"
+                            };
+
+                            context.Appointments.Add(appointment);
+                            await context.SaveChangesAsync();
+                        }
+                    }
                 }
             }
+        }
+
+        private static List<Availability> GenerateSlots(AvailabilityWindow window)
+        {
+            var slots = new List<Availability>();
+
+            if (!window.IsAvailable)
+            {
+                // Unavailable: create single slot covering the whole period
+                slots.Add(new Availability
+                {
+                    PersonnelId = window.PersonnelId,
+                    Date = window.Date,
+                    StartTime = window.StartTime,
+                    EndTime = window.EndTime,
+                    Notes = window.Notes,
+                    AvailabilityWindowId = window.Id
+                });
+            }
+            else
+            {
+                // Available: subdivide into 1-hour slots
+                var currentTime = window.StartTime;
+                while (currentTime < window.EndTime)
+                {
+                    var slotEnd = currentTime.Add(TimeSpan.FromHours(1));
+                    if (slotEnd > window.EndTime)
+                        slotEnd = window.EndTime;
+
+                    slots.Add(new Availability
+                    {
+                        PersonnelId = window.PersonnelId,
+                        Date = window.Date,
+                        StartTime = currentTime,
+                        EndTime = slotEnd,
+                        Notes = window.Notes,
+                        AvailabilityWindowId = window.Id
+                    });
+
+                    currentTime = slotEnd;
+                }
+            }
+
+            return slots;
         }
     }
 }

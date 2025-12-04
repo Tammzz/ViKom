@@ -255,7 +255,9 @@ namespace backend.Services
             }
 
             // Filter appointments for this specific date
-            var dayAppointments = appointments.Where(a => a.Availability.Date.Date == date.Date).ToList();
+            var dayAppointments = appointments
+                .Where(a => a.Availability != null && a.Availability.Date.Date == date.Date)
+                .ToList();
 
             return new DayAvailabilityDto
             {

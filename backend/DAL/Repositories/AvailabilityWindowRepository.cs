@@ -23,27 +23,29 @@ namespace backend.DAL.Repositories
 
         public async Task<IEnumerable<AvailabilityWindow>> GetByPersonnelIdAsync(string personnelId)
         {
-            return await _context.AvailabilityWindows
+            var windows = await _context.AvailabilityWindows
                 .Include(w => w.Personnel)
                 .Include(w => w.Slots)
                     .ThenInclude(s => s.Appointment)
                 .Where(w => w.PersonnelId == personnelId)
                 .OrderBy(w => w.Date)
-                .ThenBy(w => w.StartTime)
                 .ToListAsync();
+            
+            return windows.OrderBy(w => w.Date).ThenBy(w => w.StartTime).ToList();
         }
 
         public async Task<IEnumerable<AvailabilityWindow>> GetByPersonnelIdAndDateRangeAsync(
             string personnelId, DateTime startDate, DateTime endDate)
         {
-            return await _context.AvailabilityWindows
+            var windows = await _context.AvailabilityWindows
                 .Include(w => w.Personnel)
                 .Include(w => w.Slots)
                     .ThenInclude(s => s.Appointment)
                 .Where(w => w.PersonnelId == personnelId && w.Date >= startDate && w.Date <= endDate)
                 .OrderBy(w => w.Date)
-                .ThenBy(w => w.StartTime)
                 .ToListAsync();
+            
+            return windows.OrderBy(w => w.Date).ThenBy(w => w.StartTime).ToList();
         }
 
         public async Task<AvailabilityWindow?> GetByPersonnelIdAndDateAsync(string personnelId, DateTime date)
