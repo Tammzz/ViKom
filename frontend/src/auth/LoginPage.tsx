@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Container, Form, Button, Alert, Card } from 'react-bootstrap';
 import * as AuthService from './AuthService';
+import '../css/Forms.css';
 
 /**
  * Login page component that handles user authentication.
@@ -45,17 +46,28 @@ const LoginPage: React.FC = () => {
 
   return (
     // centers login form on page with max width constraint
-    <Container className="mt-5" style={{ maxWidth: '400px' }}>
-      <Card>
-        <Card.Body>
-          {/* displays login page title */}
-          <h2 className="text-center mb-4">Login</h2>
+    <Container className="auth-container">
+
+      {/* Carely Logo */}
+      <div className="login-logo">
+        <Link to="/">
+          <img src="/HomeCareApp-Logo.png" alt="Carely Logo" />
+        </Link>
+      </div>
+      
+      <Card className="auth-card">
+        <Card.Body className="auth-card-body">
+          {/* Header */}
+        <div className="auth-header">
+          <h2 className="auth-title">Welcome Back</h2>
+          <p className="auth-subtitle">Sign in to continue to Carely</p>
+        </div>
           
           {/* conditionally displays error alert if error exists */}
           {error && <Alert variant="danger">{error}</Alert>}
           
           {/* login form with submit handler */}
-          <Form onSubmit={handleSubmit}>
+          <Form onSubmit={handleSubmit} className="auth-form">
             {/* username input field */}
             <Form.Group className="mb-3">
               <Form.Label>Username</Form.Label>
@@ -79,10 +91,17 @@ const LoginPage: React.FC = () => {
             </Form.Group>
             
             {/* submit button */}
-            <Button variant="primary" type="submit" className="w-100">
+            <Button type="submit" className="w-100 btn-secondary">
               Login
             </Button>
           </Form>
+
+          {/* Footer */}
+          <div className="auth-footer">
+            <p className="mb-0">
+              Don't have an account? <Link to="/register">Register here</Link>
+            </p>
+          </div>
         </Card.Body>
       </Card>
     </Container>

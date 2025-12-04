@@ -16,7 +16,7 @@ const NavBar: React.FC = () => {
   };
 
   return (
-    <Navbar bg="white" expand="lg" className="mb-4 navbar-container">
+    <Navbar bg="white" expand="lg" className="navbar-container">
       <Container fluid>
         <Navbar.Brand as={Link} to="/">
           <img 
@@ -31,14 +31,29 @@ const NavBar: React.FC = () => {
         <Navbar.Collapse id="navbar-nav">
           <Nav className="ms-auto">
             {isAuthenticated && userInfo ? (
-              <NavDropdown title={userInfo.userName} id="account-dropdown" align="end">
-                <NavDropdown.ItemText>{userInfo.fullName}</NavDropdown.ItemText>
-                <NavDropdown.ItemText className="nav-userrole">{userInfo.role}</NavDropdown.ItemText>
-                <NavDropdown.Divider />
-                <NavDropdown.Item onClick={handleLogout}>Logout</NavDropdown.Item>
-              </NavDropdown>
+              // displays user dropdown when authenticated
+              <div className="user-dropdown-wrapper">
+                <NavDropdown 
+                  title={userInfo.fullName} 
+                  id="account-dropdown" 
+                  align="end"
+                  className="user-dropdown"
+                >
+                  <NavDropdown.Item onClick={handleLogout} className="dropdown-logout">
+                    Logout
+                  </NavDropdown.Item>
+                </NavDropdown>
+              </div>
             ) : (
-              <Nav.Link href="/login">Login</Nav.Link>
+              // displays login and register buttons when not authenticated
+              <div className="auth-buttons-wrapper">
+                <Nav.Link as={Link} to="/login" className="auth-btn-login">
+                  Login
+                </Nav.Link>
+                <Nav.Link as={Link} to="/register" className="auth-btn-register">
+                  Register
+                </Nav.Link>
+              </div>
             )}
           </Nav>
         </Navbar.Collapse>

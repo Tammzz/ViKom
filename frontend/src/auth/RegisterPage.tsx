@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Container, Form, Button, Alert, Card } from 'react-bootstrap';
 import * as AuthService from './AuthService';
+import '../css/Forms.css';
 
 /**
  * Registration page component that allows new users to create an account.
@@ -11,13 +12,13 @@ import * as AuthService from './AuthService';
 const RegisterPage: React.FC = () => {
   // stores all registration form field values in a single state object
   const [formData, setFormData] = useState({
-    userName: '',
-    password: '',
-    confirmPassword: '',
     fullName: '',
     email: '',
     phoneNumber: '',
-    role: 'Patient' as 'Personnel' | 'Patient'
+    userName: '',
+    role: 'Patient' as 'Personnel' | 'Patient',
+    password: '',
+    confirmPassword: ''
   });
   
   // stores error message to display to user
@@ -112,11 +113,14 @@ const RegisterPage: React.FC = () => {
 
   return (
     // centers registration form on page with max width constraint
-    <Container className="mt-5" style={{ maxWidth: '500px' }}>
-      <Card>
-        <Card.Body>
-          {/* displays registration page title */}
-          <h2 className="text-center mb-4">Create Account</h2>
+    <Container className="auth-container">
+      <Card className="auth-card">
+        <Card.Body className="auth-card-body">
+          {/* Header */}
+          <div className="auth-header">
+            <h2 className="auth-title">Create Account</h2>
+            <p className="auth-subtitle">Join Carely to manage your healthcare</p>
+          </div>
           
           {/* conditionally displays error alert if error exists */}
           {error && <Alert variant="danger">{error}</Alert>}
@@ -125,7 +129,7 @@ const RegisterPage: React.FC = () => {
           {success && <Alert variant="success">{success}</Alert>}
           
           {/* registration form with submit handler */}
-          <Form onSubmit={handleSubmit}>
+          <Form onSubmit={handleSubmit} className="auth-form">
             {/* full name input field */}
             <Form.Group className="mb-3">
               <Form.Label>Full Name</Form.Label>
@@ -222,16 +226,17 @@ const RegisterPage: React.FC = () => {
             </Form.Group>
 
             {/* submit button - disabled during loading with spinner */}
-            <Button variant="primary" type="submit" className="w-100 mb-3" disabled={isLoading}>
+            <Button variant="secondary" type="submit" className="w-100" disabled={isLoading}>
               {isLoading ? 'Registering...' : 'Register'}
             </Button>
-
-            {/* link to login page for existing users */}
-            <div className="text-center">
-              <span>Already have an account? </span>
-              <Link to="/login">Login here</Link>
-            </div>
           </Form>
+
+          {/* Footer */}
+          <div className="auth-footer">
+            <p className="mb-0">
+              Already have an account? <Link to="/login">Login here</Link>
+            </p>
+          </div>
         </Card.Body>
       </Card>
     </Container>

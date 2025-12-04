@@ -24,7 +24,7 @@
   /* Custom variables */
   --font-primary: 'Poppins', sans-serif;
   --font-heading: 'Nunito', sans-serif;
-  --radius-default: 0.75rem;
+  --radius-default: 0.5rem;
   --radius-card: 1rem;
 
   font-synthesis: none;
@@ -34,6 +34,12 @@
 }
 
 /* Base Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 body {
   font-family: var(--font-primary);
   font-size: 1.125rem;
@@ -104,11 +110,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* Bootstrap Card Overrides */
-.card {
-  border-radius: var(--radius-card);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  border: 1px solid rgba(0, 0, 0, 0.125);
-}
+
 
 /* Badge Styling */
 .badge {

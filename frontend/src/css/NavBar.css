@@ -2,12 +2,100 @@
 
 /* Navbar Container */
 .navbar-container {
-    padding-top: 1rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid var(--secondary);
+    padding: 2rem 4rem;
+    border-bottom: 1px solid var(--bs-secondary);
 }
 
 /* Logo */
 .navbar-logo {
     height: 50px;
+}
+
+/* ===== AUTHENTICATION BUTTONS (Not Logged In) ===== */
+.auth-buttons-wrapper {
+    display: flex;
+    gap: 1.5rem;
+    
+}
+
+.auth-btn-login,
+.auth-btn-register {
+    font-family: var(--font-primary);
+    font-size: 1.1rem;
+    font-weight: 500;
+    padding: 0.75rem 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 120px;
+    border-radius: var(--radius-default);
+    border: 1px solid;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.auth-btn-login {
+    border-color: var(--bs-secondary);
+    color: var(--bs-secondary);
+    background-color: transparent;
+}
+
+.auth-btn-register {
+    color: var(--bs-white);
+    background-color: var(--bs-secondary);
+    border-color: var(--bs-secondary);
+}
+
+.auth-btn-register:hover {
+    color: var(--bs-white);
+    background-color: var(--bs-secondary-hover);
+    border-color: var(--bs-secondary-hover);
+}
+
+/* ===== USER DROPDOWN (Logged In) ===== */
+.user-dropdown-wrapper {
+    display: flex;
+    align-items: center;
+}
+
+.user-dropdown .dropdown-toggle {
+    font-weight: 600;
+    color: var(--bs-secondary);
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-default);
+    transition: all 0.2s ease;
+}
+
+.user-dropdown .dropdown-toggle:hover {
+    background-color: var(--bs-light);
+}
+
+.dropdown-logout {
+    color: var(--bs-danger);
+    font-weight: 500;
+}
+
+.dropdown-logout:hover {
+    background-color: var(--bs-danger);
+    color: var(--bs-white);
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 991px) {
+    .auth-buttons-wrapper {
+        flex-direction: column;
+        width: 100%;
+        padding: 1rem 0;
+    }
+
+    .auth-btn-login,
+    .auth-btn-register {
+        width: 100%;
+        text-align: center;
+    }
+
+    .user-dropdown-wrapper {
+        width: 100%;
+    }
 }
