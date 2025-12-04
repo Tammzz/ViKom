@@ -1,19 +1,31 @@
+/* Google Fonts Import */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Nunito:wght@600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap');
+
 :root {
-  /* Custom Color Palette */
+  /* Bootstrap colour overrides */
   --bs-primary: #8d6af1;
   --bs-primary-rgb: 141, 106, 241;
+  --bs-primary-hover: #7c56e3;
   --bs-secondary: #1e214c;
   --bs-secondary-rgb: 30, 33, 76;
+  --bs-secondary-hover: #151742;
   --bs-success: #28a745;
   --bs-success-rgb: 40, 167, 69;
+  --bs-danger: #ea5322;
+  --bs-danger-rgb: 234, 83, 34;
+  --bs-dark: #111215;
+  --bs-dark-rgb: 17, 18, 21;
+  --bs-light: #f8f9fa;
+  --bs-light-rgb: 248, 249, 250;
+  --bs-white: #ffffff;
+  --bs-white-rgb: 255, 255, 255;
 
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  /* Custom variables */
+  --font-primary: 'Poppins', sans-serif;
+  --font-heading: 'Nunito', sans-serif;
+  --radius-default: 0.75rem;
+  --radius-card: 1rem;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -21,95 +33,86 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Bootstrap Color Overrides */
+/* Base Styles */
+body {
+  font-family: var(--font-primary);
+  font-size: 1.125rem;
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--bs-dark);
+  background-color: var(--bs-white);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  color: var(--bs-secondary);
+  line-height: 1.2;
+}
+
+/* Bootstrap Button Overrides */
+.btn {
+  font-size: 1.125rem;
+  font-weight: 500;
+  padding: 1rem 1.75rem;
+  border-radius: var(--radius-default);
+  transition: all 0.2s ease;
+}
+
 .btn-primary {
-  --bs-btn-bg: #8d6af1;
-  --bs-btn-border-color: #8d6af1;
-  --bs-btn-hover-bg: #7a59d9;
-  --bs-btn-hover-border-color: #7a59d9;
-  --bs-btn-active-bg: #6847c1;
-  --bs-btn-active-border-color: #6847c1;
+  background-color: var(--bs-primary);
+  border-color: var(--bs-primary);
+}
+
+.btn-primary:hover {
+  background-color: var(--bs-primary-hover);
+  border-color: var(--bs-primary-hover);
 }
 
 .btn-secondary {
-  --bs-btn-bg: #1e214c;
-  --bs-btn-border-color: #1e214c;
-  --bs-btn-hover-bg: #171a3d;
-  --bs-btn-hover-border-color: #171a3d;
-  --bs-btn-active-bg: #10122e;
-  --bs-btn-active-border-color: #10122e;
+  background-color: var(--bs-secondary);
+  border-color: var(--bs-secondary);
 }
 
-.bg-success {
-  background-color: #28a745 !important;
+.btn-secondary:hover {
+  background-color: var(--bs-secondary-hover);
+  border-color: var(--bs-secondary-hover);
 }
 
-.bg-secondary {
-  background-color: #1e214c !important;
+.btn-outline-primary {
+  color: var(--bs-primary);
+  border-color: var(--bs-primary);
 }
 
-.bg-primary {
-  background-color: #8d6af1 !important;
+.btn-outline-primary:hover {
+  color: var(--bs-white);
+  background-color: var(--bs-primary);
+  border-color: var(--bs-primary);
 }
 
-.badge.bg-success {
-  background-color: #28a745 !important;
+/* Bootstrap Form Overrides */
+.form-control, .form-select {
+  font-size: 1.125rem;
+  padding: 0.75rem 1rem;
+  border: 2px solid #dee2e6;
+  border-radius: var(--radius-default);
 }
 
-.badge.bg-secondary {
-  background-color: #1e214c !important;
+.form-control:focus, .form-select:focus {
+  border-color: var(--bs-primary);
+  box-shadow: 0 0 0 0.25rem rgba(141, 106, 241, 0.15);
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
+/* Bootstrap Card Overrides */
+.card {
+  border-radius: var(--radius-card);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.125);
 }
 
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+/* Badge Styling */
+.badge {
+  font-size: 0.875rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
 }

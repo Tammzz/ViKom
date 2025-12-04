@@ -17,7 +17,7 @@ const NavBar: React.FC = () => {
   return (
     <Navbar bg="primary" variant="dark" expand="lg" className="mb-3">
       <Container fluid>
-        <Navbar.Brand href="/dashboard">HomeCare App</Navbar.Brand>
+        <Navbar.Brand href={isAuthenticated ? "/dashboard" : "/"}>HomeCare App</Navbar.Brand>
         <Navbar.Toggle aria-controls="navbar-nav" />
         <Navbar.Collapse id="navbar-nav">
           <Nav className="ms-auto">
