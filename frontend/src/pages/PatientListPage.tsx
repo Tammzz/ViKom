@@ -7,7 +7,7 @@ import '../css/PatientListPage.css';
 
 const PatientListPage: React.FC = () => {
   const userInfo = getUserInfo();
-  const isPersonnel = userInfo?.role === 'Personnel' || userInfo?.role === 'Admin';
+  const isPersonnel = userInfo?.role === 'Personnel';
 
   // State
   const [patients, setPatients] = useState<PatientListDto[]>([]);

@@ -3,32 +3,22 @@ import { Table, Badge, Button } from 'react-bootstrap';
 import type { DayAvailability, AvailabilityWindow } from '../types';
 import { formatTime12Hour } from '../utils/dateUtils';
 import TaskBadges from './TaskBadges';
+import StatusBadge from './StatusBadge';
 
 interface DailyViewProps {
   dayData: DayAvailability;
   onEdit: (window: AvailabilityWindow) => void;
   onDelete: (windowId: number) => void;
+  onCreate: () => void;
 }
 
-const DailyView: React.FC<DailyViewProps> = ({ dayData, onEdit, onDelete }) => {
-  const getStatusBadgeClass = (status: string): string => {
-    switch (status) {
-      case 'Completed':
-        return 'badge bg-success';
-      case 'Cancelled':
-        return 'badge bg-danger';
-      case 'Booked':
-      default:
-        return 'badge bg-primary';
-    }
-  };
-
+const DailyView: React.FC<DailyViewProps> = ({ dayData, onEdit, onDelete, onCreate }) => {
   return (
     <div>
       {/* Availability Windows Section */}
       {dayData.windows.length > 0 && (
         <div className="mb-4">
-          <h5 className="mb-3">Availability Windows</h5>
+          <h3 className="mb-3">Availability</h3>
           <div className="card border-1 border-dark bg-white overflow-hidden">
             <div className="card-body p-0">
               <Table hover className="mb-0 availability-detail-table">
@@ -68,14 +58,14 @@ const DailyView: React.FC<DailyViewProps> = ({ dayData, onEdit, onDelete }) => {
                         <td className="py-3 px-4 text-dark">
                           <div className="d-flex gap-2">
                             <Button
-                              variant="outline-primary"
+                              variant="secondary"
                               size="sm"
                               onClick={() => onEdit(window)}
                             >
                               <i className="bi bi-pencil me-1"></i>Edit
                             </Button>
                             <Button
-                              variant="outline-danger"
+                              variant="danger"
                               size="sm"
                               onClick={() => window.id && onDelete(window.id)}
                               disabled={window.slots?.some(s => s.isBooked)}
@@ -115,7 +105,7 @@ const DailyView: React.FC<DailyViewProps> = ({ dayData, onEdit, onDelete }) => {
       {/* Appointments Section */}
       {dayData.appointments.length > 0 && (
         <div className="mb-4">
-          <h5 className="mb-3">Appointments</h5>
+          <h3 className="mb-3">Appointments</h3>
           <div className="card border-1 border-dark bg-white overflow-hidden">
             <div className="card-body p-0">
               <Table hover className="mb-0 availability-detail-table">
@@ -138,9 +128,7 @@ const DailyView: React.FC<DailyViewProps> = ({ dayData, onEdit, onDelete }) => {
                         <TaskBadges tasks={appointment.tasks} variant="secondary" />
                       </td>
                       <td className="py-3 px-4 text-dark">
-                        <span className={getStatusBadgeClass(appointment.status)}>
-                          {appointment.status}
-                        </span>
+                        <StatusBadge status={appointment.status} />
                       </td>
                     </tr>
                   ))}
@@ -153,13 +141,15 @@ const DailyView: React.FC<DailyViewProps> = ({ dayData, onEdit, onDelete }) => {
 
       {/* Empty State */}
       {dayData.windows.length === 0 && dayData.appointments.length === 0 && (
-        <div className="card border-1 border-dark bg-light">
-          <div className="card-body p-4">
-            <div className="text-center py-4">
-              <i className="bi bi-calendar-x display-4 text-muted mb-3 d-block"></i>
-              <p className="text-dark mb-0">No availability or appointments for this day.</p>
-            </div>
-          </div>
+        <div className="availability-empty">
+          <i className="empty-icon bi bi-calendar-x"></i>
+          <h3 className="empty-title">No Availability or Appointments</h3>
+          <p className="empty-text">
+            You have no availability windows or appointments scheduled for this day.
+          </p>
+          <button className="btn-create" onClick={onCreate}>
+            <i className="bi bi-calendar-plus"></i>Create Availability Window
+          </button>
         </div>
       )}
     </div>

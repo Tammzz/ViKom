@@ -62,13 +62,29 @@ const DayCard: React.FC<DayCardProps> = ({
         {dayData.appointments.length > 0 && (
           <div className="appointments-preview mt-2">
             {dayData.appointments.slice(0, 2).map((appointment) => (
-              <div key={appointment.id} className="appointment-preview-item">
+              <div 
+                key={appointment.id} 
+                className={`appointment-preview-item ${
+                  appointment.status === 'Completed' ? 'completed' : 
+                  appointment.status === 'Cancelled' ? 'cancelled' : ''
+                }`}
+              >
                 <div className="text-muted small">
                   {formatTime12Hour(appointment.startTime)}
                 </div>
                 <div className="small text-truncate">
                   {appointment.patientName}
                 </div>
+                {appointment.status === 'Completed' && (
+                  <div className="completed-text">
+                    ✓ Completed
+                  </div>
+                )}
+                {appointment.status === 'Cancelled' && (
+                  <div className="cancelled-text">
+                    ✗ Cancelled
+                  </div>
+                )}
               </div>
             ))}
             {dayData.appointments.length > 2 && (

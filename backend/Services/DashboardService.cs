@@ -28,7 +28,7 @@ namespace backend.Services
             var cancelledAppointments = await _appointmentRepository.GetCancelledCountAsync(personnelId);
             
             var upcomingAppointments = await _appointmentRepository.GetUpcomingByPersonnelIdAsync(personnelId, 5);
-            var recentAppointments = await _appointmentRepository.GetRecentByPersonnelIdAsync(personnelId, 5);
+            var recentAppointments = await _appointmentRepository.GetRecentByPersonnelIdAsync(personnelId, 2);
             var upcomingAvailability = await _availabilityRepository.GetUpcomingByPersonnelIdAsync(personnelId, 5);
 
             return new PersonnelDashboardDto
@@ -74,7 +74,7 @@ namespace backend.Services
                         PersonnelId = personnel.Id,
                         PersonnelName = personnel.FullName,
                         Email = personnel.Email ?? string.Empty,
-                        NextAvailableDate = nextAvailable?.Date.ToString("yyyy-MM-dd") ?? "No availability"
+                        NextAvailableDate = nextAvailable?.Date.ToString("yyyy-MM-dd") ?? string.Empty
                     });
                 }
             }

@@ -8,7 +8,7 @@ const DashboardPage: React.FC = () => {
   const userInfo = getUserInfo();
 
   // renders appropriate dashboard based on user role
-  if (userInfo?.role === 'Personnel' || userInfo?.role === 'Admin') {
+  if (userInfo?.role === 'Personnel') {
     return <PersonnelDashboard />;
   }
 

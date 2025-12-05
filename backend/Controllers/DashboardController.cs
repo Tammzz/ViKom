@@ -23,7 +23,7 @@ namespace backend.Controllers
         }
 
         // GET: api/dashboard/personnel/{personnelId}
-        [Authorize(Roles = "Personnel,Admin")]
+        [Authorize(Roles = "Personnel")]
         [HttpGet("personnel/{personnelId}")]
         public async Task<ActionResult<PersonnelDashboardDto>> GetPersonnelDashboard(string personnelId)
         {
@@ -40,7 +40,7 @@ namespace backend.Controllers
         }
 
         // GET: api/dashboard/personnel (uses logged-in user ID)
-        [Authorize(Roles = "Personnel,Admin")]
+        [Authorize(Roles = "Personnel")]
         [HttpGet("personnel")]
         public async Task<ActionResult<PersonnelDashboardDto>> GetMyPersonnelDashboard()
         {
@@ -61,7 +61,7 @@ namespace backend.Controllers
         }
 
         // GET: api/dashboard/patient/{patientId}
-        [Authorize(Roles = "Patient,Personnel,Admin")]
+        [Authorize(Roles = "Patient,Personnel")]
         [HttpGet("patient/{patientId}")]
         public async Task<ActionResult<PatientDashboardDto>> GetPatientDashboard(string patientId)
         {
@@ -78,7 +78,7 @@ namespace backend.Controllers
         }
 
         // GET: api/dashboard/patient (uses logged-in user ID)
-        [Authorize(Roles = "Patient,Admin")]
+        [Authorize(Roles = "Patient")]
         [HttpGet("patient")]
         public async Task<ActionResult<PatientDashboardDto>> GetMyPatientDashboard()
         {

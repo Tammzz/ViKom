@@ -14,7 +14,7 @@ interface AppointmentFormProps {
 
 const AppointmentForm: React.FC<AppointmentFormProps> = ({ initialData, onSubmit, onCancel }) => {
   const userInfo = getUserInfo();
-  const isPersonnel = userInfo?.role === 'Personnel' || userInfo?.role === 'Admin';
+  const isPersonnel = userInfo?.role === 'Personnel';
 
   // Form state
   const [formData, setFormData] = useState<Appointment>({

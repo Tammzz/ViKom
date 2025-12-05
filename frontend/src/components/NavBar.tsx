@@ -35,7 +35,7 @@ const NavBar: React.FC = () => {
   const showLogoInNavbar = !isAuthenticated;
 
   return (
-    <Navbar bg="white" expand="lg" className={`navbar-container ${isAuthenticated ? 'navbar-with-sidebar' : ''}`}>
+    <Navbar expand="lg" className={`navbar-container ${isAuthenticated ? 'navbar-with-sidebar' : ''}`}>
       <Container fluid>
         {/* Conditionally renders logo only when user is not authenticated */}
         {showLogoInNavbar && (
@@ -80,7 +80,7 @@ const NavBar: React.FC = () => {
                     </Nav.Link>
                   )}
 
-                  {(role === 'Personnel' || role === 'Admin') && (
+                  {role === 'Personnel' && (
                     <>
                       <Nav.Link 
                         as={Link} 
@@ -100,27 +100,17 @@ const NavBar: React.FC = () => {
                       </Nav.Link>
                     </>
                   )}
-
-                  {role === 'Admin' && (
-                    <Nav.Link 
-                      as={Link} 
-                      to="/users" 
-                      onClick={closeMobileMenu}
-                      className={isActive('/users') ? 'active' : ''}
-                    >
-                      Manage Users
-                    </Nav.Link>
-                  )}
                 </div>
 
                 {/* Desktop: User dropdown with fullName */}
                 <div className="user-dropdown-wrapper d-none d-lg-flex">
                   <NavDropdown 
-                    title={userInfo.fullName} 
+                    title={<><p className="user-dropdown-title"><i className="bi bi-person-circle"></i> {userInfo.fullName}</p></>} 
                     id="account-dropdown" 
                     align="end"
                     className="user-dropdown"
                   >
+                    
                     <NavDropdown.Item onClick={handleLogout} className="dropdown-logout">
                       Logout
                     </NavDropdown.Item>

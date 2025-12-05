@@ -143,7 +143,13 @@ const AvailabilityCalendarPage: React.FC = () => {
     }
   };
 
-  // Get header text
+  const handleCreateFromDailyView = () => {
+    setSelectedDate(formatDateISO(currentDate));
+    setSelectedWindow(undefined);
+    setShowModal(true);
+  };
+
+  // Date header text
   const getHeaderText = (): string => {
     if (viewMode === 'week') {
       const monday = getMonday(currentDate);
@@ -237,6 +243,7 @@ const AvailabilityCalendarPage: React.FC = () => {
           dayData={dayData}
           onEdit={handleEditFromDailyView}
           onDelete={handleDeleteFromDailyView}
+          onCreate={handleCreateFromDailyView}
         />
       )}
 

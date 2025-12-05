@@ -1,5 +1,6 @@
 import React from 'react';
 import { Badge } from 'react-bootstrap';
+import '../css/TaskBadges.css';
 
 interface TaskBadgesProps {
   tasks: string;
@@ -29,12 +30,11 @@ const TaskBadges: React.FC<TaskBadgesProps> = ({
 
   // Renders each task as a badge with small spacing between them
   return (
-    <div className={`d-flex flex-wrap gap-1 ${className}`}>
+    <div className={`task-badges d-flex flex-wrap ${className}`}>
       {taskList.map((task, index) => (
         <Badge 
           key={index} 
           bg={variant}
-          className="px-2 py-1"
         >
           {task}
         </Badge>

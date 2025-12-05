@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { fetchPersonnelDashboard } from '../services/DashboardService';
 import TaskBadges from './TaskBadges';
+import StatusBadge from './StatusBadge';
 import type { PersonnelViewModel } from '../types';
 import '../css/PersonnelDashboard.css';
 
@@ -155,47 +157,50 @@ const PersonnelDashboard: React.FC = () => {
         </div>
 
         <div className="dashboard-right">
-          {/* shows recent activity table */}
+          {/* shows recent appointments cards */}
           <div className="card">
             <div className="card-header">
-              <h2 className="card-title">Recent Activity</h2>
+              <h2 className="card-title">Recent Appointments</h2>
             </div>
             <div className="card-body">
               {dashboard.recentAppointments.length > 0 ? (
-                <div className="table-wrapper">
-                  <table className="data-table">
-                    <thead>
-                      <tr>
-                        <th>Patient Name</th>
-                        <th>Task</th>
-                        <th>Date</th>
-                        <th>Time</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {dashboard.recentAppointments.map((appointment) => (
-                        <tr key={appointment.id}>
-                          <td>{appointment.patientName}</td>
-                          <td>
-                            <TaskBadges tasks={appointment.tasks} variant="secondary" />
-                          </td>
-                          <td>
-                            {new Date(appointment.date).toLocaleDateString('en-GB', {
-                              day: '2-digit',
-                              month: '2-digit',
-                              year: '2-digit',
-                            })}
-                          </td>
-                          <td>{appointment.startTime}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                <div className="appointments-list">
+                  {dashboard.recentAppointments.map((appointment) => (
+                    <div key={appointment.id} className="appointment-item">
+                      <div className="appointment-content">
+                        <div className="appointment-main">
+                        
+                          <div className="appointment-details">
+                            <div className="appointment-top-row">
+                              <p className="appointment-datetime">
+                                {appointment.date && new Date(appointment.date).toLocaleDateString('en-US', {
+                                  weekday: 'long',
+                                  month: 'short',
+                                  day: 'numeric',
+                                })}{' '}
+                                • {appointment.startTime} - {appointment.endTime}
+                              </p>
+                              {(appointment.status === 'Completed' || appointment.status === 'Cancelled') && (
+                                <StatusBadge status={appointment.status} />
+                              )}
+                            </div>
+                            <p className="appointment-patient">
+                              <i className="bi bi-person-fill"></i> {appointment.patientName}
+                            </p>
+                            <div className="appointment-tasks">
+                              {/*<p className="appointment-patient">Task(s):</p>*/}
+                              <TaskBadges tasks={appointment.tasks} variant="secondary" />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : (
                 <div className="empty-state">
-                  <i className="bi bi-clock-history empty-icon"></i>
-                  <p className="empty-text">No recent activity to display.</p>
+                  <i className="bi bi-calendar-x empty-icon"></i>
+                  <p className="empty-text">No recent appointments to display.</p>
                 </div>
               )}
             </div>
@@ -207,6 +212,9 @@ const PersonnelDashboard: React.FC = () => {
       <div className="card">
         <div className="card-header">
           <h2 className="card-title">Upcoming Availability</h2>
+          <Link to="/availability" className="btn btn-secondary btn-sm">
+            +
+          </Link>
         </div>
         <div className="card-body">
           {dashboard.upcomingAvailability.length > 0 ? (
@@ -236,9 +244,9 @@ const PersonnelDashboard: React.FC = () => {
                       <td>{availability.notes || '-'}</td>
                       <td>
                         {availability.isBooked ? (
-                          <span className="status-badge status-booked">Booked</span>
+                          <StatusBadge status="Booked" />
                         ) : (
-                          <span className="status-badge status-available">Available</span>
+                          <StatusBadge status="Available" />
                         )}
                       </td>
                     </tr>

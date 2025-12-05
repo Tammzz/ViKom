@@ -2,6 +2,8 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import PrivateRoute from './auth/PrivateRoute';
+import PatientOnlyRoute from './auth/PatientOnlyRoute';
+import PersonnelOnlyRoute from './auth/PersonnelOnlyRoute';
 import LoginPage from './auth/LoginPage';
 import RegisterPage from './auth/RegisterPage';
 import HomePage from './pages/HomePage';
@@ -25,8 +27,8 @@ const App: React.FC = () => {
           <Route path="/dashboard" element={<PrivateRoute><DashboardPage /></PrivateRoute>} />
           <Route path="/patients" element={<PrivateRoute><PatientListPage /></PrivateRoute>} />
           <Route path="/personnel" element={<PrivateRoute><PersonnelListPage /></PrivateRoute>} />
-          <Route path="/appointments" element={<PrivateRoute><AppointmentListPage /></PrivateRoute>} />
-          <Route path="/availability" element={<PrivateRoute><AvailabilityCalendarPage /></PrivateRoute>} />
+          <Route path="/appointments" element={<PatientOnlyRoute><AppointmentListPage /></PatientOnlyRoute>} />
+          <Route path="/availability" element={<PersonnelOnlyRoute><AvailabilityCalendarPage /></PersonnelOnlyRoute>} />
         </Route>
       </Routes>
     </Router>

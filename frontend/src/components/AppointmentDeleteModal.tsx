@@ -60,10 +60,10 @@ const AppointmentDeleteModal: React.FC<AppointmentDeleteModalProps> = ({
             <strong>Task:</strong> {appointmentDescription}
           </p>
         )}
-        <p className="text-warning">
+        <div className="alert alert-warning">
           <i className="bi bi-exclamation-triangle me-2"></i>
-          Note: Appointments can only be cancelled at least 24 hours before the scheduled time.
-        </p>
+          <strong>Note:</strong> Appointments can only be cancelled at least 24 hours before the scheduled time.
+        </div>
       </Modal.Body>
       <Modal.Footer>
         <Button variant="outline-secondary" onClick={handleClose} disabled={isDeleting}>

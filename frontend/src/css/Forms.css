@@ -84,9 +84,10 @@
 
 .form-control:focus,
 .form-select:focus {
-    border-color: var(--bs-primary);
+    border-color: var(--bs-dark);
     border-width: 2px;
     outline: 0;
+    box-shadow: none;
 }
 
 .form-control::placeholder {

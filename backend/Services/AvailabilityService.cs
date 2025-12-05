@@ -185,6 +185,10 @@ namespace backend.Services
             // Check if any slot is booked
             if (existing.Slots.Any(s => s.Appointment != null))
             {
+                // Prevent toggling to unavailable
+                if (!dto.IsAvailable)
+                    throw new InvalidOperationException("Cannot mark as unavailable - some slots are booked");
+                    
                 // If time range changed, prevent update
                 var newStartTime = string.IsNullOrEmpty(dto.StartTime) ? existing.StartTime : TimeSpan.Parse(dto.StartTime);
                 var newEndTime = string.IsNullOrEmpty(dto.EndTime) ? existing.EndTime : TimeSpan.Parse(dto.EndTime);
@@ -209,18 +213,32 @@ namespace backend.Services
                 existing.EndTime = string.IsNullOrEmpty(dto.EndTime) ? existing.EndTime : TimeSpan.Parse(dto.EndTime);
             }
 
-            // Delete unbooked slots and regenerate
+            // Delete unbooked slots
             var unbookedSlots = existing.Slots.Where(s => s.Appointment == null).ToList();
             foreach (var slot in unbookedSlots)
             {
                 await _availabilityRepository.DeleteAsync(slot.Id);
             }
 
-            // Generate new slots
-            var newSlots = GenerateSlots(existing);
-            foreach (var slot in newSlots)
+            // Regenerate ALL slots (this creates a fresh set, existing booked slots remain via their appointments)
+            var allNewSlots = GenerateSlots(existing);
+            
+            // Keep track of booked slots' time ranges
+            var bookedTimeRanges = existing.Slots
+                .Where(s => s.Appointment != null)
+                .Select(s => new { s.StartTime, s.EndTime })
+                .ToList();
+            
+            // Only create slots that don't overlap with booked slots
+            foreach (var newSlot in allNewSlots)
             {
-                await _availabilityRepository.CreateAsync(slot);
+                bool overlapsWithBooked = bookedTimeRanges.Any(b => 
+                    b.StartTime == newSlot.StartTime && b.EndTime == newSlot.EndTime);
+                
+                if (!overlapsWithBooked)
+                {
+                    await _availabilityRepository.CreateAsync(newSlot);
+                }
             }
 
             var updated = await _windowRepository.UpdateAsync(existing);
@@ -287,13 +305,14 @@ namespace backend.Services
             }
             else
             {
-                // Available: subdivide into 1-hour slots
+                // Available: always create exactly 8 slots (1 hour each for 8-hour day)
+                var slotDuration = TimeSpan.FromHours(1);
+                var totalSlots = 8;
                 var currentTime = window.StartTime;
-                while (currentTime < window.EndTime)
+
+                for (int i = 0; i < totalSlots; i++)
                 {
-                    var slotEnd = currentTime.Add(TimeSpan.FromHours(1));
-                    if (slotEnd > window.EndTime)
-                        slotEnd = window.EndTime;
+                    var slotEnd = currentTime.Add(slotDuration);
 
                     slots.Add(new Availability
                     {

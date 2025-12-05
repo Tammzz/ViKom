@@ -96,32 +96,80 @@ namespace backend.DAL
                     }
                     await context.SaveChangesAsync();
 
-                    // Seed a test appointment for December 5, 2025, 10:00-11:00
+                    // Seed test appointments
                     var patient = context.Users.FirstOrDefault(u => u.Role == "Patient");
                     if (patient != null)
                     {
-                        // Find the availability slot for Dec 5, 10:00-11:00
-                        var targetDate = DateTime.Today.AddDays(1); // Dec 5, 2025
-                        var availabilitySlot = context.Availabilities
+                        // 1. Create window for 3 days ago with full day range (9:00-17:00)
+                        var pastWindow = new AvailabilityWindow
+                        {
+                            PersonnelId = personnel.Id,
+                            Date = DateTime.Today.AddDays(-3),
+                            StartTime = new TimeSpan(9, 0, 0),
+                            EndTime = new TimeSpan(17, 0, 0),
+                            IsAvailable = true,
+                            Notes = "Available for appointments"
+                        };
+                        context.AvailabilityWindows.Add(pastWindow);
+                        await context.SaveChangesAsync();
+
+                        // Generate slots for past window
+                        var pastSlots = GenerateSlots(pastWindow);
+                        context.Availabilities.AddRange(pastSlots);
+                        await context.SaveChangesAsync();
+
+                        // Create completed appointment in first slot (9:00-10:00)
+                        var completedSlot = pastSlots.FirstOrDefault(s => s.StartTime == new TimeSpan(9, 0, 0));
+                        if (completedSlot != null)
+                        {
+                            var completedAppointment = new Appointment
+                            {
+                                PatientId = patient.Id,
+                                AvailabilityId = completedSlot.Id,
+                                Tasks = "Bathing, Dressing",
+                                StartTime = new TimeSpan(9, 0, 0),
+                                EndTime = new TimeSpan(10, 0, 0),
+                                Status = "Completed"
+                            };
+                            context.Appointments.Add(completedAppointment);
+                        }
+
+                        // Create cancelled appointment in second slot (10:00-11:00)
+                        var cancelledSlot = pastSlots.FirstOrDefault(s => s.StartTime == new TimeSpan(10, 0, 0));
+                        if (cancelledSlot != null)
+                        {
+                            var cancelledAppointment = new Appointment
+                            {
+                                PatientId = patient.Id,
+                                AvailabilityId = cancelledSlot.Id,
+                                Tasks = "Groceries",
+                                StartTime = new TimeSpan(10, 0, 0),
+                                EndTime = new TimeSpan(11, 0, 0),
+                                Status = "Cancelled"
+                            };
+                            context.Appointments.Add(cancelledAppointment);
+                        }
+                        await context.SaveChangesAsync();
+
+                        // 2. Create booked appointment for tomorrow (upcoming appointment)
+                        var tomorrowSlot = context.Availabilities
                             .FirstOrDefault(a => a.PersonnelId == personnel.Id 
-                                && a.Date == targetDate 
+                                && a.Date == DateTime.Today.AddDays(1)
                                 && a.StartTime == new TimeSpan(10, 0, 0)
                                 && a.EndTime == new TimeSpan(11, 0, 0));
 
-                        if (availabilitySlot != null)
+                        if (tomorrowSlot != null)
                         {
-                            // Creates appointment with comma-separated task list
-                            var appointment = new Appointment
+                            var upcomingAppointment = new Appointment
                             {
                                 PatientId = patient.Id,
-                                AvailabilityId = availabilitySlot.Id,
+                                AvailabilityId = tomorrowSlot.Id,
                                 Tasks = "Cleaning, Medication",
                                 StartTime = new TimeSpan(10, 0, 0),
                                 EndTime = new TimeSpan(11, 0, 0),
                                 Status = "Booked"
                             };
-
-                            context.Appointments.Add(appointment);
+                            context.Appointments.Add(upcomingAppointment);
                             await context.SaveChangesAsync();
                         }
                     }

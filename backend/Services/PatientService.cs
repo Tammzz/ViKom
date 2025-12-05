@@ -35,7 +35,7 @@ namespace backend.Services
                     Email = patient.Email ?? string.Empty,
                     PhoneNumber = patient.PhoneNumber ?? string.Empty,
                     TotalAppointments = appointments.Count(),
-                    LastAppointmentDate = lastAppointment?.Availability.Date.ToString("yyyy-MM-dd") ?? "Never"
+                    LastAppointmentDate = lastAppointment?.Availability.Date.ToString("dd/MM/yyyy") ?? "Never"
                 });
             }
 

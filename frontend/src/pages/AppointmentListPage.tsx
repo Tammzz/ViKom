@@ -1,22 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { getUserInfo } from '../auth/AuthService';
+import { useSearchParams } from 'react-router-dom';
 import AppointmentService from '../services/AppointmentService';
 import AppointmentModal from '../components/AppointmentModal';
 import AppointmentDeleteModal from '../components/AppointmentDeleteModal';
 import TaskBadges from '../components/TaskBadges';
+import StatusBadge from '../components/StatusBadge';
 import type { Appointment } from '../types';
 import '../css/AppointmentListPage.css';
 
 const AppointmentListPage: React.FC = () => {
-  // gets current user information
-  const userInfo = getUserInfo();
-  const isPersonnel = userInfo?.role === 'Personnel' || userInfo?.role === 'Admin';
-
+  const [searchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  
   // State management
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
-  const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming');
+  const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>(tabParam === 'past' ? 'past' : 'upcoming');
 
   // Modal state management
   const [showModal, setShowModal] = useState<boolean>(false);
@@ -123,20 +123,6 @@ const AppointmentListPage: React.FC = () => {
     }
   };
 
-  // returns appropriate badge class based on status
-  const getStatusBadgeClass = (status: string): string => {
-    switch (status) {
-      case 'Completed':
-        return 'status-completed';
-      case 'Cancelled':
-        return 'status-cancelled';
-      case 'Booked':
-        return 'status-booked';
-      default:
-        return 'status-default';
-    }
-  };
-
   // checks if appointment is within 24 hours
   const isWithin24Hours = (appointment: Appointment): boolean => {
     if (!appointment.date || !appointment.startTime) return false;
@@ -156,14 +142,14 @@ const AppointmentListPage: React.FC = () => {
   // renders loading state
   if (loading) {
     return (
-      <div className={`appointment-list-page ${isPersonnel ? 'personnel-page' : ''}`}>
+      <div className="appointment-list-page">
         <p>Loading appointments...</p>
       </div>
     );
   }
 
   return (
-    <div className={`appointment-list-page ${isPersonnel ? 'personnel-page' : ''}`}>
+    <div className="appointment-list-page">
       {/* displays error message if present */}
       {error && (
         <div className="error-alert">
@@ -241,32 +227,31 @@ const AppointmentListPage: React.FC = () => {
                                   <i className="bi bi-calendar-event"></i>
                                 </div>
                                 <div className="appointment-details">
-                                  <div className="appointment-status-badges">
-                                    <span className={`status-badge ${getStatusBadgeClass(appointment.status)}`}>
-                                      {appointment.status}
-                                    </span>
+                                
+                                  <div className="appointment-top-row">
+                                    <p className="appointment-datetime">
+                                      {appointment.date && new Date(appointment.date).toLocaleDateString('en-US', {
+                                        weekday: 'long',
+                                        month: 'short',
+                                        day: 'numeric',
+                                      })}{' '}
+                                      at {appointment.startTime} - {appointment.endTime}
+                                    </p>
+                                    <div className="appointment-status-badges">
+                                      <StatusBadge status={appointment.status} />
+                                    </div>
                                   </div>
+
+                                  {appointment.personnelName && (
+                                    <p className="appointment-personnel">
+                                      {appointment.personnelName}
+                                    </p>
+                                  )}
+
                                   <div className="appointment-tasks">
                                     <TaskBadges tasks={appointment.tasks} variant="secondary" />
                                   </div>
-                                  <p className="appointment-datetime">
-                                    {appointment.date && new Date(appointment.date).toLocaleDateString('en-GB', {
-                                      day: '2-digit',
-                                      month: 'short',
-                                      year: 'numeric',
-                                    })}{' '}
-                                    at {appointment.startTime} - {appointment.endTime}
-                                  </p>
-                                  {appointment.personnelName && (
-                                    <p className="appointment-personnel">
-                                      With {appointment.personnelName}
-                                    </p>
-                                  )}
-                                  {isPersonnel && appointment.patientName && (
-                                    <p className="appointment-patient">
-                                      Patient: {appointment.patientName}
-                                    </p>
-                                  )}
+
                                   {within24Hours && appointment.status === 'Booked' && (
                                     <small className="appointment-warning">
                                       <i className="bi bi-exclamation-triangle"></i>
@@ -277,7 +262,7 @@ const AppointmentListPage: React.FC = () => {
                               </div>
                               <div className="appointment-actions">
                                 <button
-                                  className="btn-edit"
+                                  className="btn btn-secondary btn-edit"
                                   onClick={() => handleEdit(appointment)}
                                   disabled={!modifiable}
                                   title={!modifiable ? 'Cannot edit within 24 hours or if not booked' : 'Edit appointment'}
@@ -285,12 +270,12 @@ const AppointmentListPage: React.FC = () => {
                                   <i className="bi bi-pencil"></i> Change
                                 </button>
                                 <button
-                                  className="btn-delete"
+                                  className="btn btn-danger btn-delete"
                                   onClick={() => handleDelete(appointment)}
                                   disabled={!modifiable}
                                   title={!modifiable ? 'Cannot cancel within 24 hours or if not booked' : 'Cancel appointment'}
                                 >
-                                  <i className="bi bi-trash"></i> {isPersonnel ? 'Delete' : 'Cancel'}
+                                  <i className="bi bi-trash"></i> Cancel
                                 </button>
                               </div>
                             </div>
@@ -326,36 +311,35 @@ const AppointmentListPage: React.FC = () => {
                         <div key={appointment.id} className="appointment-item">
                           <div className="appointment-content">
                             <div className="appointment-main">
-                              <div className="appointment-icon success">
-                                <i className="bi bi-calendar-check"></i>
-                              </div>
-                              <div className="appointment-details">
-                                <div className="appointment-status-badges">
-                                  <span className={`status-badge ${getStatusBadgeClass(appointment.status)}`}>
-                                    {appointment.status}
-                                  </span>
+                                <div className={`appointment-icon ${appointment.status === 'Completed' ? 'secondary' : appointment.status === 'Cancelled' ? 'secondary' : ''}`}>
+                                  <i className={`bi ${appointment.status === 'Completed' ? 'bi-calendar-check' : appointment.status === 'Cancelled' ? 'bi-calendar-x' : 'bi-calendar-event'}`}></i>
                                 </div>
+                              <div className="appointment-details">
+
+                                <div className="appointment-top-row">
+                                  <p className="appointment-datetime">
+                                    {appointment.date && new Date(appointment.date).toLocaleDateString('en-US', {
+                                      weekday: 'long',
+                                      month: 'short',
+                                      day: 'numeric',
+                                    })}{' '}
+                                    at {appointment.startTime} - {appointment.endTime}
+                                  </p>
+
+                                  <div className="appointment-status-badges">
+                                    <StatusBadge status={appointment.status} />
+                                  </div>
+                                </div>
+
+                                {appointment.personnelName && (
+                                  <p className="appointment-personnel">
+                                    {appointment.personnelName}
+                                  </p>
+                                )}
+
                                 <div className="appointment-tasks">
                                   <TaskBadges tasks={appointment.tasks} variant="secondary" />
                                 </div>
-                                <p className="appointment-datetime">
-                                  {appointment.date && new Date(appointment.date).toLocaleDateString('en-GB', {
-                                    day: '2-digit',
-                                    month: 'short',
-                                    year: 'numeric',
-                                  })}{' '}
-                                  at {appointment.startTime} - {appointment.endTime}
-                                </p>
-                                {appointment.personnelName && (
-                                  <p className="appointment-personnel">
-                                    With {appointment.personnelName}
-                                  </p>
-                                )}
-                                {isPersonnel && appointment.patientName && (
-                                  <p className="appointment-patient">
-                                    Patient: {appointment.patientName}
-                                  </p>
-                                )}
                               </div>
                             </div>
                           </div>

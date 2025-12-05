@@ -98,7 +98,7 @@
 }
 
 .availability-calendar-page .view-btn.active {
-  background-color: var(--bs-primary);
+  background-color: var(--bs-secondary);
   color: var(--bs-white);
 }
 
@@ -173,21 +173,21 @@
 }
 
 .day-card.today {
-  border: 2px solid var(--bs-primary);
+  border: 2px solid var(--bs-dark);
   border-radius: var(--radius-default);
 }
 
 .day-card-header {
   text-align: center;
-  margin-bottom: 0.75rem;
-  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
   border-bottom: 1px solid var(--bs-dark);
 }
 
 .day-name {
   font-size: 0.875rem;
   color: var(--bs-dark);
-  font-weight: 500;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -197,7 +197,7 @@
   font-weight: 700;
   color: var(--bs-dark);
   line-height: 1;
-  margin-top: 0.25rem;
+  margin-top: 0.4rem;
 }
 
 .day-card-body {
@@ -209,7 +209,7 @@
 
 .status-badge {
   font-size: 0.75rem;
-  padding: 0.375rem 0.75rem;
+  padding: 0.5rem 0.75rem;
   text-align: center;
   display: block;
   border-radius: var(--radius-default);
@@ -226,7 +226,29 @@
   padding: 0.5rem;
   background-color: var(--bs-light);
   border-radius: var(--radius-default);
-  border-left: 3px solid var(--bs-primary);
+  border: 1px solid #b0bcc5;
+}
+
+.completed-text {
+  color: var(--bs-success);
+  font-weight: 500;
+  font-size: 0.8rem;
+}
+
+.appointment-preview-item.completed {
+  background-color: #e8f5e9;
+  border: 1px solid #81c784;
+}
+
+.cancelled-text {
+  color: var(--bs-danger);
+  font-weight: 500;
+  font-size: 0.8rem;
+}
+
+.appointment-preview-item.cancelled {
+  background-color: #ffebee;
+  border: 1px solid #e57373;
 }
 
 /* ===== DAILY VIEW TABLE STYLES ===== */
@@ -265,7 +287,59 @@
   outline-offset: 2px;
 }
 
-/* ===== ACTION BUTTONS (EDIT/DELETE) ===== */
+/* ===== EMPTY STATE ===== */
+.availability-empty {
+  text-align: center;
+  padding: 3rem 1rem;
+}
+
+.availability-empty .empty-icon {
+  font-size: 4rem;
+  color: var(--bs-dark);
+  margin-bottom: 1rem;
+  display: block;
+}
+
+.availability-empty .empty-title {
+  color: var(--bs-dark);
+  margin-bottom: 1rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.availability-empty .empty-text {
+  color: var(--bs-dark);
+  font-size: 1.25rem;
+  line-height: 1.5;
+  margin-bottom: 1.5rem;
+}
+
+.availability-empty .btn-create {
+  background-color: var(--bs-primary);
+  color: var(--bs-white);
+  border: none;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  border-radius: var(--radius-default);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.availability-empty .btn-create:hover {
+  background-color: var(--bs-primary-hover);
+}
+
+.availability-empty .btn-create i {
+  font-size: 1.2rem;
+}
+
+
+
+/* ===== ACTION BUTTONS (EDIT/DELETE) ===== 
 .btn-outline-primary,
 .btn-outline-danger {
   padding: 0.625rem 1.25rem;
@@ -302,7 +376,7 @@
 .btn-outline-danger:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-}
+} */
 
 /* ===== MEDIA QUERIES ===== */
 

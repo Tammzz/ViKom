@@ -1,0 +1,14 @@
+/* ===== TASK BADGES CUSTOM STYLING ===== */
+
+/* Override Bootstrap badge styles for task badges */
+.task-badges .badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-default);
+}
+
+/* Adjust spacing between badges */
+.task-badges {
+  gap: 0.5rem;
+}
