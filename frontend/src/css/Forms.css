@@ -101,7 +101,6 @@
     font-weight: 600;
     color: var(--bs-dark);
     margin-bottom: 0.5rem;
-    display: block;
 }
 
 /* Form Validation */
@@ -117,9 +116,20 @@
 
 .text-danger {
     color: var(--bs-danger);
+}
+
+/* Required field asterisk in form labels */
+.form-label .text-danger {
+    font-size: 1rem;
+    margin-left: 0.25rem;
+}
+
+/* Validation error messages below form fields */
+.invalid-feedback,
+.form-control + .text-danger {
+    display: block;
     font-size: 0.875rem;
     margin-top: 0.25rem;
-    display: block;
 }
 
 /* Auth Footer */

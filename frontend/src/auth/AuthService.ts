@@ -1,4 +1,4 @@
-import { API_URL } from '../shared/config';
+import { API_URL } from '../config/config';
 import type { LoginDto, RegisterDto } from '../types';
 
 interface UserInfo {
