@@ -11,7 +11,7 @@ export interface Appointment {
   tasks: string;
   startTime: string; // TimeSpan represented as string "HH:mm:ss" or "HH:mm"
   endTime: string;
-  status: 'Booked' | 'Completed' | 'Cancelled';
+  status: 'Booked' | 'InProgress' | 'Completed' | 'Cancelled';
 }
 
 // Appointment create DTO

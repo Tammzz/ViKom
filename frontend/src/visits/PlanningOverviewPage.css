@@ -1,0 +1,287 @@
+/* ===== PLANNING OVERVIEW PAGE ===== */
+.planning-overview-page {
+  padding: 2rem;
+}
+
+/* ===== PAGE HEADER ===== */
+.page-header {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.page-title {
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--bs-dark);
+  margin-bottom: 0.5rem;
+}
+
+.page-subtitle {
+  font-size: 1.125rem;
+  color: var(--bs-dark);
+  margin-bottom: 0;
+}
+
+/* ===== FILTERS CARD ===== */
+.filters-card {
+  margin-bottom: 2rem;
+  border: 1px solid var(--bs-dark);
+  border-radius: var(--radius-default);
+}
+
+.filters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+/* ===== PLANNING CONTENT ===== */
+.planning-content {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1.5rem;
+}
+
+/* ===== VISITS SECTION ===== */
+.visits-card {
+  border: 1px solid var(--bs-dark);
+  border-radius: var(--radius-default);
+}
+
+.visits-card .card-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--bs-dark);
+  margin-bottom: 0;
+}
+
+.visits-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.visit-item {
+  border: 1px solid var(--bs-light);
+  border-radius: var(--radius-default);
+  padding: 1rem;
+  background-color: var(--bs-white);
+}
+
+.visit-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.75rem;
+}
+
+.visit-main {
+  flex: 1;
+}
+
+.patient-name {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--bs-dark);
+  margin-bottom: 0.25rem;
+}
+
+.visit-address {
+  font-size: 0.875rem;
+  color: var(--bs-dark);
+  margin-bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.visit-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-items: flex-end;
+}
+
+.task-type-badge,
+.area-badge {
+  font-size: 0.75rem;
+}
+
+.visit-details {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.visit-datetime {
+  font-size: 0.875rem;
+  color: var(--bs-dark);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.visit-status {
+  font-size: 0.875rem;
+}
+
+.visit-tasks {
+  margin-bottom: 0.75rem;
+}
+
+.visit-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* ===== MAP SECTION ===== */
+.map-card {
+  border: 1px solid var(--bs-dark);
+  border-radius: var(--radius-default);
+  height: fit-content;
+}
+
+.map-card .card-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--bs-dark);
+  margin-bottom: 0;
+}
+
+.map-body {
+  padding: 0;
+}
+
+.map-placeholder {
+  height: 400px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0 0 var(--radius-default) var(--radius-default);
+}
+
+.map-content {
+  text-align: center;
+  color: var(--bs-dark);
+}
+
+.map-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.7;
+}
+
+.map-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.map-text {
+  font-size: 0.875rem;
+  margin-bottom: 1.5rem;
+  max-width: 200px;
+  line-height: 1.4;
+}
+
+.map-areas {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: 180px;
+}
+
+.map-area {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem;
+  border-radius: var(--radius-default);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.map-area.downtown {
+  background-color: rgba(0, 123, 255, 0.1);
+  color: var(--bs-primary);
+}
+
+.map-area.suburb {
+  background-color: rgba(40, 167, 69, 0.1);
+  color: var(--bs-success);
+}
+
+.map-area.rural {
+  background-color: rgba(255, 193, 7, 0.1);
+  color: var(--bs-warning);
+}
+
+.area-label {
+  font-weight: 600;
+}
+
+.area-count {
+  opacity: 0.8;
+}
+
+/* ===== EMPTY STATE ===== */
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+}
+
+.empty-icon {
+  font-size: 4rem;
+  color: var(--bs-dark);
+  margin-bottom: 1rem;
+  display: block;
+}
+
+.empty-text {
+  color: var(--bs-dark);
+  font-size: 1rem;
+  margin-bottom: 0;
+  line-height: 1.5;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 992px) {
+  .planning-content {
+    grid-template-columns: 1fr;
+  }
+
+  .map-placeholder {
+    height: 300px;
+  }
+}
+
+@media (max-width: 768px) {
+  .planning-overview-page {
+    padding: 1rem;
+  }
+
+  .visit-header {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .visit-meta {
+    align-items: flex-start;
+  }
+
+  .visit-details {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .visit-actions {
+    flex-direction: column;
+  }
+
+  .visit-actions .btn {
+    width: 100%;
+  }
+}

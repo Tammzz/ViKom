@@ -51,24 +51,29 @@ export async function login(loginDto: LoginDto): Promise<boolean> {
   try {
     const response = await fetch(`${API_URL}/api/auth/login`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(loginDto),
     });
 
-    if (response.ok) {
-      const data = await response.json();
-      setToken(data.token);
-      setUserInfo({
-        userName: data.userName,
-        fullName: data.fullName,
-        role: data.role,
-        userId: data.userId
-      });
-      return true;
+    if (!response.ok) {
+      return false;
     }
-    return false;
+
+    const data = await response.json();
+
+    if (!data?.token) {
+      return false;
+    }
+
+    setToken(data.token);
+    setUserInfo({
+      userName: data.userName,
+      fullName: data.fullName,
+      role: data.role,
+      userId: data.userId,
+    });
+
+    return true;
   } catch {
     return false;
   }
@@ -109,7 +114,7 @@ export async function register(registerDto: RegisterDto): Promise<{ success: boo
     // returns generic error message
     return { success: false, message: errorData.message || 'Registration failed' };
   } catch {
-    return { success: false, message: 'Network error. Please try again.' };
+    return { success: false, message: 'Nettverksfeil. Vennligst prøv igjen.' };
   }
 }
 

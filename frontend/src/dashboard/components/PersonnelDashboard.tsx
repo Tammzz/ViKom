@@ -20,7 +20,7 @@ const PersonnelDashboard: React.FC = () => {
         const data = await fetchPersonnelDashboard();
         setDashboard(data);
       } catch {
-        setError('Failed to load dashboard data');
+        setError('Kunne ikke laste dashboarddata');
       } finally {
         setLoading(false);
       }
@@ -33,7 +33,7 @@ const PersonnelDashboard: React.FC = () => {
   if (loading) {
     return (
       <div className="personnel-dashboard">
-        <p>Loading dashboard...</p>
+        <p>Laster dashboard...</p>
       </div>
     );
   }
@@ -42,7 +42,7 @@ const PersonnelDashboard: React.FC = () => {
   if (error || !dashboard) {
     return (
       <div className="personnel-dashboard">
-        <p className="error-text">{error || 'Unable to load dashboard'}</p>
+        <p className="error-text">{error || 'Kunne ikke laste dashboard'}</p>
       </div>
     );
   }
@@ -51,8 +51,8 @@ const PersonnelDashboard: React.FC = () => {
     <div className="personnel-dashboard">
       {/* renders welcome section with personnel name */}
       <div className="welcome-section">
-        <h1 className="welcome-title">Welcome back, {dashboard.personnelName}!</h1>
-        <p className="welcome-subtitle">Here's an overview of your schedule and patients</p>
+        <h1 className="welcome-title">Velkommen tilbake, {dashboard.personnelName}!</h1>
+        <p className="welcome-subtitle">Her er en oversikt over timeplanen og pasientene dine</p>
       </div>
 
       {/* displays quick stats overview with key metrics */}
@@ -61,7 +61,7 @@ const PersonnelDashboard: React.FC = () => {
           <div className="stat-content">
             <div className="stat-info">
               <div className="stat-number">{dashboard.totalPatients}</div>
-              <p className="stat-label">Patients</p>
+              <p className="stat-label">Pasienter</p>
             </div>
             <div className="stat-icon">
               <i className="bi bi-people-fill"></i>
@@ -73,7 +73,7 @@ const PersonnelDashboard: React.FC = () => {
           <div className="stat-content">
             <div className="stat-info">
               <div className="stat-number">{dashboard.appointmentsThisWeek}</div>
-              <p className="stat-label">This Week</p>
+              <p className="stat-label">Denne uken</p>
             </div>
             <div className="stat-icon">
               <i className="bi bi-calendar-check-fill"></i>
@@ -85,7 +85,7 @@ const PersonnelDashboard: React.FC = () => {
           <div className="stat-content">
             <div className="stat-info">
               <div className="stat-number">{dashboard.pendingAppointments}</div>
-              <p className="stat-label">Pending</p>
+              <p className="stat-label">Planlagte</p>
             </div>
             <div className="stat-icon">
               <i className="bi bi-clock-fill"></i>
@@ -97,11 +97,33 @@ const PersonnelDashboard: React.FC = () => {
           <div className="stat-content">
             <div className="stat-info">
               <div className="stat-number">{dashboard.cancelledAppointments}</div>
-              <p className="stat-label">Cancelled</p>
+              <p className="stat-label">Avlyste</p>
             </div>
             <div className="stat-icon">
               <i className="bi bi-x-circle-fill"></i>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Calendar overview section */}
+      <div className="card calendar-overview">
+        <div className="card-header">
+          <h2 className="card-title">Kalenderoversikt</h2>
+        </div>
+        <div className="card-body">
+          <div className="calendar-grid">
+            {/* Mock calendar days */}
+            {Array.from({ length: 31 }, (_, i) => {
+              const day = i + 1;
+              const hasAppointment = [5, 12, 18, 25].includes(day); // Mock days with appointments
+              return (
+                <div key={day} className={`calendar-day ${hasAppointment ? 'has-appointment' : ''}`}>
+                  <span className="day-number">{day}</span>
+                  {hasAppointment && <div className="appointment-dot"></div>}
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -112,7 +134,7 @@ const PersonnelDashboard: React.FC = () => {
           {/* shows upcoming appointments table */}
           <div className="card">
             <div className="card-header">
-              <h2 className="card-title">Upcoming Appointments</h2>
+              <h2 className="card-title">Kommende avtaler</h2>
             </div>
             <div className="card-body">
               {dashboard.upcomingAppointments.length > 0 ? (
@@ -120,10 +142,10 @@ const PersonnelDashboard: React.FC = () => {
                   <table className="data-table">
                     <thead>
                       <tr>
-                        <th>Patient Name</th>
-                        <th>Task</th>
-                        <th>Date</th>
-                        <th>Time</th>
+                        <th>Pasient</th>
+                        <th>Oppgave</th>
+                        <th>Dato</th>
+                        <th>Tid</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -134,7 +156,7 @@ const PersonnelDashboard: React.FC = () => {
                             <TaskBadges tasks={appointment.tasks} variant="secondary" />
                           </td>
                           <td>
-                            {new Date(appointment.date).toLocaleDateString('en-GB', {
+                              {new Date(appointment.date).toLocaleDateString('nb-NO', {
                               day: '2-digit',
                               month: '2-digit',
                               year: '2-digit',
@@ -149,7 +171,7 @@ const PersonnelDashboard: React.FC = () => {
               ) : (
                 <div className="empty-state">
                   <i className="bi bi-calendar-x empty-icon"></i>
-                  <p className="empty-text">No upcoming appointments scheduled.</p>
+                  <p className="empty-text">Ingen kommende avtaler planlagt.</p>
                 </div>
               )}
             </div>
@@ -160,7 +182,7 @@ const PersonnelDashboard: React.FC = () => {
           {/* shows recent appointments cards */}
           <div className="card">
             <div className="card-header">
-              <h2 className="card-title">Recent Appointments</h2>
+              <h2 className="card-title">Siste avtaler</h2>
             </div>
             <div className="card-body">
               {dashboard.recentAppointments.length > 0 ? (
@@ -173,7 +195,7 @@ const PersonnelDashboard: React.FC = () => {
                           <div className="appointment-details">
                             <div className="appointment-top-row">
                               <p className="appointment-datetime">
-                                {appointment.date && new Date(appointment.date).toLocaleDateString('en-US', {
+                                {appointment.date && new Date(appointment.date).toLocaleDateString('nb-NO', {
                                   weekday: 'long',
                                   month: 'short',
                                   day: 'numeric',
@@ -200,7 +222,7 @@ const PersonnelDashboard: React.FC = () => {
               ) : (
                 <div className="empty-state">
                   <i className="bi bi-calendar-x empty-icon"></i>
-                  <p className="empty-text">No recent appointments to display.</p>
+                  <p className="empty-text">Ingen nylige avtaler å vise.</p>
                 </div>
               )}
             </div>
@@ -208,10 +230,45 @@ const PersonnelDashboard: React.FC = () => {
         </div>
       </div>
 
+      {/* Today's Tasks section */}
+      <div className="card">
+        <div className="card-header">
+          <h2 className="card-title">Dagens oppgaver</h2>
+        </div>
+        <div className="card-body">
+          <div className="tasks-list">
+            {/* Mock tasks */}
+            {[
+              { id: 1, patient: 'Jane Smith', task: 'Medisinhåndtering', time: '10:00', completed: false },
+              { id: 2, patient: 'John Doe', task: 'Sjekk av blodtrykk og puls', time: '11:30', completed: true },
+              { id: 3, patient: 'Alice Johnson', task: 'Hjelp med matinnkjøp', time: '14:00', completed: false },
+              { id: 4, patient: 'Bob Wilson', task: 'Digital hjelp - e-postoppsett', time: '16:00', completed: false },
+            ].map((task) => (
+              <div key={task.id} className={`task-item ${task.completed ? 'completed' : ''}`}>
+                <div className="task-content">
+                  <div className="task-main">
+                    <p className="task-description">{task.task}</p>
+                    <p className="task-patient"><i className="bi bi-person-fill"></i> {task.patient}</p>
+                    <p className="task-time"><i className="bi bi-clock-fill"></i> {task.time}</p>
+                  </div>
+                  <div className="task-status">
+                    {task.completed ? (
+                      <i className="bi bi-check-circle-fill text-success"></i>
+                    ) : (
+                      <i className="bi bi-circle text-muted"></i>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
       {/* displays upcoming availability schedule */}
       <div className="card">
         <div className="card-header">
-          <h2 className="card-title">Upcoming Availability</h2>
+          <h2 className="card-title">Kommende tilgjengelighet</h2>
           <Link to="/availability" className="btn btn-secondary btn-sm">
             +
           </Link>
@@ -222,10 +279,10 @@ const PersonnelDashboard: React.FC = () => {
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>Date</th>
-                    <th>Start Time</th>
-                    <th>End Time</th>
-                    <th>Notes</th>
+                    <th>Dato</th>
+                    <th>Start</th>
+                    <th>Slutt</th>
+                    <th>Notater</th>
                     <th>Status</th>
                   </tr>
                 </thead>
@@ -257,7 +314,7 @@ const PersonnelDashboard: React.FC = () => {
           ) : (
             <div className="empty-state">
               <i className="bi bi-calendar-x empty-icon"></i>
-              <p className="empty-text">No upcoming availability scheduled.</p>
+              <p className="empty-text">Ingen planlagt tilgjengelighet.</p>
             </div>
           )}
         </div>

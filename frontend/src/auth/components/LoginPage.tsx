@@ -40,7 +40,7 @@ const LoginPage: React.FC = () => {
       navigate('/dashboard');
     } else {
       // displays error message if login fails
-      setError('Invalid username or password');
+      setError('Feil brukernavn eller passord');
     }
   };
 
@@ -59,8 +59,8 @@ const LoginPage: React.FC = () => {
         <Card.Body className="auth-card-body">
           {/* Header */}
         <div className="auth-header">
-          <h2 className="auth-title">Welcome Back</h2>
-          <p className="auth-subtitle">Sign in to continue to Carely</p>
+          <h2 className="auth-title">Velkommen tilbake</h2>
+          <p className="auth-subtitle">Logg inn for å fortsette til Carely</p>
         </div>
           
           {/* conditionally displays error alert if error exists */}
@@ -70,7 +70,7 @@ const LoginPage: React.FC = () => {
           <Form onSubmit={handleSubmit} className="auth-form">
             {/* username input field */}
             <Form.Group className="mb-3">
-              <Form.Label>Username</Form.Label>
+              <Form.Label>Brukernavn</Form.Label>
               <Form.Control
                 type="text"
                 value={userName}
@@ -81,7 +81,7 @@ const LoginPage: React.FC = () => {
             
             {/* password input field */}
             <Form.Group className="mb-3">
-              <Form.Label>Password</Form.Label>
+              <Form.Label>Passord</Form.Label>
               <Form.Control
                 type="password"
                 value={password}
@@ -92,14 +92,14 @@ const LoginPage: React.FC = () => {
             
             {/* submit button */}
             <Button type="submit" className="w-100 btn-secondary">
-              Login
+              Logg inn
             </Button>
           </Form>
 
           {/* Footer */}
           <div className="auth-footer">
             <p className="mb-0">
-              Don't have an account? <Link to="/register">Register here</Link>
+              Har du ikke en konto? <Link to="/register">Registrer deg her</Link>
             </p>
           </div>
         </Card.Body>

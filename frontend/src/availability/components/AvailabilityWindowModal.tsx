@@ -31,7 +31,7 @@ const AvailabilityWindowModal: React.FC<AvailabilityWindowModalProps> = ({
       onClose();
     } catch (error: any) {
       console.error('Error submitting availability window:', error);
-      setSubmitError(error.message || 'Failed to submit. Please try again.');
+      setSubmitError(error.message || 'Kunne ikke sende inn. Vennligst prøv igjen.');
     } finally {
       setIsSubmitting(false);
     }
@@ -40,7 +40,7 @@ const AvailabilityWindowModal: React.FC<AvailabilityWindowModalProps> = ({
   const handleDelete = async () => {
     if (!onDelete) return;
 
-    if (!window.confirm('Are you sure you want to delete this availability window?')) {
+    if (!window.confirm('Er du sikker på at du vil slette dette tilgjengelighetsvinduet?')) {
       return;
     }
 
@@ -51,7 +51,7 @@ const AvailabilityWindowModal: React.FC<AvailabilityWindowModalProps> = ({
       onClose();
     } catch (error: any) {
       console.error('Error deleting availability window:', error);
-      setSubmitError(error.message || 'Failed to delete. Please try again.');
+      setSubmitError(error.message || 'Kunne ikke slette. Vennligst prøv igjen.');
     } finally {
       setIsSubmitting(false);
     }
@@ -66,7 +66,7 @@ const AvailabilityWindowModal: React.FC<AvailabilityWindowModalProps> = ({
     <Modal show={show} onHide={handleClose} size="lg">
       <Modal.Header closeButton>
         <Modal.Title>
-          {initialData ? 'Edit Availability' : 'Create Availability'}
+          {initialData ? 'Rediger tilgjengelighet' : 'Opprett tilgjengelighet'}
         </Modal.Title>
       </Modal.Header>
       <Modal.Body>

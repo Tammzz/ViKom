@@ -20,7 +20,7 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({ show, onClose, init
       onClose();
     } catch (error: any) {
       // Extract error message from response
-      let errorMessage = 'Failed to submit appointment. Please try again.';
+      let errorMessage = 'Kunne ikke sende inn avtalen. Vennligst prøv igjen.';
       if (error.response?.data) {
         errorMessage = typeof error.response.data === 'string' 
           ? error.response.data 
@@ -40,7 +40,7 @@ const AppointmentModal: React.FC<AppointmentModalProps> = ({ show, onClose, init
   return (
     <Modal show={show} onHide={handleClose} size="lg">
       <Modal.Header closeButton>
-        <Modal.Title>{initialData ? 'Edit Appointment' : 'New Appointment'}</Modal.Title>
+        <Modal.Title>{initialData ? 'Rediger avtale' : 'Ny avtale'}</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         {submitError && (

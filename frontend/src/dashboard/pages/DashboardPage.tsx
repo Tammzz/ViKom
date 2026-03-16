@@ -18,7 +18,7 @@ const DashboardPage: React.FC = () => {
 
   return (
     <div className="container mt-5">
-      <p className="text-muted">Unable to load dashboard. Please log in again.</p>
+      <p className="text-muted">Kunne ikke laste dashbordet. Vennligst logg inn igjen.</p>
     </div>
   );
 };

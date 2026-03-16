@@ -22,7 +22,7 @@ const PatientListPage: React.FC = () => {
       const data = await PatientService.getAll();
       setPatients(data);
     } catch (err) {
-      setError('Failed to load patients');
+      setError('Kunne ikke laste pasienter');
       console.error(err);
     } finally {
       setLoading(false);
@@ -42,7 +42,7 @@ const PatientListPage: React.FC = () => {
   if (loading) {
     return (
       <Container fluid className={isPersonnel ? 'personnel-page' : ''}>
-        <p>Loading patients...</p>
+        <p>Laster pasienter...</p>
       </Container>
     );
   }
@@ -56,11 +56,11 @@ const PatientListPage: React.FC = () => {
           </Alert>
         )}
 
-        <h1 className="mb-3 fw-bold">My Patients</h1>
+        <h1 className="mb-3 fw-bold">Mine pasienter</h1>
 
         <div className="mb-4">
           <p className="text-dark mb-0 fs-5 lh-base">
-            View and manage all your patients.
+            Se og administrer alle pasientene dine.
           </p>
         </div>
 
@@ -69,7 +69,7 @@ const PatientListPage: React.FC = () => {
             <div className="card-body p-4">
               <div className="text-center py-4">
                 <i className="bi bi-people display-4 text-muted mb-3 d-block"></i>
-                <p className="text-dark mb-0">No patients found.</p>
+                <p className="text-dark mb-0">Ingen pasienter funnet.</p>
               </div>
             </div>
           </div>
@@ -79,11 +79,11 @@ const PatientListPage: React.FC = () => {
               <Table hover className="mb-0 bg-white rounded patient-table">
                 <thead className="table-light">
                   <tr>
-                    <th className="fw-bold text-dark py-3 px-4 border-bottom border-dark">Full Name</th>
-                    <th className="fw-bold text-dark py-3 px-4 border-bottom border-dark">Email</th>
-                    <th className="fw-bold text-dark py-3 px-4 border-bottom border-dark">Phone</th>
-                    <th className="fw-bold text-dark py-3 px-4 border-bottom border-dark">Total Appointments</th>
-                    <th className="fw-bold text-dark py-3 px-4 border-bottom border-dark">Last Appointment Date</th>
+                    <th className="fw-bold text-dark py-3 px-4 border-bottom border-dark">Navn</th>
+                    <th className="fw-bold text-dark py-3 px-4 border-bottom border-dark">E-post</th>
+                    <th className="fw-bold text-dark py-3 px-4 border-bottom border-dark">Telefon</th>
+                    <th className="fw-bold text-dark py-3 px-4 border-bottom border-dark">Totalt antall avtaler</th>
+                    <th className="fw-bold text-dark py-3 px-4 border-bottom border-dark">Siste avtaledato</th>
                   </tr>
                 </thead>
                 <tbody>

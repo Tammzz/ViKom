@@ -27,7 +27,7 @@ const AppointmentDeleteModal: React.FC<AppointmentDeleteModalProps> = ({
       console.error('Error deleting appointment:', error);
       
       // Extract error message from response
-      let errorMessage = 'Failed to cancel appointment. Please try again.';
+      let errorMessage = 'Kunne ikke avbryte avtalen. Vennligst prøv igjen.';
       if (error.message) {
         errorMessage = error.message;
       }
@@ -46,7 +46,7 @@ const AppointmentDeleteModal: React.FC<AppointmentDeleteModalProps> = ({
   return (
     <Modal show={show} onHide={handleClose}>
       <Modal.Header closeButton>
-        <Modal.Title>Cancel Appointment</Modal.Title>
+        <Modal.Title>Avbryt avtale</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         {error && (
@@ -54,23 +54,23 @@ const AppointmentDeleteModal: React.FC<AppointmentDeleteModalProps> = ({
             {error}
           </Alert>
         )}
-        <p>Are you sure you want to cancel this appointment?</p>
+        <p>Er du sikker på at du vil avbryte denne avtalen?</p>
         {appointmentDescription && (
           <p className="text-muted">
-            <strong>Task:</strong> {appointmentDescription}
+            <strong>Oppgave:</strong> {appointmentDescription}
           </p>
         )}
         <div className="alert alert-warning">
           <i className="bi bi-exclamation-triangle me-2"></i>
-          <strong>Note:</strong> Appointments can only be cancelled at least 24 hours before the scheduled time.
+          <strong>Merk:</strong> Avtaler kan kun avbestilles minst 24 timer før avtalt tid.
         </div>
       </Modal.Body>
       <Modal.Footer>
         <Button variant="outline-secondary" onClick={handleClose} disabled={isDeleting}>
-          No, Keep It
+          Nei, behold
         </Button>
         <Button variant="danger" onClick={handleConfirm} disabled={isDeleting}>
-          {isDeleting ? 'Cancelling...' : 'Yes, Cancel Appointment'}
+          {isDeleting ? 'Avbryter...' : 'Ja, avbryt avtalen'}
         </Button>
       </Modal.Footer>
     </Modal>

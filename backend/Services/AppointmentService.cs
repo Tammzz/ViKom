@@ -78,18 +78,59 @@ namespace backend.Services
             if (existing == null)
                 throw new InvalidOperationException("Appointment not found");
 
-            // Enforce 24-hour restriction for edits
-            var appointmentDateTime = existing.Availability.Date.Date + existing.StartTime;
-            var hoursUntilAppointment = (appointmentDateTime - DateTime.Now).TotalHours;
-            
-            if (hoursUntilAppointment < 24)
-                throw new InvalidOperationException("Appointments cannot be modified less than 24 hours before the scheduled time");
+            var updated = false;
 
-            // Only allows updating tasks field
-            existing.Tasks = appointmentDto.Tasks;
+            // Update tasks (only allowed >24h before appointment)
+            if (!string.Equals(appointmentDto.Tasks, existing.Tasks, StringComparison.Ordinal))
+            {
+                var appointmentDateTime = existing.Availability.Date.Date + existing.StartTime;
+                var hoursUntilAppointment = (appointmentDateTime - DateTime.Now).TotalHours;
 
-            var updated = await _appointmentRepository.UpdateAsync(existing);
-            var result = await _appointmentRepository.GetByIdAsync(updated.Id);
+                if (hoursUntilAppointment < 24)
+                    throw new InvalidOperationException("Appointments cannot be modified less than 24 hours before the scheduled time");
+
+                existing.Tasks = appointmentDto.Tasks;
+                updated = true;
+            }
+
+            // Update status (Personnel should use this to start/complete appointments)
+            if (!string.IsNullOrEmpty(appointmentDto.Status) && appointmentDto.Status != existing.Status)
+            {
+                var currentStatus = existing.Status;
+                var newStatus = appointmentDto.Status;
+                var validTransition = (currentStatus, newStatus) switch
+                {
+                    ("Booked", "InProgress") => true,
+                    ("Booked", "Cancelled") => true,
+                    ("InProgress", "Completed") => true,
+                    ("InProgress", "Cancelled") => true,
+                    _ => false
+                };
+
+                if (!validTransition)
+                    throw new InvalidOperationException($"Invalid status transition from {currentStatus} to {newStatus}");
+
+                // Keep existing 24h cancellation restriction
+                if (newStatus == "Cancelled")
+                {
+                    var appointmentDateTime = existing.Availability.Date.Date + existing.StartTime;
+                    var hoursUntilAppointment = (appointmentDateTime - DateTime.Now).TotalHours;
+
+                    if (hoursUntilAppointment < 24)
+                        throw new InvalidOperationException("Appointments cannot be cancelled less than 24 hours before the scheduled time");
+                }
+
+                existing.Status = newStatus;
+                updated = true;
+            }
+
+            if (!updated)
+            {
+                return MapToDto(existing);
+            }
+
+            var updatedAppointment = await _appointmentRepository.UpdateAsync(existing);
+            var result = await _appointmentRepository.GetByIdAsync(updatedAppointment.Id);
             return MapToDto(result!);
         }
 

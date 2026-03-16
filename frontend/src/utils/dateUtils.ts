@@ -31,7 +31,7 @@ export function formatDateISO(date: Date): string {
  * Formats a date to readable format like "Monday, Dec 4, 2025"
  */
 export function formatDateLong(date: Date): string {
-  return date.toLocaleDateString('en-US', {
+  return date.toLocaleDateString('nb-NO', {
     weekday: 'long',
     year: 'numeric',
     month: 'short',
@@ -43,7 +43,7 @@ export function formatDateLong(date: Date): string {
  * Formats a date to short format like "Dec 4"
  */
 export function formatDateShort(date: Date): string {
-  return date.toLocaleDateString('en-US', {
+  return date.toLocaleDateString('nb-NO', {
     month: 'short',
     day: 'numeric',
   });
@@ -53,7 +53,7 @@ export function formatDateShort(date: Date): string {
  * Gets the day name (Sun, Mon, Tue, etc.)
  */
 export function getDayName(date: Date): string {
-  return date.toLocaleDateString('en-US', { weekday: 'short' });
+  return date.toLocaleDateString('nb-NO', { weekday: 'short' });
 }
 
 /**
@@ -108,9 +108,9 @@ export function addWeeks(date: Date, weeks: number): Date {
  * Formats week range like "Nov 30 - Dec 6, 2025"
  */
 export function formatWeekRange(startDate: Date, endDate: Date): string {
-  const startMonth = startDate.toLocaleDateString('en-US', { month: 'short' });
+  const startMonth = startDate.toLocaleDateString('nb-NO', { month: 'short' });
   const startDay = startDate.getDate();
-  const endMonth = endDate.toLocaleDateString('en-US', { month: 'short' });
+  const endMonth = endDate.toLocaleDateString('nb-NO', { month: 'short' });
   const endDay = endDate.getDate();
   const year = endDate.getFullYear();
 
@@ -132,13 +132,11 @@ export function getWeekDates(monday: Date): Date[] {
 }
 
 /**
- * Formats time from HH:mm to 12-hour format
+ * Formats time from HH:mm to 24-hour format (e.g., "09:00")
  */
 export function formatTime12Hour(time: string): string {
   const [hours, minutes] = time.split(':').map(Number);
-  const ampm = hours >= 12 ? 'PM' : 'AM';
-  const displayHours = hours % 12 || 12;
-  return `${displayHours}:${String(minutes).padStart(2, '0')} ${ampm}`;
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
 }
 
 /**

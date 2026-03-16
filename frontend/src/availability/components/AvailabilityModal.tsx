@@ -20,14 +20,14 @@ const AvailabilityModal: React.FC<AvailabilityModalProps> = ({ show, onClose, in
       onClose();
     } catch (error) {
       console.error('Error submitting availability:', error);
-      setSubmitError('Failed to submit availability. Please try again.');
+      setSubmitError('Kunne ikke sende inn tilgjengelighet. Vennligst prøv igjen.');
     }
   };
 
   return (
     <Modal show={show} onHide={onClose} size="lg">
       <Modal.Header closeButton>
-        <Modal.Title>{initialData ? 'Edit Availability Slot' : 'Add Availability Slot'}</Modal.Title>
+        <Modal.Title>{initialData ? 'Rediger tilgjengelighetsluke' : 'Legg til tilgjengelighetsluke'}</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         {submitError && (

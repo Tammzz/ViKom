@@ -59,20 +59,20 @@ const RegisterPage: React.FC = () => {
 
     // validates that password and confirm password match
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+      setError('Passordene stemmer ikke overens');
       return;
     }
 
     // validates password meets minimum length requirement
     if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters long');
+      setError('Passordet må være minst 6 tegn langt');
       return;
     }
 
     // validates email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
-      setError('Please enter a valid email address');
+      setError('Vennligst oppgi en gyldig e-postadresse');
       return;
     }
 
@@ -95,17 +95,17 @@ const RegisterPage: React.FC = () => {
 
       // handles successful registration
       if (result.success) {
-        setSuccess('Registration successful! Redirecting to login...');
+        setSuccess('Registrering fullført! Sender deg til innlogging...');
         // redirects to login page after 2 seconds
         setTimeout(() => navigate('/login'), 2000);
       } else {
         // displays error message from backend
-        setError(result.message || 'Registration failed. Please try again.');
+        setError(result.message || 'Registrering mislyktes. Prøv igjen.');
         setIsLoading(false);
       }
     } catch {
       // handles any unexpected errors during registration process
-      setError('An error occurred during registration. Please try again.');
+      setError('Det oppstod en feil under registrering. Prøv igjen.');
       setIsLoading(false);
     }
   };
@@ -117,8 +117,8 @@ const RegisterPage: React.FC = () => {
         <Card.Body className="auth-card-body">
           {/* Header */}
           <div className="auth-header">
-            <h2 className="auth-title">Create Account</h2>
-            <p className="auth-subtitle">Join Carely to manage your healthcare</p>
+            <h2 className="auth-title">Opprett konto</h2>
+            <p className="auth-subtitle">Opprett konto for å bruke Carely</p>
           </div>
           
           {/* conditionally displays error alert if error exists */}
@@ -131,7 +131,7 @@ const RegisterPage: React.FC = () => {
           <Form onSubmit={handleSubmit} className="auth-form">
             {/* full name input field */}
             <Form.Group className="mb-3">
-              <Form.Label>Full Name</Form.Label>
+              <Form.Label>Fullt navn</Form.Label>
               <Form.Control
                 type="text"
                 name="fullName"
@@ -144,7 +144,7 @@ const RegisterPage: React.FC = () => {
 
             {/* email input field */}
             <Form.Group className="mb-3">
-              <Form.Label>Email</Form.Label>
+              <Form.Label>E-post</Form.Label>
               <Form.Control
                 type="email"
                 name="email"
@@ -157,7 +157,7 @@ const RegisterPage: React.FC = () => {
 
             {/* phone number input field - optional */}
             <Form.Group className="mb-3">
-              <Form.Label>Phone Number (Optional)</Form.Label>
+              <Form.Label>Telefonnummer (valgfritt)</Form.Label>
               <Form.Control
                 type="tel"
                 name="phoneNumber"
@@ -169,7 +169,7 @@ const RegisterPage: React.FC = () => {
 
             {/* username input field */}
             <Form.Group className="mb-3">
-              <Form.Label>Username</Form.Label>
+              <Form.Label>Brukernavn</Form.Label>
               <Form.Control
                 type="text"
                 name="userName"
@@ -182,7 +182,7 @@ const RegisterPage: React.FC = () => {
 
             {/* role selection dropdown */}
             <Form.Group className="mb-3">
-              <Form.Label>I am registering as</Form.Label>
+              <Form.Label>Jeg registrerer meg som</Form.Label>
               <Form.Select
                 name="role"
                 value={formData.role}
@@ -190,14 +190,14 @@ const RegisterPage: React.FC = () => {
                 required
                 disabled={isLoading}
               >
-                <option value="Patient">Patient</option>
-                <option value="Personnel">Personnel (Healthcare Provider)</option>
+                <option value="Patient">Pasient</option>
+                <option value="Personnel">Sykepleier</option>
               </Form.Select>
             </Form.Group>
 
             {/* password input field */}
             <Form.Group className="mb-3">
-              <Form.Label>Password</Form.Label>
+              <Form.Label>Passord</Form.Label>
               <Form.Control
                 type="password"
                 name="password"
@@ -207,13 +207,13 @@ const RegisterPage: React.FC = () => {
                 disabled={isLoading}
               />
               <Form.Text className="text-muted">
-                Must be at least 6 characters long
+                Må være minst 6 tegn langt
               </Form.Text>
             </Form.Group>
 
             {/* confirm password input field for validation */}
             <Form.Group className="mb-3">
-              <Form.Label>Confirm Password</Form.Label>
+              <Form.Label>Bekreft passord</Form.Label>
               <Form.Control
                 type="password"
                 name="confirmPassword"
@@ -226,14 +226,14 @@ const RegisterPage: React.FC = () => {
 
             {/* submit button - disabled during loading with spinner */}
             <Button variant="secondary" type="submit" className="w-100" disabled={isLoading}>
-              {isLoading ? 'Registering...' : 'Register'}
+              {isLoading ? 'Registrerer...' : 'Registrer'}
             </Button>
           </Form>
 
           {/* Footer */}
           <div className="auth-footer">
             <p className="mb-0">
-              Already have an account? <Link to="/login">Login here</Link>
+              Har du allerede en konto? <Link to="/login">Logg inn her</Link>
             </p>
           </div>
         </Card.Body>

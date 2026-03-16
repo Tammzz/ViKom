@@ -10,48 +10,48 @@ const HomePage: React.FC = () => {
   return (
     <section className="hero text-center">
       <div className="hero-content">
-        <h1 className="hero-title">The simpler way to manage homecare</h1>
+        <h1 className="hero-title">Den enkleste måten å administrere hjemmetjeneste på</h1>
         <p className="hero-text">
-          Helping you manage home visits, schedules, and support — all in one place designed for caregivers and patients alike.
+          Hjelper deg å håndtere hjemmebesøk, timeplaner og oppfølging — alt på ett sted for både pasienter og helsepersonell.
         </p>
 
         {/* Services features */}
         <div className="feature-grid">
           <div className="feature-card">
             <div className="feature-icon"><i className="bi bi-calendar-check text-secondary"></i></div>
-            <h5 className="feature-title">Easy Scheduling</h5>
-            <p className="feature-text">Book and manage appointments easily. Real-time availability updates.</p>
+            <h5 className="feature-title">Enkel planlegging</h5>
+            <p className="feature-text">Book og administrer avtaler enkelt. Oppdatert tilgjengelighet i sanntid.</p>
           </div>
 
           <div className="feature-card">
             <div className="feature-icon">
               <i className="bi bi-heart text-secondary"></i>
             </div>
-            <h5 className="feature-title">Patient-Centered</h5>
-            <p className="feature-text">Personalized care plans for each client's unique needs.</p>
+            <h5 className="feature-title">Pasientfokusert</h5>
+            <p className="feature-text">Personlige oppfølgingsplaner for hver pasients behov.</p>
           </div>
 
           <div className="feature-card">
             <div className="feature-icon">
               <i className="bi bi-shield-lock text-secondary"></i>
             </div>
-            <h5 className="feature-title">Secure & Private</h5>
-            <p className="feature-text">End-to-end encryption for all sensitive data.</p>
+            <h5 className="feature-title">Sikker og privat</h5>
+            <p className="feature-text">Kryptering for alle sensitive data.</p>
           </div>
 
           <div className="feature-card">
             <div className="feature-icon">
               <i className="bi bi-clock-history text-secondary"></i>
             </div>
-            <h5 className="feature-title">24/7 Access</h5>
-            <p className="feature-text">Access your schedule and info anytime, anywhere.</p>
+            <h5 className="feature-title">Tilgang 24/7</h5>
+            <p className="feature-text">Tilgang til timeplan og informasjon når som helst.</p>
           </div>
         </div>
 
         {/* Call-to-action buttons */}
         <div className="hero-buttons">
           <Link className="cta" to={isAuthenticated ? "/dashboard" : "/register"}>
-            Get Started <i className="bi bi-arrow-right"></i>
+            Kom i gang <i className="bi bi-arrow-right"></i>
           </Link>
         </div>
       </div>

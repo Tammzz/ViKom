@@ -31,7 +31,7 @@ namespace backend.DTOs
         public string? EndTime { get; set; }
         
         // System-controlled - computed dynamically
-        [RegularExpression(@"^(Booked|Completed|Cancelled)$", ErrorMessage = "Invalid status value.")]
+        [RegularExpression(@"^(Booked|InProgress|Completed|Cancelled)$", ErrorMessage = "Invalid status value.")]
         public string Status { get; set; } = "Booked";
     }
 }

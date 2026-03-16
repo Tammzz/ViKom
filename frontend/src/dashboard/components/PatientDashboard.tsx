@@ -20,7 +20,7 @@ const PatientDashboard: React.FC = () => {
         const data = await fetchPatientDashboard();
         setDashboard(data);
       } catch {
-        setError('Failed to load dashboard data');
+        setError('Kunne ikke laste dashboarddata');
       } finally {
         setLoading(false);
       }
@@ -40,7 +40,7 @@ const PatientDashboard: React.FC = () => {
   if (error || !dashboard) {
     return (
       <div className="patient-dashboard">
-        <p className="error-message">{error || 'Unable to load dashboard'}</p>
+        <p className="error-message">{error || 'Kunne ikke laste dashboard'}</p>
       </div>
     );
   }
@@ -49,14 +49,14 @@ const PatientDashboard: React.FC = () => {
     <div className="patient-dashboard">
       {/* Welcome Section */}
       <div className="welcome-section">
-        <h1 className="welcome-title">Welcome back, {dashboard.patientName}!</h1>
+        <h1 className="welcome-title">Velkommen tilbake, {dashboard.patientName}!</h1>
         {dashboard.upcomingAppointments.length > 0 ? (
           <p className="welcome-subtitle">
-            You have {dashboard.upcomingAppointments.length} appointment
-            {dashboard.upcomingAppointments.length > 1 ? 's' : ''} coming up.
+            Du har {dashboard.upcomingAppointments.length} avtale
+            {dashboard.upcomingAppointments.length > 1 ? 'r' : ''} i vente.
           </p>
         ) : (
-          <p className="welcome-subtitle">You have no appointments scheduled today.</p>
+          <p className="welcome-subtitle">Du har ingen avtaler i dag.</p>
         )}
       </div>
 
@@ -67,7 +67,7 @@ const PatientDashboard: React.FC = () => {
           <Link to="/appointments" className="cta-link">
             <div className="cta-card">
               <i className="cta-icon bi bi-calendar-check"></i>
-              <h3 className="cta-title">Book appointment</h3>
+              <h3 className="cta-title">Bestill avtale</h3>
             </div>
           </Link>
 
@@ -75,23 +75,23 @@ const PatientDashboard: React.FC = () => {
           <a href="#" className="cta-link" onClick={(e) => e.preventDefault()}>
             <div className="cta-card">
               <i className="cta-icon bi bi-envelope"></i>
-              <h3 className="cta-title">Contact caregiver</h3>
+              <h3 className="cta-title">Kontakt helsehjelp</h3>
             </div>
           </a>
           {/* Care Team Card */}
           <div className="care-team-card" id="careTeam">
             <div className="care-team-body">
-              <h2 className="care-team-title">My Care Team</h2>
+              <h2 className="care-team-title">Mitt omsorgsteam</h2>
               {dashboard.availableCaregivers.length > 0 ? (
                 <div className="caregivers-list">
                   {dashboard.availableCaregivers.map((caregiver) => {
                     const formattedDate = caregiver.nextAvailableDate 
-                      ? new Date(caregiver.nextAvailableDate).toLocaleDateString('en-GB', {
+                      ? new Date(caregiver.nextAvailableDate).toLocaleDateString('nb-NO', {
                           day: 'numeric',
                           month: 'long',
                           year: 'numeric'
                         })
-                      : 'No availability';
+                      : 'Ingen ledig tid';
                     
                     return (
                       <div key={caregiver.personnelId} className="caregiver-item">
@@ -99,7 +99,7 @@ const PatientDashboard: React.FC = () => {
                           <i className="bi bi-person-fill"></i> {caregiver.personnelName}
                         </p>
                         <p className="caregiver-availability">
-                          Next available: {formattedDate}
+                          Neste ledige: {formattedDate}
                         </p>
                       </div>
                     );
@@ -108,7 +108,7 @@ const PatientDashboard: React.FC = () => {
               ) : (
                 <div className="care-team-empty">
                   <i className="empty-icon bi bi-people"></i>
-                  <p className="empty-text">No caregivers currently available.</p>
+                  <p className="empty-text">Ingen omsorgspersoner tilgjengelig akkurat nå.</p>
                 </div>
               )}
             </div>
@@ -121,7 +121,7 @@ const PatientDashboard: React.FC = () => {
           <div className="appointments-card">
             <div className="appointments-body">
               <div className="appointments-header">
-                <h2 className="appointments-title">Upcoming Appointments</h2>
+                <h2 className="appointments-title">Kommende avtaler</h2>
                 <Link to="/appointments" className="btn btn-secondary btn-sm">
                   +
                 </Link>
@@ -141,7 +141,7 @@ const PatientDashboard: React.FC = () => {
                       </div>
                       <div className="appointment-right">
                         <div className="appointment-date">
-                          {new Date(appointment.date).toLocaleDateString('en-US', {
+                          {new Date(appointment.date).toLocaleDateString('nb-NO', {
                             day: 'numeric',
                             month: 'short',
                             year: 'numeric',
@@ -155,9 +155,9 @@ const PatientDashboard: React.FC = () => {
               ) : (
                 <div className="appointments-empty">
                   <i className="empty-icon bi bi-calendar-x"></i>
-                  <p className="empty-text">No upcoming appointments scheduled.</p>
+                  <p className="empty-text">Ingen kommende avtaler planlagt.</p>
                   <Link to="/appointments" className="book-btn">
-                    <i className="bi bi-plus-circle"></i>Book appointment
+                    <i className="bi bi-plus-circle"></i>Bestill avtale
                   </Link>
                 </div>
               )}
@@ -168,7 +168,7 @@ const PatientDashboard: React.FC = () => {
           <div className="appointments-card">
             <div className="appointments-body">
               <div className="appointments-header">
-                <h2 className="appointments-title">Recent Appointments</h2>
+                <h2 className="appointments-title">Siste avtaler</h2>
                 <Link to="/appointments?tab=past" className="btn btn-secondary btn-sm">
                   +
                 </Link>
@@ -208,7 +208,7 @@ const PatientDashboard: React.FC = () => {
               ) : (
                 <div className="appointments-empty">
                   <i className="empty-icon bi bi-calendar-x"></i>
-                  <p className="empty-text">No appointment history available.</p>
+                  <p className="empty-text">Ingen avtalehistorikk tilgjengelig.</p>
                 </div>
               )}
             </div>

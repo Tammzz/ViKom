@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import * as AuthService from '../../auth/AuthService';
 import AppointmentService from '../services/AppointmentService';
 import AppointmentModal from '../components/AppointmentModal';
 import AppointmentDeleteModal from '../components/AppointmentDeleteModal';
@@ -8,15 +9,31 @@ import StatusBadge from '../../components/common/StatusBadge';
 import type { Appointment } from '../types/appointment';
 import './AppointmentListPage.css';
 
+type PersonnelTab = 'all' | 'scheduled' | 'inprogress' | 'completed';
+
+type PatientTab = 'upcoming' | 'past';
+
+const formatDateNorwegian = (dateString?: string) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toLocaleDateString('nb-NO', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  });
+};
+
 const AppointmentListPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const tabParam = searchParams.get('tab');
-  
+  const userInfo = AuthService.getUserInfo();
+  const role = userInfo?.role;
+
   // State management
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
-  const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>(tabParam === 'past' ? 'past' : 'upcoming');
 
   // Modal state management
   const [showModal, setShowModal] = useState<boolean>(false);
@@ -24,15 +41,32 @@ const AppointmentListPage: React.FC = () => {
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | undefined>();
   const [appointmentToDelete, setAppointmentToDelete] = useState<{ id: number; description: string } | null>(null);
 
-  // loads all appointments from the server
+  // Active tab state (depends on user role)
+  const [activeTab, setActiveTab] = useState<PersonnelTab | PatientTab>(() => {
+    if (role === 'Personnel') {
+      return (tabParam as PersonnelTab) || 'all';
+    }
+    return (tabParam === 'past' ? 'past' : 'upcoming') as PatientTab;
+  });
+
+  // loads appointments from the server based on role
   const loadAppointments = async () => {
     try {
       setLoading(true);
       setError('');
-      const data = await AppointmentService.getAll();
+
+      let data: Appointment[] = [];
+      if (role === 'Patient' && userInfo?.userId) {
+        data = await AppointmentService.getByPatientId(userInfo.userId);
+      } else if (role === 'Personnel' && userInfo?.userId) {
+        data = await AppointmentService.getByPersonnelId(userInfo.userId);
+      } else {
+        data = await AppointmentService.getAll();
+      }
+
       setAppointments(data);
     } catch {
-      setError('Failed to load appointments');
+      setError('Kunne ikke laste avtaler');
     } finally {
       setLoading(false);
     }
@@ -43,33 +77,73 @@ const AppointmentListPage: React.FC = () => {
     loadAppointments();
   }, []);
 
-  // filters appointments into upcoming and past categories
+  // handle updates to appointment status (start/complete)
+  const handleStatusUpdate = async (appointment: Appointment, newStatus: 'InProgress' | 'Completed') => {
+    if (!appointment.id) return;
+    try {
+      await AppointmentService.update(appointment.id, { ...appointment, status: newStatus });
+      await loadAppointments();
+    } catch {
+      setError('Kunne ikke oppdatere avtalen.');
+    }
+  };
+
+  // filters for patient view
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  // filters and sorts upcoming appointments
-  const upcomingAppointments = appointments.filter((apt) => {
-    if (!apt.date) return false;
-    const aptDate = new Date(apt.date);
-    aptDate.setHours(0, 0, 0, 0);
-    return aptDate >= today;
-  }).sort((a, b) => {
+  const upcomingAppointments = appointments
+    .filter((apt) => {
+      if (!apt.date) return false;
+      const aptDate = new Date(apt.date);
+      aptDate.setHours(0, 0, 0, 0);
+      return aptDate >= today;
+    })
+    .sort((a, b) => {
+      const dateA = new Date(a.date || '');
+      const dateB = new Date(b.date || '');
+      return dateA.getTime() - dateB.getTime();
+    });
+
+  const pastAppointments = appointments
+    .filter((apt) => {
+      if (!apt.date) return false;
+      const aptDate = new Date(apt.date);
+      aptDate.setHours(0, 0, 0, 0);
+      return aptDate < today;
+    })
+    .sort((a, b) => {
+      const dateA = new Date(a.date || '');
+      const dateB = new Date(b.date || '');
+      return dateB.getTime() - dateA.getTime();
+    });
+
+  // filters for personnel view
+  const scheduledAppointments = appointments.filter((a) => a.status === 'Booked');
+  const inProgressAppointments = appointments.filter((a) => a.status === 'InProgress');
+  const completedAppointments = appointments.filter((a) => a.status === 'Completed');
+  const allActiveAppointments = [...scheduledAppointments, ...inProgressAppointments].sort((a, b) => {
     const dateA = new Date(a.date || '');
     const dateB = new Date(b.date || '');
-    return dateA.getTime() - dateB.getTime();
+    if (dateA.getTime() !== dateB.getTime()) return dateA.getTime() - dateB.getTime();
+    return a.startTime.localeCompare(b.startTime);
   });
 
-  // filters and sorts past appointments
-  const pastAppointments = appointments.filter((apt) => {
-    if (!apt.date) return false;
-    const aptDate = new Date(apt.date);
-    aptDate.setHours(0, 0, 0, 0);
-    return aptDate < today;
-  }).sort((a, b) => {
-    const dateA = new Date(a.date || '');
-    const dateB = new Date(b.date || '');
-    return dateB.getTime() - dateA.getTime();
-  });
+  // checks if appointment is within 24 hours (for patient modifications)
+  const isWithin24Hours = (appointment: Appointment): boolean => {
+    if (!appointment.date || !appointment.startTime) return false;
+
+    const appointmentDateTime = new Date(`${appointment.date}T${appointment.startTime}`);
+    const now = new Date();
+    const hoursUntil = (appointmentDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
+
+    return hoursUntil < 24;
+  };
+
+  // checks if patient appointment can be modified
+  const canModify = (appointment: Appointment): boolean => {
+    return !isWithin24Hours(appointment) && appointment.status === 'Booked';
+  };
 
   // opens modal to create new appointment
   const handleCreate = () => {
@@ -118,32 +192,195 @@ const AppointmentListPage: React.FC = () => {
         await AppointmentService.delete(appointmentToDelete.id);
         await loadAppointments();
       } catch {
-        setError('Failed to delete appointment');
+        setError('Kunne ikke slette avtalen');
       }
     }
-  };
-
-  // checks if appointment is within 24 hours
-  const isWithin24Hours = (appointment: Appointment): boolean => {
-    if (!appointment.date || !appointment.startTime) return false;
-    
-    const appointmentDateTime = new Date(`${appointment.date}T${appointment.startTime}`);
-    const now = new Date();
-    const hoursUntil = (appointmentDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
-    
-    return hoursUntil < 24;
-  };
-
-  // checks if appointment can be modified
-  const canModify = (appointment: Appointment): boolean => {
-    return !isWithin24Hours(appointment) && appointment.status === 'Booked';
   };
 
   // renders loading state
   if (loading) {
     return (
       <div className="appointment-list-page">
-        <p>Loading appointments...</p>
+        <p>Laster avtaler...</p>
+      </div>
+    );
+  }
+
+  // Render UI for personnel (nurse) view
+  if (role === 'Personnel') {
+    const showList = (tab: PersonnelTab) => {
+      const list =
+        tab === 'all'
+          ? allActiveAppointments
+          : tab === 'scheduled'
+          ? scheduledAppointments
+          : tab === 'inprogress'
+          ? inProgressAppointments
+          : completedAppointments;
+
+      if (list.length === 0) {
+        return (
+          <div className="appointments-empty">
+            <i className="empty-icon bi bi-calendar-x"></i>
+            <h2 className="empty-title">Ingen avtaler</h2>
+            <p className="empty-text">
+              Det finnes ingen avtaler som matcher dette filteret.
+            </p>
+          </div>
+        );
+      }
+
+      return (
+        <div className="appointments-list">
+          {list.map((appointment) => {
+            const isBooked = appointment.status === 'Booked';
+            const isInProgress = appointment.status === 'InProgress';
+            const isCompleted = appointment.status === 'Completed';
+
+            return (
+              <div key={appointment.id} className="appointment-item">
+                <div className="appointment-content">
+                  <div className="appointment-main">
+                    <div className="appointment-icon">
+                      <i className="bi bi-calendar-event"></i>
+                    </div>
+                    <div className="appointment-details">
+                      <div className="appointment-top-row">
+                        <p className="appointment-datetime">
+                          {formatDateNorwegian(appointment.date)}
+                          {appointment.startTime ? ` • ${appointment.startTime} - ${appointment.endTime}` : ''}
+                        </p>
+                        <div className="appointment-status-badges">
+                          <StatusBadge status={appointment.status} />
+                        </div>
+                      </div>
+
+                      {appointment.patientName && (
+                        <p className="appointment-personnel">
+                          Pasient: {appointment.patientName}
+                        </p>
+                      )}
+
+                      <div className="appointment-tasks">
+                        <TaskBadges tasks={appointment.tasks} variant="secondary" />
+                      </div>
+
+                      {isCompleted && (
+                        <small className="appointment-warning">
+                          Oppgaven er fullført.
+                        </small>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="appointment-actions">
+                    {isBooked && (
+                      <button
+                        className="btn btn-primary"
+                        onClick={() => handleStatusUpdate(appointment, 'InProgress')}
+                      >
+                        Start
+                      </button>
+                    )}
+                    {isInProgress && (
+                      <button
+                        className="btn btn-success"
+                        onClick={() => handleStatusUpdate(appointment, 'Completed')}
+                      >
+                        Fullfør
+                      </button>
+                    )}
+                    {isCompleted && (
+                      <span className="badge bg-success">Oppgave fullført</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      );
+    };
+
+    return (
+      <div className="appointment-list-page personnel-page">
+        {error && (
+          <div className="error-alert">
+            <span>{error}</span>
+            <button className="error-close" onClick={() => setError('')}>
+              <i className="bi bi-x"></i>
+            </button>
+          </div>
+        )}
+
+        <h1 className="page-title">Mine pasientavtaler</h1>
+        <div className="page-subtitle">
+          <p>Start og fullfør oppgaver for pasientene dine direkte her.</p>
+        </div>
+
+        <div className="tabs-container">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <button
+              className="btn btn-warning"
+              type="button"
+              onClick={() => setActiveTab('completed')}
+            >
+              Rydd opp fullførte
+            </button>
+            <ul className="tab-navigation" role="tablist">
+              <li className="tab-item" role="presentation">
+                <button
+                  className={`tab-button ${activeTab === 'all' ? 'active' : ''}`}
+                  type="button"
+                  role="tab"
+                  onClick={() => setActiveTab('all')}
+                >
+                  Alle ({allActiveAppointments.length})
+                </button>
+              </li>
+              <li className="tab-item" role="presentation">
+                <button
+                  className={`tab-button ${activeTab === 'scheduled' ? 'active' : ''}`}
+                  type="button"
+                  role="tab"
+                  onClick={() => setActiveTab('scheduled')}
+                >
+                  Planlagt ({scheduledAppointments.length})
+                </button>
+              </li>
+              <li className="tab-item" role="presentation">
+                <button
+                  className={`tab-button ${activeTab === 'inprogress' ? 'active' : ''}`}
+                  type="button"
+                  role="tab"
+                  onClick={() => setActiveTab('inprogress')}
+                >
+                  Pågår ({inProgressAppointments.length})
+                </button>
+              </li>
+              <li className="tab-item" role="presentation">
+                <button
+                  className={`tab-button ${activeTab === 'completed' ? 'active' : ''}`}
+                  type="button"
+                  role="tab"
+                  onClick={() => setActiveTab('completed')}
+                >
+                  Fullført ({completedAppointments.length})
+                </button>
+              </li>
+            </ul>
+          </div>
+
+          <div className="tab-content">
+            <div className="tab-panel">
+              <div className="appointments-card">
+                <div className="appointments-body">
+                  {showList(activeTab as PersonnelTab)}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -161,17 +398,17 @@ const AppointmentListPage: React.FC = () => {
       )}
 
       {/* main page title */}
-      <h1 className="page-title">My Appointments</h1>
+      <h1 className="page-title">Mine avtaler</h1>
 
       {/* page subtitle */}
       <div className="page-subtitle">
-        <p>View and manage all your appointments in one place.</p>
+        <p>Se og administrer alle dine avtaler på ett sted.</p>
       </div>
 
       {/* creates new appointment button */}
       <div className="create-btn-wrapper">
         <button className="btn-create" onClick={handleCreate}>
-          <i className="bi bi-calendar-plus"></i>Book New Appointment
+          <i className="bi bi-calendar-plus"></i>Ny avtale
         </button>
       </div>
 
@@ -188,7 +425,7 @@ const AppointmentListPage: React.FC = () => {
               type="button"
               role="tab"
             >
-              Upcoming
+              Kommende
             </button>
           </li>
           <li className="tab-item" role="presentation">
@@ -201,7 +438,7 @@ const AppointmentListPage: React.FC = () => {
               type="button"
               role="tab"
             >
-              Past
+              Tidligere
             </button>
           </li>
         </ul>
@@ -230,12 +467,8 @@ const AppointmentListPage: React.FC = () => {
                                 
                                   <div className="appointment-top-row">
                                     <p className="appointment-datetime">
-                                      {appointment.date && new Date(appointment.date).toLocaleDateString('en-US', {
-                                        weekday: 'long',
-                                        month: 'short',
-                                        day: 'numeric',
-                                      })}{' '}
-                                      at {appointment.startTime} - {appointment.endTime}
+                                      {appointment.date && formatDateNorwegian(appointment.date)}
+                                      {appointment.startTime ? ` • ${appointment.startTime} - ${appointment.endTime}` : ''}
                                     </p>
                                     <div className="appointment-status-badges">
                                       <StatusBadge status={appointment.status} />
@@ -255,7 +488,7 @@ const AppointmentListPage: React.FC = () => {
                                   {within24Hours && appointment.status === 'Booked' && (
                                     <small className="appointment-warning">
                                       <i className="bi bi-exclamation-triangle"></i>
-                                      Cancellations must be made at least 24 hours before
+                                      Avbestilling må skje minst 24 timer før
                                     </small>
                                   )}
                                 </div>
@@ -265,17 +498,17 @@ const AppointmentListPage: React.FC = () => {
                                   className="btn btn-secondary btn-edit"
                                   onClick={() => handleEdit(appointment)}
                                   disabled={!modifiable}
-                                  title={!modifiable ? 'Cannot edit within 24 hours or if not booked' : 'Edit appointment'}
+                                  title={!modifiable ? 'Kan ikke endres innen 24 timer eller hvis ikke planlagt' : 'Endre avtale'}
                                 >
-                                  <i className="bi bi-pencil"></i> Change
+                                  <i className="bi bi-pencil"></i> Endre
                                 </button>
                                 <button
                                   className="btn btn-danger btn-delete"
                                   onClick={() => handleDelete(appointment)}
                                   disabled={!modifiable}
-                                  title={!modifiable ? 'Cannot cancel within 24 hours or if not booked' : 'Cancel appointment'}
+                                  title={!modifiable ? 'Kan ikke avbestilles innen 24 timer eller hvis ikke planlagt' : 'Avbryt avtale'}
                                 >
-                                  <i className="bi bi-trash"></i> Cancel
+                                  <i className="bi bi-trash"></i> Avbryt
                                 </button>
                               </div>
                             </div>
@@ -286,12 +519,12 @@ const AppointmentListPage: React.FC = () => {
                   ) : (
                     <div className="appointments-empty">
                       <i className="empty-icon bi bi-calendar-x"></i>
-                      <h2 className="empty-title">No upcoming appointments</h2>
+                      <h2 className="empty-title">Ingen kommende avtaler</h2>
                       <p className="empty-text">
-                        You have no appointments scheduled.
+                        Du har ingen planlagte avtaler.
                       </p>
                       <button className="btn-create" onClick={handleCreate}>
-                        <i className="bi bi-calendar-plus"></i>Book Your First Appointment
+                        <i className="bi bi-calendar-plus"></i>Book første avtale
                       </button>
                     </div>
                   )}
@@ -318,12 +551,8 @@ const AppointmentListPage: React.FC = () => {
 
                                 <div className="appointment-top-row">
                                   <p className="appointment-datetime">
-                                    {appointment.date && new Date(appointment.date).toLocaleDateString('en-US', {
-                                      weekday: 'long',
-                                      month: 'short',
-                                      day: 'numeric',
-                                    })}{' '}
-                                    at {appointment.startTime} - {appointment.endTime}
+                                    {appointment.date && formatDateNorwegian(appointment.date)}
+                                    {appointment.startTime ? ` • ${appointment.startTime} - ${appointment.endTime}` : ''}
                                   </p>
 
                                   <div className="appointment-status-badges">
@@ -349,9 +578,9 @@ const AppointmentListPage: React.FC = () => {
                   ) : (
                     <div className="appointments-empty">
                       <i className="empty-icon bi bi-calendar-x"></i>
-                      <h2 className="empty-title">No past appointments</h2>
+                      <h2 className="empty-title">Ingen tidligere avtaler</h2>
                       <p className="empty-text">
-                        Your appointment history will appear here.
+                        Historikken vises her.
                       </p>
                     </div>
                   )}

@@ -33,6 +33,28 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ initialData, onSubmit
   const userInfo = getUserInfo();
   const isPersonnel = userInfo?.role === 'Personnel';
 
+  // Mock tasks available for booking, localized to Norwegian
+  const allTasks = [
+    { id: 'medisin', label: 'Medisin', description: 'Hjelp med medisinering og dosering' },
+    { id: 'bading', label: 'Bading', description: 'Hjelp med personlig hygiene og bading' },
+    { id: 'matlaging', label: 'Matlaging', description: 'Hjelp med måltider og matlaging' },
+    { id: 'handel', label: 'Handel', description: 'Hjelp med å handle mat og nødvendigheter' },
+    { id: 'husholdning', label: 'Husholdning', description: 'Lett husarbeid og rengjøring' },
+    { id: 'digitalhjelp', label: 'Digital hjelp', description: 'Hjelp med telefon, nettbrett eller PC' },
+    { id: 'transport', label: 'Transport', description: 'Støtte til avtaler og ærender' },
+  ];
+
+  // Mock permission mapping - which tasks the selected personnel has approved
+  const allowedTasksByPersonnel: Record<string, string[]> = {
+    // Personnel ID '1' can handle medication and bathing
+    '1': ['medisin', 'bading', 'husholdning'],
+    // Personnel ID '2' can handle digital help and shopping
+    '2': ['digitalhjelp', 'handel', 'transport'],
+  };
+
+  const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
+
+
   // Form state
   const [formData, setFormData] = useState<Appointment>({
     id: initialData?.id,
@@ -43,6 +65,22 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ initialData, onSubmit
     endTime: '',
     status: 'Booked',
   });
+
+  // When editing an existing appointment, prefill selected tasks based on the stored task string
+  useEffect(() => {
+    if (!initialData?.tasks) return;
+
+    const taskLabels = initialData.tasks
+      .split(',')
+      .map((t) => t.trim())
+      .filter(Boolean);
+
+    const selectedIds = allTasks
+      .filter((task) => taskLabels.includes(task.label))
+      .map((task) => task.id);
+
+    setSelectedTaskIds(selectedIds);
+  }, [initialData]);
 
   // Dropdown options
   const [patients, setPatients] = useState<PatientListDto[]>([]);
@@ -163,15 +201,19 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ initialData, onSubmit
   const handlePersonnelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const personnelId = e.target.value;
     setSelectedPersonnelId(personnelId);
-    // Resets date and slot selection when personnel changes
+
+    // Reset dependent fields when personnel changes
     setSelectedDate('');
-    setFormData(prev => ({ ...prev, availabilityId: 0 }));
-    if (errors.personnelId || errors.date || errors.availabilityId) {
+    setFormData(prev => ({ ...prev, availabilityId: 0, tasks: '' }));
+    setSelectedTaskIds([]);
+
+    if (errors.personnelId || errors.date || errors.availabilityId || errors.tasks) {
       setErrors(prev => ({ 
         ...prev, 
         personnelId: '', 
         date: '', 
-        availabilityId: '' 
+        availabilityId: '',
+        tasks: ''
       }));
     }
   };
@@ -196,12 +238,14 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ initialData, onSubmit
     }
   };
 
-  // Handles task input changes
-  const handleTaskChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const { value } = e.target;
-    setFormData(prev => ({ ...prev, tasks: value }));
+  // Handles toggling task checkboxes
+  const handleTaskToggle = (taskId: string, checked: boolean) => {
+    setSelectedTaskIds((prev) =>
+      checked ? [...prev, taskId] : prev.filter((id) => id !== taskId)
+    );
+
     if (errors.tasks) {
-      setErrors(prev => ({ ...prev, tasks: '' }));
+      setErrors((prev) => ({ ...prev, tasks: '' }));
     }
   };
 
@@ -217,35 +261,36 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ initialData, onSubmit
   // Gets selected slot details for display
   const selectedSlot = availableSlots.find(slot => slot.id === formData.availabilityId);
 
+  // Determines which tasks are allowed based on selected personnel
+  const allowedTaskIds = selectedPersonnelId && allowedTasksByPersonnel[selectedPersonnelId]
+    ? allowedTasksByPersonnel[selectedPersonnelId]
+    : allTasks.map((t) => t.id);
+
+  const allowedTasks = allTasks.filter((task) => allowedTaskIds.includes(task.id));
+
   // Validates form before submission
   const validate = (): boolean => {
     const newErrors: { [key: string]: string } = {};
 
     if (isPersonnel && !formData.patientId) {
-      newErrors.patientId = 'Please select a patient';
+      newErrors.patientId = 'Vennligst velg en pasient';
     }
 
     if (!selectedPersonnelId) {
-      newErrors.personnelId = 'Please select personnel';
+      newErrors.personnelId = 'Vennligst velg en ansatt';
     }
 
     if (!selectedDate) {
-      newErrors.date = 'Please select a date';
+      newErrors.date = 'Vennligst velg en dato';
     }
 
     if (!formData.availabilityId || formData.availabilityId === 0) {
-      newErrors.availabilityId = 'Please select a time slot';
+      newErrors.availabilityId = 'Vennligst velg et tidspunkt';
     }
 
-    // Validates that tasks field contains at least one task
-    if (!formData.tasks.trim()) {
-      newErrors.tasks = 'At least one task is required';
-    } else {
-      // Checks that tasks are comma-separated and not empty
-      const taskList = formData.tasks.split(',').map(t => t.trim()).filter(t => t.length > 0);
-      if (taskList.length === 0) {
-        newErrors.tasks = 'At least one valid task is required';
-      }
+    // Validates that at least one task is selected
+    if (selectedTaskIds.length === 0) {
+      newErrors.tasks = 'Velg minst én oppgave';
     }
 
     setErrors(newErrors);
@@ -260,14 +305,22 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ initialData, onSubmit
       return;
     }
 
-    onSubmit(formData);
+    // Convert selected task IDs back into a comma-separated string for backend
+    const selectedTaskLabels = selectedTaskIds
+      .map((id) => allTasks.find((t) => t.id === id)?.label)
+      .filter(Boolean);
+
+    onSubmit({
+      ...formData,
+      tasks: selectedTaskLabels.join(', '),
+    });
   };
 
   if (loading) {
     return (
       <div className="text-center py-4">
         <Spinner animation="border" role="status">
-          <span className="visually-hidden">Loading...</span>
+            <span className="visually-hidden">Laster...</span>
         </Spinner>
       </div>
     );
@@ -278,14 +331,14 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ initialData, onSubmit
       {/* Patient selection (Personnel only) */}
       {isPersonnel && (
         <Form.Group className="mb-3">
-          <Form.Label>Client <span className="text-danger">*</span></Form.Label>
+          <Form.Label>Klient <span className="text-danger">*</span></Form.Label>
           {errors.patientId && <div className="text-danger small mb-1">{errors.patientId}</div>}
           <Form.Select
             value={formData.patientId}
             onChange={handlePatientChange}
             isInvalid={!!errors.patientId}
           >
-            <option value="">-- Select Patient --</option>
+            <option value="">-- Velg pasient --</option>
             {patients.map((patient) => (
               <option key={patient.id} value={patient.id}>
                 {patient.fullName}
@@ -297,14 +350,14 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ initialData, onSubmit
 
       {/* Personnel selection */}
       <Form.Group className="mb-3">
-        <Form.Label>Personnel <span className="text-danger">*</span></Form.Label>
+        <Form.Label>Ansatt <span className="text-danger">*</span></Form.Label>
         {errors.personnelId && <div className="text-danger small mb-1">{errors.personnelId}</div>}
         <Form.Select
           value={selectedPersonnelId}
           onChange={handlePersonnelChange}
           isInvalid={!!errors.personnelId}
         >
-          <option value="">-- Select Personnel --</option>
+          <option value="">-- Velg ansatt --</option>
           {personnel.map((person) => (
             <option key={person.id} value={person.id}>
               {person.fullName}
@@ -315,12 +368,12 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ initialData, onSubmit
 
       {/* Date selection - populated after personnel selection */}
       <Form.Group className="mb-3">
-        <Form.Label>Date <span className="text-danger">*</span></Form.Label>
+        <Form.Label>Dato <span className="text-danger">*</span></Form.Label>
         {errors.date && <div className="text-danger small mb-1">{errors.date}</div>}
         {loadingDates ? (
           <div className="text-center py-2">
             <Spinner animation="border" size="sm" role="status">
-              <span className="visually-hidden">Loading dates...</span>
+              <span className="visually-hidden">Laster datoer...</span>
             </Spinner>
           </div>
         ) : (
@@ -333,12 +386,12 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ initialData, onSubmit
             >
               <option value="">
                 {selectedPersonnelId 
-                  ? '-- Select Date --' 
-                  : '-- First select personnel --'}
+                  ? '-- Velg Dato --' 
+                  : '-- Velg Ansatt --'}
               </option>
               {availableDates.map((date) => (
                 <option key={date} value={date}>
-                  {new Date(date).toLocaleDateString('en-GB', { 
+                  {new Date(date).toLocaleDateString('nb-NO', { 
                     weekday: 'short', 
                     day: '2-digit', 
                     month: 'short', 
@@ -349,7 +402,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ initialData, onSubmit
             </Form.Select>
             {selectedPersonnelId && availableDates.length === 0 && !loadingDates && (
               <Form.Text className="text-muted">
-                No available dates for this personnel member.
+                  Ingen tilgjengelige datoer for denne ansatte.
               </Form.Text>
             )}
           </>
@@ -358,12 +411,12 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ initialData, onSubmit
 
       {/* Time slot selection - populated after date selection */}
       <Form.Group className="mb-3">
-        <Form.Label>Time Slot <span className="text-danger">*</span></Form.Label>
+        <Form.Label>Tidspunkt <span className="text-danger">*</span></Form.Label>
         {errors.availabilityId && <div className="text-danger small mb-1">{errors.availabilityId}</div>}
         {loadingSlots ? (
           <div className="text-center py-2">
             <Spinner animation="border" size="sm" role="status">
-              <span className="visually-hidden">Loading time slots...</span>
+              <span className="visually-hidden">Laster tidspunkter...</span>
             </Spinner>
           </div>
         ) : (
@@ -376,8 +429,8 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ initialData, onSubmit
             >
               <option value="0">
                 {selectedDate 
-                  ? '-- Select Time Slot --' 
-                  : '-- First select date --'}
+                  ? '-- Velg Tidspunkt --' 
+                  : '-- Velg Dato --'}
               </option>
               {availableSlots.map((slot) => (
                 <option key={slot.id} value={slot.id}>
@@ -387,7 +440,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ initialData, onSubmit
             </Form.Select>
             {selectedDate && availableSlots.length === 0 && !loadingSlots && (
               <Form.Text className="text-muted">
-                No available time slots for this date.
+                Ingen ledige tidspunkter for denne datoen.
               </Form.Text>
             )}
           </>
@@ -399,35 +452,52 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ initialData, onSubmit
         <Alert variant="info" className="mb-3">
           <small>
             <i className="bi bi-info-circle me-2"></i>
-            Appointment will be scheduled from <strong>{selectedSlot.startTime}</strong> to <strong>{selectedSlot.endTime}</strong>
+            Avtalen er planlagt fra <strong>{selectedSlot.startTime}</strong> til <strong>{selectedSlot.endTime}</strong>
           </small>
         </Alert>
       )}
 
-      {/* Tasks field - comma-separated list */}
+      {/* Tasks selection (based on what the selected personnel has approved) */}
       <Form.Group className="mb-3">
-        <Form.Label>Task(s) <span className="text-danger">*</span></Form.Label>
+        <Form.Label>Oppgaver <span className="text-danger">*</span></Form.Label>
         {errors.tasks && <div className="text-danger small mb-1">{errors.tasks}</div>}
-        <Form.Control
-          as="textarea"
-          rows={2}
-          value={formData.tasks}
-          onChange={handleTaskChange}
-          placeholder="Enter tasks separated by commas (e.g., Groceries, Medication, Vitals)"
-          isInvalid={!!errors.tasks}
-        />
+
+        {allowedTasks.length > 0 ? (
+          <div className="task-checkboxes">
+            {allowedTasks.map((task) => (
+              <Form.Check
+                key={task.id}
+                type="checkbox"
+                id={`task-${task.id}`}
+                label={
+                  <div>
+                    <strong>{task.label}</strong>
+                    <div className="text-muted" style={{ fontSize: '0.9rem' }}>{task.description}</div>
+                  </div>
+                }
+                checked={selectedTaskIds.includes(task.id)}
+                onChange={(e) => handleTaskToggle(task.id, e.target.checked)}
+              />
+            ))}
+          </div>
+        ) : (
+          <Form.Text className="text-muted">
+            Ingen oppgaver er tilgjengelig for denne ansatte. Velg en annen ansatt for å se tilgjengelige oppgaver.
+          </Form.Text>
+        )}
+
         <Form.Text className="text-muted">
-          Separate multiple tasks with commas. Each task will display as a badge.
+          Oppgavene som vises er basert på hva sykepleier har godkjent.
         </Form.Text>
       </Form.Group>
 
       {/* Buttons */}
       <div className="d-flex gap-2">
         <Button variant="primary" type="submit">
-          {initialData ? 'Update' : 'Create'}
+          {initialData ? 'Oppdater' : 'Opprett'}
         </Button>
         <Button variant="outline-secondary" onClick={onCancel}>
-          Cancel
+          Avbryt
         </Button>
       </div>
     </Form>

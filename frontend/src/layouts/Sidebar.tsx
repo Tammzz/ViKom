@@ -33,7 +33,7 @@ const Sidebar: React.FC = () => {
           to="/dashboard" 
           className={isActive('/dashboard') ? 'active' : ''}
         >
-          Dashboard
+          Oversikt
         </Nav.Link>
 
         {/* Patient navigation */}
@@ -47,22 +47,63 @@ const Sidebar: React.FC = () => {
           </Nav.Link>
         )}
 
+        {/* Patient navigation - additional */}
+        {role === 'Patient' && (
+          <>
+            <Nav.Link 
+              as={Link} 
+              to="/task-selection" 
+              className={isActive('/task-selection') ? 'active' : ''}
+            >
+              Be om tjenester
+            </Nav.Link>
+            <Nav.Link 
+              as={Link} 
+              to="/preferred-time" 
+              className={isActive('/preferred-time') ? 'active' : ''}
+            >
+              Planlegg besøk
+            </Nav.Link>
+          </>
+        )}
+
         {/* Personnel navigation */}
         {role === 'Personnel' && (
           <>
             <Nav.Link 
               as={Link} 
+              to="/appointments" 
+              className={isActive('/appointments') ? 'active' : ''}
+            >
+              Pasientavtaler
+            </Nav.Link>
+            <Nav.Link 
+              as={Link} 
               to="/availability" 
               className={isActive('/availability') ? 'active' : ''}
             >
-              My Calendar
+              Kalender
             </Nav.Link>
             <Nav.Link 
               as={Link} 
               to="/patients" 
               className={isActive('/patients') ? 'active' : ''}
             >
-              My Patients
+              Mine pasienter
+            </Nav.Link>
+            <Nav.Link 
+              as={Link} 
+              to="/visit-execution" 
+              className={isActive('/visit-execution') ? 'active' : ''}
+            >
+              Besøk
+            </Nav.Link>
+            <Nav.Link 
+              as={Link} 
+              to="/planning" 
+              className={isActive('/planning') ? 'active' : ''}
+            >
+              Planlegging
             </Nav.Link>
           </>
         )}

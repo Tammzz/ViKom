@@ -16,6 +16,8 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ status, className = '' }) => 
     switch (normalizedStatus) {
       case 'booked':
         return 'info';
+      case 'inprogress':
+        return 'warning';
       case 'completed':
         return 'success';
       case 'cancelled':
@@ -28,7 +30,21 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ status, className = '' }) => 
   };
 
   const getDisplayText = (status: string): string => {
-    return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+    const normalized = status.toLowerCase();
+    switch (normalized) {
+      case 'booked':
+        return 'Planlagt';
+      case 'inprogress':
+        return 'Pågår';
+      case 'completed':
+        return 'Fullført';
+      case 'cancelled':
+        return 'Avlyst';
+      case 'available':
+        return 'Tilgjengelig';
+      default:
+        return status;
+    }
   };
 
   return (

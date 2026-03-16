@@ -28,39 +28,39 @@ const AvailabilityDeleteModal: React.FC<AvailabilityDeleteModalProps> = ({
   return (
     <Modal show={show} onHide={onClose}>
       <Modal.Header closeButton>
-        <Modal.Title>Delete Availability Slot</Modal.Title>
+        <Modal.Title>Slett tilgjengelighetsluke</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         {isBooked ? (
           <div>
             <p className="text-danger">
-              <strong>This availability slot is already booked and cannot be deleted.</strong>
+              <strong>Denne tilgjengelighetsluken er allerede booket og kan ikke slettes.</strong>
             </p>
             {availabilityDate && (
               <p className="text-muted">
-                <strong>Date:</strong> {new Date(availabilityDate).toLocaleDateString()}
+                <strong>Dato:</strong> {new Date(availabilityDate).toLocaleDateString('nb-NO')}
               </p>
             )}
           </div>
         ) : (
           <div>
-            <p>Are you sure you want to delete this availability slot?</p>
+            <p>Er du sikker på at du vil slette denne tilgjengelighetsluken?</p>
             {availabilityDate && (
               <p className="text-muted">
-                <strong>Date:</strong> {new Date(availabilityDate).toLocaleDateString()}
+                <strong>Dato:</strong> {new Date(availabilityDate).toLocaleDateString('nb-NO')}
               </p>
             )}
-            <p className="text-danger">This action cannot be undone.</p>
+            <p className="text-danger">Denne handlingen kan ikke angres.</p>
           </div>
         )}
       </Modal.Body>
       <Modal.Footer>
         <Button variant="outline-secondary" onClick={onClose}>
-          {isBooked ? 'Close' : 'Cancel'}
+          {isBooked ? 'Lukk' : 'Avbryt'}
         </Button>
         {!isBooked && (
           <Button variant="danger" onClick={handleConfirm}>
-            Delete
+            Slett
           </Button>
         )}
       </Modal.Footer>

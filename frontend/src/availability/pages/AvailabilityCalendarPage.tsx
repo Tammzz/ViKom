@@ -65,7 +65,7 @@ const AvailabilityCalendarPage: React.FC = () => {
       }
     } catch (err) {
       console.error('Error loading availability:', err);
-      setError('Failed to load availability data');
+      setError('Kunne ikke laste tilgjengelighetsdata');
     } finally {
       setLoading(false);
     }
@@ -131,7 +131,7 @@ const AvailabilityCalendarPage: React.FC = () => {
   };
 
   const handleDeleteFromDailyView = async (windowId: number) => {
-    if (!window.confirm('Are you sure you want to delete this availability window?')) {
+    if (!window.confirm('Er du sikker på at du vil slette dette tilgjengelighetsvinduet?')) {
       return;
     }
 
@@ -139,7 +139,7 @@ const AvailabilityCalendarPage: React.FC = () => {
       await deleteAvailabilityWindow(windowId);
       await loadData();
     } catch (err: any) {
-      setError(err.message || 'Failed to delete availability window');
+      setError(err.message || 'Kunne ikke slette tilgjengelighetsvinduet');
     }
   };
 
@@ -164,7 +164,7 @@ const AvailabilityCalendarPage: React.FC = () => {
   if (loading && !weekData && !dayData) {
     return (
       <div className="availability-calendar-page">
-        <p>Loading availability...</p>
+        <p>Laster tilgjengelighet...</p>
       </div>
     );
   }
@@ -182,11 +182,11 @@ const AvailabilityCalendarPage: React.FC = () => {
       )}
 
       {/* renders page title */}
-      <h1 className="page-title">My Calendar</h1>
+      <h1 className="page-title">Min kalender</h1>
 
       {/* displays page subtitle */}
       <div className="page-subtitle">
-        <p>Manage your weekly and daily availability schedule.</p>
+        <p>Administrer din ukentlige og daglige tilgjengelighetsplan.</p>
       </div>
 
       {/* provides view mode toggle and navigation controls */}
@@ -201,7 +201,7 @@ const AvailabilityCalendarPage: React.FC = () => {
                 setCurrentDate(new Date());
               }}
             >
-              Day
+              Dag
             </button>
             <button
               className={`view-btn ${viewMode === 'week' ? 'active' : ''}`}
@@ -210,13 +210,13 @@ const AvailabilityCalendarPage: React.FC = () => {
                 setCurrentDate(new Date());
               }}
             >
-              Week
+              Uke
             </button>
           </div>
 
           {/* navigates to current date */}
           <button className="today-btn" onClick={handleToday}>
-            Today
+            I dag
           </button>
         </div>
 

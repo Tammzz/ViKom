@@ -51,13 +51,13 @@ const AvailabilityWindowForm: React.FC<AvailabilityWindowFormProps> = ({
     const newErrors: { [key: string]: string } = {};
 
     if (!formData.date) {
-      newErrors.date = 'Date is required';
+      newErrors.date = 'Dato er påkrevd';
     }
 
     // Only validate times if both are provided
     if (formData.startTime && formData.endTime) {
       if (formData.startTime >= formData.endTime) {
-        newErrors.endTime = 'End time must be after start time';
+        newErrors.endTime = 'Sluttid må være etter starttid';
       }
     }
 
@@ -81,7 +81,7 @@ const AvailabilityWindowForm: React.FC<AvailabilityWindowFormProps> = ({
     <Form onSubmit={handleSubmit}>
       {/* Date (Read-only) */}
       <Form.Group className="mb-3">
-        <Form.Label>Date</Form.Label>
+        <Form.Label>Dato</Form.Label>
         <Form.Control
           type="text"
           value={formatDateLong(parseISODate(formData.date))}
@@ -96,12 +96,12 @@ const AvailabilityWindowForm: React.FC<AvailabilityWindowFormProps> = ({
           type="switch"
           id="isAvailable"
           name="isAvailable"
-          label="Available?"
+          label="Tilgjengelig?"
           checked={formData.isAvailable}
           onChange={handleChange}
         />
         <Form.Text className="text-muted">
-          Toggle this to mark yourself as available or unavailable for this day.
+          Velg om du er tilgjengelig eller ikke denne dagen.
         </Form.Text>
       </Form.Group>
 
@@ -110,14 +110,14 @@ const AvailabilityWindowForm: React.FC<AvailabilityWindowFormProps> = ({
         <Row>
           <Col md={6}>
             <Form.Group className="mb-3">
-              <Form.Label>Start Time</Form.Label>
+              <Form.Label>Starttid</Form.Label>
               <Form.Select
                 name="startTime"
                 value={formData.startTime}
                 onChange={handleChange}
                 isInvalid={!!errors.startTime}
               >
-                <option value="">Select start time</option>
+                <option value="">Velg starttid</option>
                 {hourOptions.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
@@ -128,21 +128,21 @@ const AvailabilityWindowForm: React.FC<AvailabilityWindowFormProps> = ({
                 {errors.startTime}
               </Form.Control.Feedback>
               <Form.Text className="text-muted">
-                Leave empty to use default (9:00 AM)
+                La stå tomt for å bruke standard (09:00)
               </Form.Text>
             </Form.Group>
           </Col>
 
           <Col md={6}>
             <Form.Group className="mb-3">
-              <Form.Label>End Time</Form.Label>
+              <Form.Label>Sluttid</Form.Label>
               <Form.Select
                 name="endTime"
                 value={formData.endTime}
                 onChange={handleChange}
                 isInvalid={!!errors.endTime}
               >
-                <option value="">Select end time</option>
+                <option value="">Velg sluttid</option>
                 {hourOptions.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
@@ -153,7 +153,7 @@ const AvailabilityWindowForm: React.FC<AvailabilityWindowFormProps> = ({
                 {errors.endTime}
               </Form.Control.Feedback>
               <Form.Text className="text-muted">
-                Leave empty to use default (5:00 PM)
+                La stå tomt for å bruke standard (17:00)
               </Form.Text>
             </Form.Group>
           </Col>
@@ -162,14 +162,14 @@ const AvailabilityWindowForm: React.FC<AvailabilityWindowFormProps> = ({
 
       {/* Notes */}
       <Form.Group className="mb-3">
-        <Form.Label>Notes</Form.Label>
+        <Form.Label>Notater</Form.Label>
         <Form.Control
           as="textarea"
           rows={3}
           name="notes"
           value={formData.notes}
           onChange={handleChange}
-          placeholder="Optional notes about this availability..."
+          placeholder="Valgfrie notater om tilgjengeligheten..."
         />
       </Form.Group>
 
@@ -177,7 +177,7 @@ const AvailabilityWindowForm: React.FC<AvailabilityWindowFormProps> = ({
       {hasBookedSlots && (
         <div className="alert alert-warning">
           <i className="bi bi-exclamation-triangle me-2"></i>
-          <strong>Note:</strong> This availability has booked appointments. You cannot change the time range.
+          <strong>Merk:</strong> Denne tilgjengeligheten har bookede avtaler. Du kan ikke endre tidsintervallet.
         </div>
       )}
 
@@ -190,16 +190,16 @@ const AvailabilityWindowForm: React.FC<AvailabilityWindowFormProps> = ({
               onClick={onDelete}
               disabled={hasBookedSlots || isSubmitting}
             >
-              <i className="bi bi-trash me-2"></i>Delete
+              <i className="bi bi-trash me-2"></i>Slett
             </Button>
           )}
         </div>
         <div className="d-flex gap-2">
           <Button variant="secondary" onClick={onCancel} disabled={isSubmitting}>
-            Cancel
+            Avbryt
           </Button>
           <Button variant="primary" type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Saving...' : (initialData ? 'Update' : 'Create')}
+            {isSubmitting ? 'Lagrer...' : (initialData ? 'Oppdater' : 'Opprett')}
           </Button>
         </div>
       </div>

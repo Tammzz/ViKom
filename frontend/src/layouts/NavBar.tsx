@@ -66,7 +66,7 @@ const NavBar: React.FC = () => {
                     onClick={closeMobileMenu}
                     className={isActive('/dashboard') ? 'active' : ''}
                   >
-                    Dashboard
+                    Oversikt
                   </Nav.Link>
 
                   {role === 'Patient' && (
@@ -76,7 +76,7 @@ const NavBar: React.FC = () => {
                       onClick={closeMobileMenu}
                       className={isActive('/appointments') ? 'active' : ''}
                     >
-                      My Appointments
+                      Mine avtaler
                     </Nav.Link>
                   )}
 
@@ -88,7 +88,7 @@ const NavBar: React.FC = () => {
                         onClick={closeMobileMenu}
                         className={isActive('/availability') ? 'active' : ''}
                       >
-                        My Calendar
+                        Min kalender
                       </Nav.Link>
                       <Nav.Link 
                         as={Link} 
@@ -96,7 +96,7 @@ const NavBar: React.FC = () => {
                         onClick={closeMobileMenu}
                         className={isActive('/patients') ? 'active' : ''}
                       >
-                        My Patients
+                        Mine pasienter
                       </Nav.Link>
                     </>
                   )}
@@ -112,7 +112,7 @@ const NavBar: React.FC = () => {
                   >
                     
                     <NavDropdown.Item onClick={handleLogout} className="dropdown-logout">
-                      Logout
+                      Logg ut
                     </NavDropdown.Item>
                   </NavDropdown>
                 </div>
@@ -120,7 +120,7 @@ const NavBar: React.FC = () => {
                 {/* Mobile: Direct logout button without dropdown */}
                 <div className="d-lg-none mobile-logout-wrapper">
                   <Nav.Link onClick={handleLogout} className="mobile-logout-btn">
-                    Logout
+                    Logg ut
                   </Nav.Link>
                 </div>
               </>
@@ -128,10 +128,10 @@ const NavBar: React.FC = () => {
               // displays login and register buttons when not authenticated
               <div className="auth-buttons-wrapper">
                 <Nav.Link as={Link} to="/login" className="auth-btn-login">
-                  Login
+                  Logg inn
                 </Nav.Link>
                 <Nav.Link as={Link} to="/register" className="auth-btn-register">
-                  Register
+                  Registrer
                 </Nav.Link>
               </div>
             )}

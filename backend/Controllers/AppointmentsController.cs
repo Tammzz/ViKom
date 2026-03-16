@@ -141,6 +141,18 @@ namespace backend.Controllers
                 if (!ModelState.IsValid)
                     return BadRequest(ModelState);
 
+                // Only personnel are allowed to change appointment status (start/complete)
+                var role = User.FindFirstValue(ClaimTypes.Role);
+                if (!string.IsNullOrEmpty(appointmentDto.Status))
+                {
+                    var existing = await _appointmentService.GetByIdAsync(id);
+                    if (existing == null)
+                        return NotFound();
+
+                    if (!string.Equals(existing.Status, appointmentDto.Status, StringComparison.Ordinal) && role != "Personnel")
+                        return Forbid();
+                }
+
                 await _appointmentService.UpdateAsync(id, appointmentDto);
                 return NoContent();
             }
