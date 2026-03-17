@@ -41,8 +41,8 @@ const NavBar: React.FC = () => {
         {showLogoInNavbar && (
           <Navbar.Brand as={Link} to="/">
             <img 
-              src="/HomeCareApp-Logo.png" 
-              alt="HomeCareApp Logo" 
+              src="/logo-placeholder-transparent.png" 
+              alt="Vikom Logo" 
               className="navbar-logo d-inline-block align-top"
             />
           </Navbar.Brand>

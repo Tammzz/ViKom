@@ -13,13 +13,13 @@ const Sidebar: React.FC = () => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <div className="sidebar bg-light border-end">
+    <div className="sidebar border-end">
       {/* Brand logo at the top of sidebar */}
       <div className="sidebar-brand">
         <Link to="/dashboard">
           <img 
-            src="/HomeCareApp-Logo.png" 
-            alt="HomeCareApp Logo" 
+            src="/logo-placeholder-transparent.png" 
+            alt="Vikom Logo" 
             className="sidebar-logo"
           />
         </Link>
@@ -33,6 +33,7 @@ const Sidebar: React.FC = () => {
           to="/dashboard" 
           className={isActive('/dashboard') ? 'active' : ''}
         >
+          <i className="bi bi-grid" aria-hidden="true"></i>
           Oversikt
         </Nav.Link>
 
@@ -72,23 +73,26 @@ const Sidebar: React.FC = () => {
           <>
             <Nav.Link 
               as={Link} 
-              to="/appointments" 
-              className={isActive('/appointments') ? 'active' : ''}
-            >
-              Pasientavtaler
-            </Nav.Link>
-            <Nav.Link 
-              as={Link} 
               to="/availability" 
               className={isActive('/availability') ? 'active' : ''}
             >
+              <i className="bi bi-calendar4" aria-hidden="true"></i>
               Kalender
+            </Nav.Link>
+            <Nav.Link 
+              as={Link} 
+              to="/appointments" 
+              className={isActive('/appointments') ? 'active' : ''}
+            >
+              <i className="bi bi-briefcase" aria-hidden="true"></i>
+              Pasientavtaler
             </Nav.Link>
             <Nav.Link 
               as={Link} 
               to="/patients" 
               className={isActive('/patients') ? 'active' : ''}
             >
+              <i className="bi bi-people" aria-hidden="true"></i>
               Mine pasienter
             </Nav.Link>
             <Nav.Link 
@@ -96,6 +100,7 @@ const Sidebar: React.FC = () => {
               to="/visit-execution" 
               className={isActive('/visit-execution') ? 'active' : ''}
             >
+              <i className="bi bi-clipboard" aria-hidden="true"></i>
               Besøk
             </Nav.Link>
             <Nav.Link 
@@ -103,6 +108,7 @@ const Sidebar: React.FC = () => {
               to="/planning" 
               className={isActive('/planning') ? 'active' : ''}
             >
+              <i className="bi bi-list-ul" aria-hidden="true"></i>
               Planlegging
             </Nav.Link>
           </>
