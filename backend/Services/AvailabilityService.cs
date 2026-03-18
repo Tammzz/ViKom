@@ -305,14 +305,16 @@ namespace backend.Services
             }
             else
             {
-                // Available: always create exactly 8 slots (1 hour each for 8-hour day)
+                // Available: 1-hour appointments with 30-minute travel buffer between visits.
                 var slotDuration = TimeSpan.FromHours(1);
-                var totalSlots = 8;
+                var travelDuration = TimeSpan.FromMinutes(30);
                 var currentTime = window.StartTime;
 
-                for (int i = 0; i < totalSlots; i++)
+                while (currentTime < window.EndTime)
                 {
                     var slotEnd = currentTime.Add(slotDuration);
+                    if (slotEnd > window.EndTime)
+                        break;
 
                     slots.Add(new Availability
                     {
@@ -324,7 +326,7 @@ namespace backend.Services
                         AvailabilityWindowId = window.Id
                     });
 
-                    currentTime = slotEnd;
+                    currentTime = slotEnd.Add(travelDuration);
                 }
             }
 

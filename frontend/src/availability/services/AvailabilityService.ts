@@ -26,6 +26,7 @@ async function handleResponse(response: Response) {
 // fetches all availability slots
 export async function fetchAvailability(): Promise<Availability[]> {
   const response = await fetch(`${API_URL}/api/availability`, {
+    cache: 'no-store',
     headers: { ...headers, ...getAuthHeader() },
   });
   return handleResponse(response);
@@ -34,6 +35,7 @@ export async function fetchAvailability(): Promise<Availability[]> {
 // fetches availability by ID
 export async function fetchAvailabilityById(id: number): Promise<Availability> {
   const response = await fetch(`${API_URL}/api/availability/${id}`, {
+    cache: 'no-store',
     headers: { ...headers, ...getAuthHeader() },
   });
   return handleResponse(response);
@@ -42,6 +44,7 @@ export async function fetchAvailabilityById(id: number): Promise<Availability> {
 // fetches availability by personnel ID
 export async function fetchAvailabilityByPersonnel(personnelId: string): Promise<Availability[]> {
   const response = await fetch(`${API_URL}/api/availability/personnel/${personnelId}`, {
+    cache: 'no-store',
     headers: { ...headers, ...getAuthHeader() },
   });
   return handleResponse(response);
@@ -50,6 +53,7 @@ export async function fetchAvailabilityByPersonnel(personnelId: string): Promise
 // fetches free availability slots (not booked)
 export async function fetchFreeAvailability(): Promise<Availability[]> {
   const response = await fetch(`${API_URL}/api/availability/free`, {
+    cache: 'no-store',
     headers: { ...headers, ...getAuthHeader() },
   });
   return handleResponse(response);
@@ -97,7 +101,10 @@ export async function fetchWeekAvailability(
 ): Promise<WeekAvailability> {
   const response = await fetch(
     `${API_URL}/api/availability/week/${personnelId}?startDate=${startDate}`,
-    { headers: { ...headers, ...getAuthHeader() } }
+    {
+      cache: 'no-store',
+      headers: { ...headers, ...getAuthHeader() },
+    }
   );
   return handleResponse(response);
 }
@@ -109,7 +116,10 @@ export async function fetchDayAvailability(
 ): Promise<DayAvailability> {
   const response = await fetch(
     `${API_URL}/api/availability/day/${personnelId}?date=${date}`,
-    { headers: { ...headers, ...getAuthHeader() } }
+    {
+      cache: 'no-store',
+      headers: { ...headers, ...getAuthHeader() },
+    }
   );
   return handleResponse(response);
 }

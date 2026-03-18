@@ -11,6 +11,12 @@ const PersonnelDashboard: React.FC = () => {
   const [dashboard, setDashboard] = useState<PersonnelViewModel | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedAvailabilityDateKey, setSelectedAvailabilityDateKey] = useState<string>('');
+  const [timelineFilter, setTimelineFilter] = useState<'alle' | 'fysisk' | 'digitalt'>('alle');
+  const [displayedMonthDate, setDisplayedMonthDate] = useState<Date>(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), 1);
+  });
 
   // fetches dashboard data on mount
   useEffect(() => {
@@ -46,6 +52,252 @@ const PersonnelDashboard: React.FC = () => {
       </div>
     );
   }
+
+  const today = new Date();
+  const displayedYear = displayedMonthDate.getFullYear();
+  const displayedMonth = displayedMonthDate.getMonth();
+  const firstDayOfMonth = new Date(displayedYear, displayedMonth, 1);
+  const daysInMonth = new Date(displayedYear, displayedMonth + 1, 0).getDate();
+  const daysInPreviousMonth = new Date(displayedYear, displayedMonth, 0).getDate();
+  const firstDayWeekIndex = (firstDayOfMonth.getDay() + 6) % 7;
+  const totalCalendarCells = 42;
+
+  const monthLabel = firstDayOfMonth.toLocaleDateString('en-US', {
+    month: 'long',
+    year: 'numeric',
+  });
+
+  const weekDayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+
+  const currentWeekStart = new Date(today);
+  currentWeekStart.setHours(0, 0, 0, 0);
+  const mondayOffset = (today.getDay() + 6) % 7;
+  currentWeekStart.setDate(today.getDate() - mondayOffset);
+
+  const currentWeekEnd = new Date(currentWeekStart);
+  currentWeekEnd.setDate(currentWeekStart.getDate() + 6);
+
+  const appointmentDateSet = new Set(
+    dashboard.upcomingAppointments.map((appointment) => {
+      const date = new Date(appointment.date);
+      date.setHours(0, 0, 0, 0);
+      return date.getTime();
+    })
+  );
+
+  const calendarDays = Array.from({ length: totalCalendarCells }, (_, index) => {
+    const dayOffset = index - firstDayWeekIndex;
+    const dayNumber = dayOffset + 1;
+
+    if (dayNumber <= 0) {
+      const previousMonthDate = new Date(displayedYear, displayedMonth - 1, daysInPreviousMonth + dayNumber);
+      previousMonthDate.setHours(0, 0, 0, 0);
+      return {
+        key: `prev-${index}`,
+        date: previousMonthDate,
+        day: previousMonthDate.getDate(),
+        isCurrentMonth: false,
+      };
+    }
+
+    if (dayNumber > daysInMonth) {
+      const nextMonthDate = new Date(displayedYear, displayedMonth + 1, dayNumber - daysInMonth);
+      nextMonthDate.setHours(0, 0, 0, 0);
+      return {
+        key: `next-${index}`,
+        date: nextMonthDate,
+        day: nextMonthDate.getDate(),
+        isCurrentMonth: false,
+      };
+    }
+
+    const currentMonthDate = new Date(displayedYear, displayedMonth, dayNumber);
+    currentMonthDate.setHours(0, 0, 0, 0);
+    return {
+      key: `current-${dayNumber}`,
+      date: currentMonthDate,
+      day: dayNumber,
+      isCurrentMonth: true,
+    };
+  });
+
+  const dayTimelineDateLabel = today.toLocaleDateString('nb-NO', {
+    day: 'numeric',
+    month: 'long',
+  });
+
+  const nowTimeLabel = today.toLocaleTimeString('nb-NO', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
+
+  const toMinutes = (time: string) => {
+    const [hours, minutes] = time.split(':').map(Number);
+    return (hours * 60) + minutes;
+  };
+
+  const getVisitType = (notes: string) => (/^digitalt$/i.test(notes.trim()) ? 'Digitalt' : 'Fysisk');
+
+  const toDateKey = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const parseDateKey = (dateKey: string) => {
+    const [year, month, day] = dateKey.split('-').map(Number);
+
+    if (!year || !month || !day) {
+      return new Date('');
+    }
+
+    return new Date(year, month - 1, day);
+  };
+
+  const isSameDay = (firstDate: Date, secondDate: Date) =>
+    firstDate.getFullYear() === secondDate.getFullYear()
+    && firstDate.getMonth() === secondDate.getMonth()
+    && firstDate.getDate() === secondDate.getDate();
+
+  const todayTimelineItems = dashboard.upcomingAppointments
+    .filter((appointment) => isSameDay(new Date(appointment.date), today))
+    .sort((firstAppointment, secondAppointment) => toMinutes(firstAppointment.startTime) - toMinutes(secondAppointment.startTime))
+    .filter((appointment, index, allAppointments) => {
+      const duplicateIndex = allAppointments.findIndex((candidate) =>
+        candidate.startTime === appointment.startTime
+      );
+
+      return duplicateIndex === index;
+    })
+    .map((appointment) => {
+      const notes = appointment.availabilityNotes?.trim() ?? '';
+      const visitType = getVisitType(notes);
+      const notesMatch = notes.match(/^([^,]+),\s*(.+)$/);
+      const zone = notesMatch ? notesMatch[1].trim() : '';
+      const address = notesMatch ? notesMatch[2].trim() : notes;
+
+      return {
+        id: appointment.id,
+        startTime: appointment.startTime,
+        endTime: appointment.endTime,
+        patientName: appointment.patientName,
+        tasks: appointment.tasks,
+        zone,
+        address,
+        visitType,
+        tone: visitType === 'Digitalt' ? 'blue' : 'olive',
+      };
+    });
+
+  const timelineItems = todayTimelineItems.filter((item) => {
+    if (timelineFilter === 'alle') {
+      return true;
+    }
+
+    if (timelineFilter === 'fysisk') {
+      return item.visitType === 'Fysisk';
+    }
+
+    return item.visitType === 'Digitalt';
+  });
+
+  const todayDateKey = toDateKey(today);
+  const availabilityWeekEnd = new Date(today);
+  availabilityWeekEnd.setHours(23, 59, 59, 999);
+  availabilityWeekEnd.setDate(today.getDate() + 6);
+
+  const isWithinAvailabilityWeek = (date: Date) => {
+    const normalizedDate = new Date(date);
+    normalizedDate.setHours(0, 0, 0, 0);
+
+    const normalizedToday = new Date(today);
+    normalizedToday.setHours(0, 0, 0, 0);
+
+    return normalizedDate >= normalizedToday && normalizedDate <= availabilityWeekEnd;
+  };
+
+  const availabilityByDate = dashboard.upcomingAvailability
+    .reduce<Record<string, typeof dashboard.upcomingAvailability>>((groupedAvailability, availability) => {
+      const date = new Date(availability.date);
+      if (!isWithinAvailabilityWeek(date)) {
+        return groupedAvailability;
+      }
+
+      const dateKey = toDateKey(date);
+
+      if (!groupedAvailability[dateKey]) {
+        groupedAvailability[dateKey] = [];
+      }
+
+      groupedAvailability[dateKey].push(availability);
+      return groupedAvailability;
+    }, {});
+
+  const orderedAvailabilityDateKeys = Object.keys(availabilityByDate)
+    .sort((firstKey, secondKey) => firstKey.localeCompare(secondKey));
+
+  const baseWindowDate = new Date(today);
+
+  const availabilityWindowDays = Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(baseWindowDate);
+    date.setDate(baseWindowDate.getDate() + index);
+    const dateKey = toDateKey(date);
+    const dayName = date.toLocaleDateString('nb-NO', { weekday: 'short' });
+
+    return {
+      date,
+      dateKey,
+      label: index === 0 && dateKey === todayDateKey ? 'I dag' : `${dayName.charAt(0).toUpperCase()}${dayName.slice(1)}`,
+    };
+  });
+
+  const defaultAvailabilityDateKey =
+    availabilityByDate[todayDateKey]
+      ? todayDateKey
+      : orderedAvailabilityDateKeys[0] ?? availabilityWindowDays[0]?.dateKey ?? todayDateKey;
+
+  const activeAvailabilityDateKey = selectedAvailabilityDateKey || defaultAvailabilityDateKey;
+
+  const activeAvailabilityDate = parseDateKey(activeAvailabilityDateKey);
+  const activeAvailabilityDateLabel = Number.isNaN(activeAvailabilityDate.getTime())
+    ? ''
+    : activeAvailabilityDate.toLocaleDateString('nb-NO', { day: 'numeric', month: 'long' });
+
+  const currentMinutes = toMinutes(nowTimeLabel);
+
+  const selectedDaySlots = (availabilityByDate[activeAvailabilityDateKey] ?? [])
+    .filter((availability) => {
+      if (activeAvailabilityDateKey !== todayDateKey) {
+        return true;
+      }
+
+      return toMinutes(availability.endTime) >= currentMinutes;
+    })
+    .sort((firstAvailability, secondAvailability) => toMinutes(firstAvailability.startTime) - toMinutes(secondAvailability.startTime));
+
+  const timelineItemsWithState = timelineItems.map((item) => {
+    const startMinutes = toMinutes(item.startTime);
+    const endMinutes = toMinutes(item.endTime);
+    const isCurrent = currentMinutes >= startMinutes && currentMinutes <= endMinutes;
+    const isPast = currentMinutes > endMinutes;
+
+    return {
+      ...item,
+      isCurrent,
+      isPast,
+    };
+  });
+
+  const hasCurrentTimelineItem = timelineItemsWithState.some((item) => item.isCurrent);
+  const timelineStartMinutes = timelineItems.length > 0 ? toMinutes(timelineItems[0].startTime) : -1;
+  const timelineEndMinutes = timelineItems.length > 0 ? toMinutes(timelineItems[timelineItems.length - 1].endTime) : -1;
+
+  const shouldShowNowMarker =
+    !hasCurrentTimelineItem && currentMinutes >= timelineStartMinutes && currentMinutes <= timelineEndMinutes;
+
+  const nowMarkerIndex = timelineItems.findIndex((item) => currentMinutes < toMinutes(item.startTime));
 
   return (
     <div className="personnel-dashboard">
@@ -106,80 +358,255 @@ const PersonnelDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Calendar overview section */}
-      <div className="card calendar-overview">
-        <div className="card-header">
-          <h2 className="card-title">Kalenderoversikt</h2>
-        </div>
-        <div className="card-body">
-          <div className="calendar-grid">
-            {/* Mock calendar days */}
-            {Array.from({ length: 31 }, (_, i) => {
-              const day = i + 1;
-              const hasAppointment = [5, 12, 18, 25].includes(day); // Mock days with appointments
-              return (
-                <div key={day} className={`calendar-day ${hasAppointment ? 'has-appointment' : ''}`}>
-                  <span className="day-number">{day}</span>
-                  {hasAppointment && <div className="appointment-dot"></div>}
-                </div>
-              );
-            })}
+      <div className="top-content">
+        <div className="mini-column">
+          {/* Calendar overview section */}
+          <div className="card calendar-overview">
+          <div className="card-header">
+            <h2 className="card-title">Kalenderoversikt</h2>
           </div>
-        </div>
-      </div>
+          <div className="card-body">
+            <div className="calendar-header-row">
+              <button
+                type="button"
+                className="calendar-nav-btn"
+                aria-label="Forrige måned"
+                onClick={() => setDisplayedMonthDate(new Date(displayedYear, displayedMonth - 1, 1))}
+              >
+                <i className="bi bi-chevron-left"></i>
+              </button>
+              <h3 className="calendar-month-label">{monthLabel}</h3>
+              <button
+                type="button"
+                className="calendar-nav-btn"
+                aria-label="Neste måned"
+                onClick={() => setDisplayedMonthDate(new Date(displayedYear, displayedMonth + 1, 1))}
+              >
+                <i className="bi bi-chevron-right"></i>
+              </button>
+            </div>
 
-      {/* displays two-column layout for appointments and activity */}
-      <div className="dashboard-content">
-        <div className="dashboard-left">
-          {/* shows upcoming appointments table */}
-          <div className="card">
+            <div className="calendar-weekdays" role="presentation">
+              {weekDayLabels.map((label, index) => (
+                <span key={`${label}-${index}`} className="calendar-weekday">
+                  {label}
+                </span>
+              ))}
+            </div>
+
+            <div className="calendar-grid">
+              {calendarDays.map((calendarDay) => {
+                const isInCurrentWeek =
+                  calendarDay.date >= currentWeekStart && calendarDay.date <= currentWeekEnd && calendarDay.isCurrentMonth;
+
+                const isToday =
+                  calendarDay.date.getDate() === today.getDate() &&
+                  calendarDay.date.getMonth() === today.getMonth() &&
+                  calendarDay.date.getFullYear() === today.getFullYear();
+
+                const hasAppointment = appointmentDateSet.has(calendarDay.date.getTime());
+
+                return (
+                  <div
+                    key={calendarDay.key}
+                    className={`calendar-day ${calendarDay.isCurrentMonth ? '' : 'outside-month'} ${isInCurrentWeek ? 'current-week' : ''} ${isToday ? 'today' : ''} ${hasAppointment ? 'has-appointment' : ''}`}
+                  >
+                    <span className="day-number">{calendarDay.day}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          </div>
+
+          {/* Today's Tasks section 
+        <div className="card tasks-overview">
+          <div className="card-header">
+            <h2 className="card-title">Dagens oppgaver</h2>
+          </div>
+          <div className="card-body">
+            <div className="tasks-list">
+              {[
+                { id: 1, patient: 'Jane Smith', task: 'Emergency Visit', time: '09:15', tone: 'rose', icon: 'bi bi-heart-pulse-fill' },
+                { id: 2, patient: 'Samantha Williams', task: 'Routine Check-Up', time: '09:15', tone: 'blue', icon: 'bi bi-clipboard2-pulse' },
+                { id: 3, patient: 'Amy White', task: 'Video Consultation', time: '09:15', tone: 'violet', icon: 'bi bi-camera-video' },
+                { id: 4, patient: 'Tyler Young', task: 'Report', time: '09:45', tone: 'olive', icon: 'bi bi-briefcase-medical' },
+              ].map((task) => (
+                <div key={task.id} className={`task-item task-tone-${task.tone}`}>
+                  <div className="task-icon-wrap">
+                    <div className="task-icon">
+                      <i className={task.icon}></i>
+                    </div>
+                  </div>
+                  <div className="task-main">
+                    <p className="task-patient-name">{task.patient}</p>
+                    <p className="task-description">{task.task}</p>
+                  </div>
+                  <div className="task-time-pill">{task.time} AM</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div> */}
+
+          <div className="card timeline-overview">
             <div className="card-header">
-              <h2 className="card-title">Kommende avtaler</h2>
+              <h2 className="card-title">Dagens tidslinje</h2>
+              <label className="timeline-filter-wrap">
+                <span className="visually-hidden">Filtrer tidslinje</span>
+                <select
+                  className="timeline-filter-select"
+                  value={timelineFilter}
+                  onChange={(event) => setTimelineFilter(event.target.value as 'alle' | 'fysisk' | 'digitalt')}
+                  aria-label="Filtrer tidslinje"
+                >
+                  <option value="alle">Alle</option>
+                  <option value="fysisk">Fysisk</option>
+                  <option value="digitalt">Digitalt</option>
+                </select>
+              </label>
             </div>
             <div className="card-body">
-              {dashboard.upcomingAppointments.length > 0 ? (
-                <div className="table-wrapper">
-                  <table className="data-table">
-                    <thead>
-                      <tr>
-                        <th>Pasient</th>
-                        <th>Oppgave</th>
-                        <th>Dato</th>
-                        <th>Tid</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {dashboard.upcomingAppointments.map((appointment) => (
-                        <tr key={appointment.id}>
-                          <td>{appointment.patientName}</td>
-                          <td>
-                            <TaskBadges tasks={appointment.tasks} variant="secondary" />
-                          </td>
-                          <td>
-                              {new Date(appointment.date).toLocaleDateString('nb-NO', {
-                              day: '2-digit',
-                              month: '2-digit',
-                              year: '2-digit',
-                            })}
-                          </td>
-                          <td>{appointment.startTime}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+              <p className="timeline-date-label">{dayTimelineDateLabel}</p>
+
+              {timelineItemsWithState.length > 0 ? (
+                <div className="timeline-list">
+                  {timelineItemsWithState.map((item, index) => (
+                    <React.Fragment key={item.id}>
+                      {shouldShowNowMarker && index === nowMarkerIndex && (
+                        <div className="timeline-now-row">
+                          <div className="timeline-time timeline-now-time">{nowTimeLabel}</div>
+                          <div className="timeline-now-line"></div>
+                        </div>
+                      )}
+
+                      <div className={`timeline-row ${item.isCurrent ? 'active' : ''} ${item.isPast ? 'past' : ''}`}>
+                        <div className="timeline-time">{item.isCurrent ? nowTimeLabel : item.startTime}</div>
+                        <div className={`timeline-item timeline-tone-${item.tone} ${item.isCurrent ? 'active' : ''} ${item.isPast ? 'past' : ''}`}>
+                          <div className="timeline-item-content">
+                            <p className="timeline-patient-name">{item.patientName}</p>
+                            <TaskBadges tasks={item.tasks} variant="secondary" className="timeline-task-badges" />
+                            {item.visitType === 'Fysisk' ? (
+                              <p className="timeline-address">{item.zone && item.address ? `${item.zone}, ${item.address}` : (item.address || item.zone || 'Adresse ikke oppgitt')}</p>
+                            ) : (
+                              <p className="timeline-visit-type">Digitalt besøk</p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </React.Fragment>
+                  ))}
+
+                  {shouldShowNowMarker && nowMarkerIndex === -1 && (
+                    <div className="timeline-now-row">
+                      <div className="timeline-time timeline-now-time">{nowTimeLabel}</div>
+                      <div className="timeline-now-line"></div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="empty-state">
                   <i className="bi bi-calendar-x empty-icon"></i>
-                  <p className="empty-text">Ingen kommende avtaler planlagt.</p>
+                  <p className="empty-text">Ingen planlagte avtaler i dag.</p>
                 </div>
               )}
+
+              <Link to="/availability" className="timeline-view-more-btn">
+                Vis mer
+              </Link>
             </div>
           </div>
         </div>
 
-        <div className="dashboard-right">
-          {/* shows recent appointments cards */}
+        <div className="availability-column">
+          <div className="availability-quick-actions" role="group" aria-label="Hurtighandlinger">
+            <button type="button" className="quick-action-btn">
+              <i className="bi bi-calendar-plus"></i>
+              <span>Legg til nytt besøk</span>
+            </button>
+
+            <button type="button" className="quick-action-btn">
+              <i className="bi bi-arrow-repeat"></i>
+              <span>Oppdater tilgjengelighet</span>
+            </button>
+
+            <button type="button" className="quick-action-btn">
+              <i className="bi bi-camera-video"></i>
+              <span>Start videosamtale</span>
+            </button>
+
+            <button type="button" className="quick-action-btn">
+              <i className="bi bi-geo-alt"></i>
+              <span>Vis kart</span>
+            </button>
+          </div>
+
+          <div className="card availability-overview">
+            <div className="card-header">
+              <h2 className="card-title">Kommende tilgjengelighet</h2>
+              <Link to="/availability" className="btn btn-secondary btn-sm">
+                +
+              </Link>
+            </div>
+            <div className="card-body">
+              {orderedAvailabilityDateKeys.length > 0 ? (
+                <div className="availability-day-planner">
+                  <div className="availability-days-nav">
+                    <div className="availability-days-strip">
+                      {availabilityWindowDays.map((day) => {
+                        const hasSlots = Boolean(availabilityByDate[day.dateKey]);
+                        const isActive = day.dateKey === activeAvailabilityDateKey;
+
+                        return (
+                          <button
+                            key={day.dateKey}
+                            type="button"
+                            className={`availability-day-chip ${isActive ? 'active' : ''}`}
+                            onClick={() => setSelectedAvailabilityDateKey(day.dateKey)}
+                          >
+                            <span className="availability-day-chip-label">{day.label}</span>
+                            <span className="availability-day-chip-number">{day.date.getDate()}</span>
+                            <span className="availability-day-chip-month">
+                              {day.date.toLocaleDateString('nb-NO', { month: 'short' })}
+                            </span>
+                            {hasSlots && <span className="availability-day-dot"></span>}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {activeAvailabilityDateLabel && (
+                    <p className="availability-active-date">{activeAvailabilityDateLabel}</p>
+                  )}
+
+                  {selectedDaySlots.length > 0 ? (
+                    <div className="availability-slots-grid">
+                      {selectedDaySlots.map((availability) => (
+                        <div
+                          key={availability.id}
+                          className={`availability-slot-card ${availability.isBooked ? 'booked' : 'available'}`}
+                        >
+                          <span className="availability-slot-time">{availability.startTime}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="empty-state">
+                      <i className="bi bi-calendar-x empty-icon"></i>
+                      <p className="empty-text">Ingen tilgjengelige tider for valgt dag.</p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="empty-state">
+                  <i className="bi bi-calendar-x empty-icon"></i>
+                  <p className="empty-text">Ingen planlagt tilgjengelighet.</p>
+                </div>
+              )}
+            </div>
+          </div>
+
           <div className="card">
             <div className="card-header">
               <h2 className="card-title">Siste avtaler</h2>
@@ -191,7 +618,6 @@ const PersonnelDashboard: React.FC = () => {
                     <div key={appointment.id} className="appointment-item">
                       <div className="appointment-content">
                         <div className="appointment-main">
-                        
                           <div className="appointment-details">
                             <div className="appointment-top-row">
                               <p className="appointment-datetime">
@@ -210,7 +636,6 @@ const PersonnelDashboard: React.FC = () => {
                               <i className="bi bi-person-fill"></i> {appointment.patientName}
                             </p>
                             <div className="appointment-tasks">
-                              {/*<p className="appointment-patient">Task(s):</p>*/}
                               <TaskBadges tasks={appointment.tasks} variant="secondary" />
                             </div>
                           </div>
@@ -230,95 +655,10 @@ const PersonnelDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Today's Tasks section */}
-      <div className="card">
-        <div className="card-header">
-          <h2 className="card-title">Dagens oppgaver</h2>
-        </div>
-        <div className="card-body">
-          <div className="tasks-list">
-            {/* Mock tasks */}
-            {[
-              { id: 1, patient: 'Jane Smith', task: 'Medisinhåndtering', time: '10:00', completed: false },
-              { id: 2, patient: 'John Doe', task: 'Sjekk av blodtrykk og puls', time: '11:30', completed: true },
-              { id: 3, patient: 'Alice Johnson', task: 'Hjelp med matinnkjøp', time: '14:00', completed: false },
-              { id: 4, patient: 'Bob Wilson', task: 'Digital hjelp - e-postoppsett', time: '16:00', completed: false },
-            ].map((task) => (
-              <div key={task.id} className={`task-item ${task.completed ? 'completed' : ''}`}>
-                <div className="task-content">
-                  <div className="task-main">
-                    <p className="task-description">{task.task}</p>
-                    <p className="task-patient"><i className="bi bi-person-fill"></i> {task.patient}</p>
-                    <p className="task-time"><i className="bi bi-clock-fill"></i> {task.time}</p>
-                  </div>
-                  <div className="task-status">
-                    {task.completed ? (
-                      <i className="bi bi-check-circle-fill text-success"></i>
-                    ) : (
-                      <i className="bi bi-circle text-muted"></i>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+      {/*
+        Kommende avtaler er midlertidig kommentert ut etter ønske.
+      */}
 
-      {/* displays upcoming availability schedule */}
-      <div className="card">
-        <div className="card-header">
-          <h2 className="card-title">Kommende tilgjengelighet</h2>
-          <Link to="/availability" className="btn btn-secondary btn-sm">
-            +
-          </Link>
-        </div>
-        <div className="card-body">
-          {dashboard.upcomingAvailability.length > 0 ? (
-            <div className="table-wrapper">
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>Dato</th>
-                    <th>Start</th>
-                    <th>Slutt</th>
-                    <th>Notater</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {dashboard.upcomingAvailability.map((availability) => (
-                    <tr key={availability.id}>
-                      <td>
-                        {new Date(availability.date).toLocaleDateString('en-GB', {
-                          day: '2-digit',
-                          month: '2-digit',
-                          year: '2-digit',
-                        })}
-                      </td>
-                      <td>{availability.startTime}</td>
-                      <td>{availability.endTime}</td>
-                      <td>{availability.notes || '-'}</td>
-                      <td>
-                        {availability.isBooked ? (
-                          <StatusBadge status="Booked" />
-                        ) : (
-                          <StatusBadge status="Available" />
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="empty-state">
-              <i className="bi bi-calendar-x empty-icon"></i>
-              <p className="empty-text">Ingen planlagt tilgjengelighet.</p>
-            </div>
-          )}
-        </div>
-      </div>
     </div>
   );
 };

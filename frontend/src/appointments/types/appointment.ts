@@ -37,4 +37,5 @@ export interface AppointmentSummary {
   endTime: string;
   status: string;
   formattedDateTime?: string;
+  availabilityNotes?: string;
 }

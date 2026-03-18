@@ -5,7 +5,6 @@ import {
   LoginPage, 
   RegisterPage, 
   PrivateRoute, 
-  PatientOnlyRoute, 
   PersonnelOnlyRoute,
   PublicOnlyRoute
 } from './auth';

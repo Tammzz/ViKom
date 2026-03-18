@@ -26,10 +26,16 @@ namespace backend.Services
             var appointmentsThisWeek = await _appointmentRepository.GetThisWeekCountAsync(personnelId);
             var pendingAppointments = await _appointmentRepository.GetPendingCountAsync(personnelId);
             var cancelledAppointments = await _appointmentRepository.GetCancelledCountAsync(personnelId);
+            var today = DateTime.Today;
+            var weekEnd = today.AddDays(6);
             
             var upcomingAppointments = await _appointmentRepository.GetUpcomingByPersonnelIdAsync(personnelId, 5);
             var recentAppointments = await _appointmentRepository.GetRecentByPersonnelIdAsync(personnelId, 2);
-            var upcomingAvailability = await _availabilityRepository.GetUpcomingByPersonnelIdAsync(personnelId, 5);
+            var upcomingAvailability = (await _availabilityRepository.GetUpcomingByPersonnelIdAsync(personnelId, 400))
+                .Where(availability => availability.Date >= today && availability.Date <= weekEnd)
+                .OrderBy(availability => availability.Date)
+                .ThenBy(availability => availability.StartTime)
+                .ToList();
 
             return new PersonnelDashboardDto
             {
@@ -103,7 +109,8 @@ namespace backend.Services
                 StartTime = appointment.StartTime.ToString(@"hh\:mm"),
                 EndTime = appointment.EndTime.ToString(@"hh\:mm"),
                 Status = appointment.Status,
-                FormattedDateTime = $"{appointment.Availability?.Date:yyyy-MM-dd} {appointment.StartTime:hh\\:mm}-{appointment.EndTime:hh\\:mm}"
+                FormattedDateTime = $"{appointment.Availability?.Date:yyyy-MM-dd} {appointment.StartTime:hh\\:mm}-{appointment.EndTime:hh\\:mm}",
+                AvailabilityNotes = appointment.Availability?.Notes ?? string.Empty
             };
         }
 

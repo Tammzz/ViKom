@@ -218,6 +218,9 @@ const AvailabilityCalendarPage: React.FC = () => {
           <button className="today-btn" onClick={handleToday}>
             I dag
           </button>
+          <button className="today-btn" onClick={loadData} disabled={loading}>
+            Oppdater
+          </button>
         </div>
 
         {/* displays current date range and navigation arrows */}

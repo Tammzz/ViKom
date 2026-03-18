@@ -12,5 +12,6 @@ namespace backend.DTOs
         public string EndTime { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;
         public string FormattedDateTime { get; set; } = string.Empty;
+        public string AvailabilityNotes { get; set; } = string.Empty;
     }
 }

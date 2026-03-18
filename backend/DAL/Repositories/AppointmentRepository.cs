@@ -42,12 +42,14 @@ namespace backend.DAL.Repositories
 
         public async Task<IEnumerable<Appointment>> GetByPersonnelIdAsync(string personnelId)
         {
-            return await _context.Appointments
+            var appointments = await _context.Appointments
                 .Include(a => a.Patient)
                 .Include(a => a.Availability)
                 .ThenInclude(av => av.Personnel)
                 .Where(a => a.Availability.PersonnelId == personnelId)
                 .ToListAsync();
+
+            return DeduplicateBySlot(appointments);
         }
 
         public async Task<IEnumerable<Appointment>> GetByPersonnelIdAndDateRangeAsync(string personnelId, DateTime startDate, DateTime endDate)
@@ -94,11 +96,41 @@ namespace backend.DAL.Repositories
                 .OrderBy(a => a.Availability.Date)
                 .ToListAsync();
             
-            return appointments
+            return DeduplicateBySlot(appointments)
                 .OrderBy(a => a.Availability.Date)
                 .ThenBy(a => a.StartTime)
                 .Take(count)
                 .ToList();
+        }
+
+        private static IEnumerable<Appointment> DeduplicateBySlot(IEnumerable<Appointment> appointments)
+        {
+            return appointments
+                .GroupBy(appointment => new
+                {
+                    appointment.Availability.PersonnelId,
+                    appointment.Availability.Date,
+                    appointment.StartTime,
+                    appointment.PatientId
+                })
+                .Select(group =>
+                    group
+                        .OrderByDescending(appointment => AppointmentStatusRank(appointment.Status))
+                        .ThenByDescending(appointment => appointment.Id)
+                        .First())
+                .ToList();
+        }
+
+        private static int AppointmentStatusRank(string status)
+        {
+            return status switch
+            {
+                "InProgress" => 4,
+                "Booked" => 3,
+                "Completed" => 2,
+                "Cancelled" => 1,
+                _ => 0
+            };
         }
 
         public async Task<IEnumerable<Appointment>> GetRecentByPersonnelIdAsync(string personnelId, int count)
