@@ -3,10 +3,12 @@ export interface Appointment {
   id?: number;
   patientId: string;
   patientName?: string;
+  patientAddress?: string;
   availabilityId: number;
   personnelId?: string;
   personnelName?: string;
   date?: string;
+  availabilityNotes?: string;
   // Stores comma-separated list of tasks (e.g., "Medication, Vitals, Exercises")
   tasks: string;
   startTime: string; // TimeSpan represented as string "HH:mm:ss" or "HH:mm"

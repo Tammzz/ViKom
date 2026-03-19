@@ -15,6 +15,7 @@ const RegisterPage: React.FC = () => {
     fullName: '',
     email: '',
     phoneNumber: '',
+    address: '',
     userName: '',
     role: 'Patient' as 'Personnel' | 'Patient',
     password: '',
@@ -87,7 +88,8 @@ const RegisterPage: React.FC = () => {
         password: formData.password,
         fullName: formData.fullName,
         role: formData.role,
-        phoneNumber: formData.phoneNumber || undefined
+        phoneNumber: formData.phoneNumber || undefined,
+        address: formData.address || undefined
       };
 
       // calls AuthService to register new user
@@ -162,6 +164,17 @@ const RegisterPage: React.FC = () => {
                 type="tel"
                 name="phoneNumber"
                 value={formData.phoneNumber}
+                onChange={handleChange}
+                disabled={isLoading}
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Adresse (valgfritt)</Form.Label>
+              <Form.Control
+                type="text"
+                name="address"
+                value={formData.address}
                 onChange={handleChange}
                 disabled={isLoading}
               />

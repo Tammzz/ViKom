@@ -10,6 +10,8 @@ namespace backend.DTOs
         public string PatientId { get; set; } = string.Empty;
         
         public string? PatientName { get; set; }
+
+        public string? PatientAddress { get; set; }
         
         [Required]
         public int AvailabilityId { get; set; }
@@ -23,6 +25,8 @@ namespace backend.DTOs
         // Stores comma-separated list of tasks (e.g., "Medication, Vitals, Exercises")
         [Required(ErrorMessage = "At least one task is required.")]
         public string Tasks { get; set; } = string.Empty;
+
+        public string? AvailabilityNotes { get; set; }
         
         // Auto-filled from availability slot - not user input
         public string? StartTime { get; set; }

@@ -45,7 +45,8 @@ namespace backend.Controllers
                 Email = registerDto.Email,
                 FullName = registerDto.FullName,
                 Role = registerDto.Role,
-                PhoneNumber = registerDto.PhoneNumber
+                PhoneNumber = registerDto.PhoneNumber,
+                Address = registerDto.Address
             };
 
             var result = await _userManager.CreateAsync(user, registerDto.Password);

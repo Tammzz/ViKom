@@ -14,4 +14,5 @@ export interface RegisterDto {
   fullName: string;
   role: 'Personnel' | 'Patient';
   phoneNumber?: string;
+  address?: string;
 }

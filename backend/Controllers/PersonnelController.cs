@@ -35,7 +35,8 @@ namespace backend.Controllers
                     Email = p.Email ?? string.Empty,
                     FullName = p.FullName,
                     Role = p.Role,
-                    PhoneNumber = p.PhoneNumber
+                    PhoneNumber = p.PhoneNumber,
+                    Address = p.Address
                 });
                 
                 return Ok(personnelDtos);

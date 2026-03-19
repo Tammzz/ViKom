@@ -34,6 +34,7 @@ namespace backend.Services
                     FullName = patient.FullName,
                     Email = patient.Email ?? string.Empty,
                     PhoneNumber = patient.PhoneNumber ?? string.Empty,
+                    Address = patient.Address ?? string.Empty,
                     TotalAppointments = appointments.Count(),
                     LastAppointmentDate = lastAppointment?.Availability.Date.ToString("dd/MM/yyyy") ?? "Never"
                 });

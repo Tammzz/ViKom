@@ -1,84 +1,162 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Card, Button, Form, Badge } from 'react-bootstrap';
+import * as AuthService from '../auth/AuthService';
+import AppointmentService from '../appointments/services/AppointmentService';
+import type { Appointment } from '../appointments/types/appointment';
 import TaskBadges from '../components/common/TaskBadges';
 import './PlanningOverviewPage.css';
 
-// Mock visits data
-const mockVisits = [
-  {
-    id: 1,
-    patientName: 'Jane Smith',
-    address: '123 Main St',
-    area: 'Sentrum',
-    taskType: 'Fysisk',
-    tasks: 'Medisinhåndtering, Blodtrykksmåling',
-    date: '2026-03-15',
-    time: '10:00',
-    status: 'Planlagt'
-  },
-  {
-    id: 2,
-    patientName: 'John Doe',
-    address: '456 Oak Ave',
-    area: 'Forstad',
-    taskType: 'Digital',
-    tasks: 'Digital hjelp - e-postoppsett',
-    date: '2026-03-15',
-    time: '14:00',
-    status: 'Planlagt'
-  },
-  {
-    id: 3,
-    patientName: 'Alice Johnson',
-    address: '789 Pine Rd',
-    area: 'Sentrum',
-    taskType: 'Fysisk',
-    tasks: 'Handle matvarer, Lett rengjøring',
-    date: '2026-03-16',
-    time: '09:00',
-    status: 'Planlagt'
-  },
-  {
-    id: 4,
-    patientName: 'Bob Wilson',
-    address: '321 Elm St',
-    area: 'Forstad',
-    taskType: 'Fysisk',
-    tasks: 'Matlaging, Selskap',
-    date: '2026-03-16',
-    time: '11:00',
-    status: 'Planlagt'
-  },
-  {
-    id: 5,
-    patientName: 'Carol Brown',
-    address: '654 Maple Dr',
-    area: 'Landlig',
-    taskType: 'Digital',
-    tasks: 'Digital hjelp - telefonoppsett',
-    date: '2026-03-17',
-    time: '13:00',
-    status: 'Venter'
-  },
-];
+type PlanningVisit = {
+  id: number;
+  patientName: string;
+  address: string;
+  area: string;
+  taskType: 'Digital' | 'Fysisk';
+  tasks: string;
+  date: string;
+  time: string;
+  status: string;
+};
+
+const mapTaskType = (tasks: string): 'Digital' | 'Fysisk' => {
+  return /digital/i.test(tasks) ? 'Digital' : 'Fysisk';
+};
+
+const mapStatus = (status: Appointment['status']): string => {
+  switch (status) {
+    case 'Booked':
+      return 'Planlagt';
+    case 'InProgress':
+      return 'Pågår';
+    case 'Completed':
+      return 'Fullført';
+    case 'Cancelled':
+      return 'Avlyst';
+    default:
+      return status;
+  }
+};
+
+const parseAreaAndAddress = (
+  availabilityNotes?: string,
+  patientAddress?: string
+): { area: string; address: string } => {
+  const fallbackAddress = patientAddress?.trim() || 'Adresse ikke tilgjengelig';
+  if (!availabilityNotes) {
+    return { area: 'Ikke satt', address: fallbackAddress };
+  }
+
+  const parts = availabilityNotes.split(',').map((part) => part.trim()).filter(Boolean);
+  const area = parts.length > 0 && /^sone/i.test(parts[0]) ? parts[0] : 'Ikke satt';
+  const noteAddress = parts.length > 1 ? parts.slice(1).join(', ') : '';
+
+  return {
+    area,
+    address: fallbackAddress !== 'Adresse ikke tilgjengelig' ? fallbackAddress : noteAddress || fallbackAddress,
+  };
+};
 
 const PlanningOverviewPage: React.FC = () => {
+  const userInfo = AuthService.getUserInfo();
+  const role = userInfo?.role;
+
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [taskTypeFilter, setTaskTypeFilter] = useState<string>('Alle');
   const [areaFilter, setAreaFilter] = useState<string>('Alle');
+  const [sortBy, setSortBy] = useState<string>('time');
+
+  const loadAppointments = async () => {
+    try {
+      setLoading(true);
+      setError('');
+
+      let data: Appointment[] = [];
+      if (role === 'Patient' && userInfo?.userId) {
+        data = await AppointmentService.getByPatientId(userInfo.userId);
+      } else if (role === 'Personnel' && userInfo?.userId) {
+        data = await AppointmentService.getByPersonnelId(userInfo.userId);
+      } else {
+        data = await AppointmentService.getAll();
+      }
+
+      setAppointments(data);
+    } catch {
+      setError('Kunne ikke laste planlagte besøk');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadAppointments();
+  }, []);
+
+  const visits = useMemo<PlanningVisit[]>(() => {
+    return appointments.map((appointment) => ({
+      ...parseAreaAndAddress(appointment.availabilityNotes, appointment.patientAddress),
+      id: appointment.id ?? 0,
+      patientName: appointment.patientName || 'Ukjent pasient',
+      taskType: mapTaskType(appointment.tasks),
+      tasks: appointment.tasks,
+      date: appointment.date || '',
+      time: appointment.startTime || '',
+      status: mapStatus(appointment.status),
+    }));
+  }, [appointments]);
 
   // Get unique task types and areas
-  const taskTypes = ['Alle', ...Array.from(new Set(mockVisits.map(v => v.taskType)))];
-  const areas = ['Alle', ...Array.from(new Set(mockVisits.map(v => v.area)))];
+  const taskTypes = ['Alle', ...Array.from(new Set(visits.map((v) => v.taskType)))];
+  const areas = ['Alle', ...Array.from(new Set(visits.map((v) => v.area)))];
 
   // Filter visits
-  const filteredVisits = mockVisits.filter(visit => {
+  const filteredVisits = visits.filter((visit) => {
+    const isPlanned = visit.status === 'Planlagt';
+    const matchesSearch = visit.patientName.toLowerCase().includes(searchQuery.trim().toLowerCase());
     const matchesTaskType = taskTypeFilter === 'Alle' || visit.taskType === taskTypeFilter;
     const matchesArea = areaFilter === 'Alle' || visit.area === areaFilter;
-    return matchesTaskType && matchesArea;
+    return isPlanned && matchesSearch && matchesTaskType && matchesArea;
   });
+
+  const displayedVisits = [...filteredVisits].sort((a, b) => {
+    if (sortBy === 'patient') {
+      return a.patientName.localeCompare(b.patientName, 'nb-NO');
+    }
+
+    if (sortBy === 'area') {
+      return a.area.localeCompare(b.area, 'nb-NO');
+    }
+
+    const dateA = new Date(`${a.date}T${a.time || '00:00'}`).getTime();
+    const dateB = new Date(`${b.date}T${b.time || '00:00'}`).getTime();
+    return dateA - dateB;
+  });
+
+  const mapAreaCounts = Array.from(
+    displayedVisits.reduce((acc, visit) => {
+      acc.set(visit.area, (acc.get(visit.area) || 0) + 1);
+      return acc;
+    }, new Map<string, number>())
+  );
+
+  if (loading) {
+    return (
+      <div className="planning-overview-page">
+        <p>Laster planlagte besok...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="planning-overview-page">
+      {error && (
+        <div className="empty-state">
+          <p className="empty-text">{error}</p>
+        </div>
+      )}
+
       {/* Page Header */}
       <div className="page-header">
         <h1 className="page-title">Oversikt over planlagte besøk</h1>
@@ -88,30 +166,48 @@ const PlanningOverviewPage: React.FC = () => {
       {/* Filters */}
       <Card className="filters-card">
         <Card.Body>
-          <div className="filters-grid">
-            <Form.Group>
-              <Form.Label><strong>Oppgavetype</strong></Form.Label>
-              <Form.Select
-                value={taskTypeFilter}
-                onChange={(e) => setTaskTypeFilter(e.target.value)}
-              >
-                {taskTypes.map(type => (
-                  <option key={type} value={type}>{type}</option>
-                ))}
-              </Form.Select>
-            </Form.Group>
+          <div className="controls-bar">
+            <Form.Control
+              type="search"
+              className="search-control"
+              placeholder="Search patient"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              aria-label="Search patient"
+            />
 
-            <Form.Group>
-              <Form.Label><strong>Område</strong></Form.Label>
-              <Form.Select
-                value={areaFilter}
-                onChange={(e) => setAreaFilter(e.target.value)}
-              >
-                {areas.map(area => (
-                  <option key={area} value={area}>{area}</option>
-                ))}
-              </Form.Select>
-            </Form.Group>
+            <Form.Select
+              className="compact-select"
+              value={taskTypeFilter}
+              onChange={(e) => setTaskTypeFilter(e.target.value)}
+              aria-label="Filter by type"
+            >
+              {taskTypes.map((type) => (
+                <option key={type} value={type}>{`Type: ${type}`}</option>
+              ))}
+            </Form.Select>
+
+            <Form.Select
+              className="compact-select"
+              value={areaFilter}
+              onChange={(e) => setAreaFilter(e.target.value)}
+              aria-label="Filter by area"
+            >
+              {areas.map((area) => (
+                <option key={area} value={area}>{`Area: ${area}`}</option>
+              ))}
+            </Form.Select>
+
+            <Form.Select
+              className="compact-select"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              aria-label="Sort visits"
+            >
+              <option value="time">Sort: Time</option>
+              <option value="patient">Sort: Patient</option>
+              <option value="area">Sort: Area</option>
+            </Form.Select>
           </div>
         </Card.Body>
       </Card>
@@ -125,9 +221,9 @@ const PlanningOverviewPage: React.FC = () => {
               <h2 className="card-title">Planlagte besøk ({filteredVisits.length})</h2>
             </Card.Header>
             <Card.Body>
-              {filteredVisits.length > 0 ? (
+              {displayedVisits.length > 0 ? (
                 <div className="visits-list">
-                  {filteredVisits.map((visit) => (
+                  {displayedVisits.map((visit) => (
                     <div key={visit.id} className="visit-item">
                       <div className="visit-header">
                         <div className="visit-main">
@@ -146,15 +242,12 @@ const PlanningOverviewPage: React.FC = () => {
                       <div className="visit-details">
                         <div className="visit-datetime">
                           <i className="bi bi-calendar-event-fill"></i>
-                          {new Date(visit.date).toLocaleDateString('nb-NO', {
-                            month: 'short',
-                            day: 'numeric',
-                          })} kl. {visit.time}
-                        </div>
-                        <div className="visit-status">
-                          <Badge bg={visit.status === 'Planlagt' ? 'success' : 'warning'}>
-                            {visit.status}
-                          </Badge>
+                          {visit.date
+                            ? `${new Date(visit.date).toLocaleDateString('nb-NO', {
+                                month: 'short',
+                                day: 'numeric',
+                              })} kl. ${visit.time}`
+                            : 'Tid ikke satt'}
                         </div>
                       </div>
                       <div className="visit-tasks">
@@ -185,29 +278,33 @@ const PlanningOverviewPage: React.FC = () => {
         <div className="map-section">
           <Card className="map-card">
             <Card.Header>
-              <h2 className="card-title">Karte over områder</h2>
+              <h2 className="card-title">Kart over områder</h2>
             </Card.Header>
             <Card.Body className="map-body">
               <div className="map-placeholder">
                 <div className="map-content">
                   <i className="bi bi-geo-alt-fill map-icon"></i>
-                  <h3 className="map-title">Interaktiv kart</h3>
+                  <h3 className="map-title">Interaktivt kart</h3>
                   <p className="map-text">
-                    Kartvisning for å planlegge besøk etter område og optimalisere ruter.
+                    Kartvisning for å planlegge besøk etter områder og optimalisere ruter.
                   </p>
                   <div className="map-areas">
-                    <div className="map-area downtown">
-                      <span className="area-label">Sentrum</span>
-                      <span className="area-count">2 besøk</span>
-                    </div>
-                    <div className="map-area suburb">
-                      <span className="area-label">Forstad</span>
-                      <span className="area-count">2 besøk</span>
-                    </div>
-                    <div className="map-area rural">
-                      <span className="area-label">Landlig</span>
-                      <span className="area-count">1 besøk</span>
-                    </div>
+                    {mapAreaCounts.length > 0 ? (
+                      mapAreaCounts.map(([area, count], index) => {
+                        const variantClass = index % 3 === 0 ? 'downtown' : index % 3 === 1 ? 'suburb' : 'rural';
+                        return (
+                          <div key={area} className={`map-area ${variantClass}`}>
+                            <span className="area-label">{area}</span>
+                            <span className="area-count">{count} besøk</span>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <div className="map-area downtown">
+                        <span className="area-label">Ingen data</span>
+                        <span className="area-count">0 besøk</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

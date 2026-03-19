@@ -172,11 +172,13 @@ namespace backend.Services
                 Id = appointment.Id,
                 PatientId = appointment.PatientId,
                 PatientName = appointment.Patient?.FullName ?? string.Empty,
+                PatientAddress = appointment.Patient?.Address ?? string.Empty,
                 AvailabilityId = appointment.AvailabilityId,
                 PersonnelId = appointment.Availability?.PersonnelId ?? string.Empty,
                 PersonnelName = appointment.Availability?.Personnel?.FullName ?? string.Empty,
                 Date = appointment.Availability?.Date.ToString("yyyy-MM-dd") ?? string.Empty,
                 Tasks = appointment.Tasks,
+                AvailabilityNotes = appointment.Availability?.Notes ?? string.Empty,
                 StartTime = appointment.StartTime.ToString(@"hh\:mm"),
                 EndTime = appointment.EndTime.ToString(@"hh\:mm"),
                 Status = status

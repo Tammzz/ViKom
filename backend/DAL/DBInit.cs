@@ -9,6 +9,7 @@ namespace backend.DAL
         public static async Task SeedAsync(ApplicationDbContext context, UserManager<User> userManager, RoleManager<IdentityRole> roleManager)
         {
             context.Database.EnsureCreated();
+            await EnsureUserAddressColumnAsync(context);
 
             // Check if roles exist, if not create them
             if (!await roleManager.RoleExistsAsync("Personnel"))
@@ -24,33 +25,60 @@ namespace backend.DAL
             await ReplaceLegacyAvailabilityNotesAsync(context);
             await RemoveDuplicateSlotDataAsync(context);
 
-            // Seed users if none exist
-            if (!context.Users.Any())
-            {
-                var personnel = new User
-                {
-                    UserName = "nurse@homecare.local",
-                    Email = "nurse@homecare.local",
-                    FullName = "Nurse Nora",
-                    Role = "Personnel",
-                    EmailConfirmed = true
-                };
+            // Ensure base personnel and a broader demo patient set always exist.
+            await EnsureDemoUserAsync(
+                userManager,
+                userName: "nurse@homecare.local",
+                email: "nurse@homecare.local",
+                fullName: "Nurse Nora",
+                role: "Personnel",
+                phoneNumber: "+47 900 00 001",
+                address: "Sognsveien 10, 0450 Oslo");
 
-                var patient = new User
-                {
-                    UserName = "patient@homecare.local",
-                    Email = "patient@homecare.local",
-                    FullName = "Patient Peter",
-                    Role = "Patient",
-                    EmailConfirmed = true
-                };
+            await EnsureDemoUserAsync(
+                userManager,
+                userName: "patient@homecare.local",
+                email: "patient@homecare.local",
+                fullName: "Patient Peter",
+                role: "Patient",
+                phoneNumber: "+47 900 00 101",
+                address: "Hagegata 25, 0653 Oslo");
 
-                await userManager.CreateAsync(personnel, "Pass123!");
-                await userManager.CreateAsync(patient, "Pass123!");
+            await EnsureDemoUserAsync(
+                userManager,
+                userName: "patient.paula@homecare.local",
+                email: "patient.paula@homecare.local",
+                fullName: "Paula Hansen",
+                role: "Patient",
+                phoneNumber: "+47 900 00 102",
+                address: "Rolf Hofmos gate 18, 0655 Oslo");
 
-                await userManager.AddToRoleAsync(personnel, "Personnel");
-                await userManager.AddToRoleAsync(patient, "Patient");
-            }
+            await EnsureDemoUserAsync(
+                userManager,
+                userName: "patient.ole@homecare.local",
+                email: "patient.ole@homecare.local",
+                fullName: "Ole Nilsen",
+                role: "Patient",
+                phoneNumber: "+47 900 00 103",
+                address: "Enebakkveien 36, 0657 Oslo");
+
+            await EnsureDemoUserAsync(
+                userManager,
+                userName: "patient.ingrid@homecare.local",
+                email: "patient.ingrid@homecare.local",
+                fullName: "Ingrid Berg",
+                role: "Patient",
+                phoneNumber: "+47 900 00 104",
+                address: "Grensen 12, 0159 Oslo");
+
+            await EnsureDemoUserAsync(
+                userManager,
+                userName: "patient.karim@homecare.local",
+                email: "patient.karim@homecare.local",
+                fullName: "Karim Ali",
+                role: "Patient",
+                phoneNumber: "+47 900 00 105",
+                address: "Kampengata 7, 0654 Oslo");
 
             // Seed availability windows if none exist (NEW SYSTEM)
             if (!context.AvailabilityWindows.Any())
@@ -219,6 +247,101 @@ namespace backend.DAL
             }
         }
 
+        private static async Task EnsureUserAddressColumnAsync(ApplicationDbContext context)
+        {
+            var connection = context.Database.GetDbConnection();
+            await connection.OpenAsync();
+
+            try
+            {
+                using var checkCommand = connection.CreateCommand();
+                checkCommand.CommandText = "PRAGMA table_info('AspNetUsers');";
+
+                var hasAddressColumn = false;
+                using (var reader = await checkCommand.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        var columnName = reader[1]?.ToString();
+                        if (string.Equals(columnName, "Address", StringComparison.OrdinalIgnoreCase))
+                        {
+                            hasAddressColumn = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!hasAddressColumn)
+                {
+                    using var alterCommand = connection.CreateCommand();
+                    alterCommand.CommandText = "ALTER TABLE AspNetUsers ADD COLUMN Address TEXT NULL;";
+                    await alterCommand.ExecuteNonQueryAsync();
+                }
+            }
+            finally
+            {
+                await connection.CloseAsync();
+            }
+        }
+
+        private static async Task EnsureDemoUserAsync(
+            UserManager<User> userManager,
+            string userName,
+            string email,
+            string fullName,
+            string role,
+            string phoneNumber,
+            string address)
+        {
+            var existingUser = await userManager.FindByNameAsync(userName);
+
+            if (existingUser == null)
+            {
+                var newUser = new User
+                {
+                    UserName = userName,
+                    Email = email,
+                    FullName = fullName,
+                    Role = role,
+                    PhoneNumber = phoneNumber,
+                    Address = address,
+                    EmailConfirmed = true
+                };
+
+                var createResult = await userManager.CreateAsync(newUser, "Pass123!");
+                if (createResult.Succeeded)
+                {
+                    await userManager.AddToRoleAsync(newUser, role);
+                }
+
+                return;
+            }
+
+            var requiresUpdate =
+                existingUser.Email != email ||
+                existingUser.FullName != fullName ||
+                existingUser.Role != role ||
+                existingUser.PhoneNumber != phoneNumber ||
+                existingUser.Address != address ||
+                !existingUser.EmailConfirmed;
+
+            if (requiresUpdate)
+            {
+                existingUser.Email = email;
+                existingUser.FullName = fullName;
+                existingUser.Role = role;
+                existingUser.PhoneNumber = phoneNumber;
+                existingUser.Address = address;
+                existingUser.EmailConfirmed = true;
+                await userManager.UpdateAsync(existingUser);
+            }
+
+            if (!await userManager.IsInRoleAsync(existingUser, role))
+            {
+                await userManager.AddToRoleAsync(existingUser, role);
+            }
+        }
+
         private static async Task RemoveDuplicateSlotDataAsync(ApplicationDbContext context)
         {
             var allAvailabilities = await context.Availabilities
@@ -336,12 +459,17 @@ namespace backend.DAL
         private static async Task SeedTodayTimelineDemoAppointmentsAsync(ApplicationDbContext context)
         {
             var personnel = await context.Users.FirstOrDefaultAsync(u => u.Role == "Personnel");
-            var patient = await context.Users.FirstOrDefaultAsync(u => u.Role == "Patient");
+            var patients = await context.Users
+                .Where(u => u.Role == "Patient")
+                .OrderBy(u => u.UserName)
+                .ToListAsync();
 
-            if (personnel == null || patient == null)
+            if (personnel == null || patients.Count == 0)
             {
                 return;
             }
+
+            var demoPatientIds = patients.Select(p => p.Id).ToHashSet();
 
             var today = DateTime.Today;
 
@@ -389,7 +517,7 @@ namespace backend.DAL
                         a.StartTime == obsoleteSlot.Start &&
                         a.EndTime == obsoleteSlot.End);
 
-                if (obsoleteAvailability?.Appointment != null && obsoleteAvailability.Appointment.PatientId == patient.Id)
+                if (obsoleteAvailability?.Appointment != null && demoPatientIds.Contains(obsoleteAvailability.Appointment.PatientId))
                 {
                     context.Appointments.Remove(obsoleteAvailability.Appointment);
                     context.Availabilities.Remove(obsoleteAvailability);
@@ -424,7 +552,7 @@ namespace backend.DAL
                 .Where(appointment =>
                     appointment.Availability.PersonnelId == personnel.Id
                     && appointment.Availability.Date == today
-                    && appointment.PatientId == patient.Id
+                    && demoPatientIds.Contains(appointment.PatientId)
                     && !validTimelineStarts.Contains(appointment.StartTime))
                 .ToListAsync();
 
@@ -434,8 +562,11 @@ namespace backend.DAL
                 await context.SaveChangesAsync();
             }
 
-            foreach (var entry in timelineEntries)
+            for (var index = 0; index < timelineEntries.Length; index++)
             {
+                var entry = timelineEntries[index];
+                var selectedPatient = patients[index % patients.Count];
+
                 var availability = await context.Availabilities
                     .Include(a => a.Appointment)
                     .FirstOrDefaultAsync(a =>
@@ -468,7 +599,7 @@ namespace backend.DAL
                 {
                     var existingAppointment = availability.Appointment;
                     var shouldUpdateAppointment =
-                        existingAppointment.PatientId != patient.Id ||
+                        existingAppointment.PatientId != selectedPatient.Id ||
                         existingAppointment.Tasks != entry.Tasks ||
                         existingAppointment.StartTime != entry.Start ||
                         existingAppointment.EndTime != entry.End ||
@@ -476,7 +607,7 @@ namespace backend.DAL
 
                     if (shouldUpdateAppointment)
                     {
-                        existingAppointment.PatientId = patient.Id;
+                        existingAppointment.PatientId = selectedPatient.Id;
                         existingAppointment.Tasks = entry.Tasks;
                         existingAppointment.StartTime = entry.Start;
                         existingAppointment.EndTime = entry.End;
@@ -489,7 +620,7 @@ namespace backend.DAL
 
                 var appointment = new Appointment
                 {
-                    PatientId = patient.Id,
+                    PatientId = selectedPatient.Id,
                     AvailabilityId = availability.Id,
                     Tasks = entry.Tasks,
                     StartTime = entry.Start,
@@ -505,12 +636,17 @@ namespace backend.DAL
         private static async Task SeedTomorrowDemoAppointmentsAsync(ApplicationDbContext context)
         {
             var personnel = await context.Users.FirstOrDefaultAsync(u => u.Role == "Personnel");
-            var patient = await context.Users.FirstOrDefaultAsync(u => u.Role == "Patient");
+            var patients = await context.Users
+                .Where(u => u.Role == "Patient")
+                .OrderBy(u => u.UserName)
+                .ToListAsync();
 
-            if (personnel == null || patient == null)
+            if (personnel == null || patients.Count == 0)
             {
                 return;
             }
+
+            var demoPatientIds = patients.Select(p => p.Id).ToHashSet();
 
             var tomorrow = DateTime.Today.AddDays(1);
 
@@ -545,7 +681,7 @@ namespace backend.DAL
                             a.Date == tomorrow &&
                             a.StartTime == entry.Start);
 
-                    if (availability?.Appointment != null && availability.Appointment.PatientId == patient.Id)
+                    if (availability?.Appointment != null && demoPatientIds.Contains(availability.Appointment.PatientId))
                     {
                         context.Appointments.Remove(availability.Appointment);
                     }
@@ -567,7 +703,7 @@ namespace backend.DAL
                 .Where(appointment =>
                     appointment.Availability.PersonnelId == personnel.Id
                     && appointment.Availability.Date == tomorrow
-                    && appointment.PatientId == patient.Id
+                    && demoPatientIds.Contains(appointment.PatientId)
                     && !validTomorrowStarts.Contains(appointment.StartTime))
                 .ToListAsync();
 
@@ -577,8 +713,11 @@ namespace backend.DAL
                 await context.SaveChangesAsync();
             }
 
-            foreach (var entry in tomorrowEntries)
+            for (var index = 0; index < tomorrowEntries.Length; index++)
             {
+                var entry = tomorrowEntries[index];
+                var selectedPatient = patients[index % patients.Count];
+
                 var availability = await context.Availabilities
                     .Include(a => a.Appointment)
                     .FirstOrDefaultAsync(a =>
@@ -611,7 +750,7 @@ namespace backend.DAL
                 {
                     var existingAppointment = availability.Appointment;
                     var shouldUpdateAppointment =
-                        existingAppointment.PatientId != patient.Id ||
+                        existingAppointment.PatientId != selectedPatient.Id ||
                         existingAppointment.Tasks != entry.Tasks ||
                         existingAppointment.StartTime != entry.Start ||
                         existingAppointment.EndTime != entry.End ||
@@ -619,7 +758,7 @@ namespace backend.DAL
 
                     if (shouldUpdateAppointment)
                     {
-                        existingAppointment.PatientId = patient.Id;
+                        existingAppointment.PatientId = selectedPatient.Id;
                         existingAppointment.Tasks = entry.Tasks;
                         existingAppointment.StartTime = entry.Start;
                         existingAppointment.EndTime = entry.End;
@@ -632,7 +771,7 @@ namespace backend.DAL
 
                 var appointment = new Appointment
                 {
-                    PatientId = patient.Id,
+                    PatientId = selectedPatient.Id,
                     AvailabilityId = availability.Id,
                     Tasks = entry.Tasks,
                     StartTime = entry.Start,

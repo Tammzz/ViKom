@@ -6,6 +6,7 @@ export interface PatientListDto {
   fullName: string;
   email: string;
   phoneNumber: string;
+  address: string;
   totalAppointments: number;
   lastAppointmentDate: string;
 }
@@ -16,5 +17,6 @@ export interface PatientDetailsDto {
   fullName: string;
   email: string;
   phoneNumber: string;
+  address?: string;
   appointments: AppointmentSummary[];
 }

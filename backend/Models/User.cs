@@ -12,6 +12,9 @@ namespace backend.Models
         [Display(Name = "Full Name")]
         public string FullName { get; set; } = string.Empty;
 
+        [Display(Name = "Address")]
+        public string? Address { get; set; }
+
         [Required(ErrorMessage = "Role is required.")]
         [RegularExpression(@"^(Personnel|Patient)$", ErrorMessage = "Role must be either 'Personnel' or 'Patient'.")]
         public string Role { get; set; } = string.Empty; // "Personnel" or "Patient"

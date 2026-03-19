@@ -82,6 +82,7 @@ const PatientListPage: React.FC = () => {
                     <th className="fw-bold text-dark py-3 px-4 border-bottom border-dark">Navn</th>
                     <th className="fw-bold text-dark py-3 px-4 border-bottom border-dark">E-post</th>
                     <th className="fw-bold text-dark py-3 px-4 border-bottom border-dark">Telefon</th>
+                    <th className="fw-bold text-dark py-3 px-4 border-bottom border-dark">Adresse</th>
                     <th className="fw-bold text-dark py-3 px-4 border-bottom border-dark">Totalt antall avtaler</th>
                     <th className="fw-bold text-dark py-3 px-4 border-bottom border-dark">Siste avtaledato</th>
                   </tr>
@@ -92,6 +93,7 @@ const PatientListPage: React.FC = () => {
                       <td className="py-3 px-4 text-dark">{patient.fullName}</td>
                       <td className="py-3 px-4 text-dark">{patient.email}</td>
                       <td className="py-3 px-4 text-dark">{patient.phoneNumber}</td>
+                      <td className="py-3 px-4 text-dark">{patient.address || 'Ikke oppgitt'}</td>
                       <td className="py-3 px-4 text-dark">{patient.totalAppointments}</td>
                       <td className="py-3 px-4 text-dark">{formatDate(patient.lastAppointmentDate)}</td>
                     </tr>
