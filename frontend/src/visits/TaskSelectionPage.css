@@ -3,6 +3,7 @@
   padding: 2rem;
   max-width: 900px;
   margin: 0 auto;
+  background-color: var(--bs-white);
 }
 
 /* ===== PAGE HEADER ===== */
@@ -31,6 +32,13 @@
 .task-selection-card {
   border: 1px solid var(--bs-dark);
   border-radius: var(--radius-default);
+  overflow: hidden;
+  background-color: var(--bs-white);
+}
+
+.task-selection-card .card-header,
+.task-selection-card .card-body {
+  background-color: var(--bs-white);
 }
 
 .task-selection-card .card-title {
@@ -110,6 +118,17 @@
   min-width: 200px;
 }
 
+.submit-btn.btn-primary {
+  background-color: var(--bs-primary);
+  border-color: var(--bs-primary);
+}
+
+.submit-btn.btn-primary:hover,
+.submit-btn.btn-primary:focus {
+  background-color: var(--bs-primary-hover);
+  border-color: var(--bs-primary-hover);
+}
+
 .selection-alert {
   margin-top: 1rem;
   max-width: 400px;
@@ -123,6 +142,8 @@
   border-radius: var(--radius-default);
   max-width: 500px;
   margin: 4rem auto;
+  overflow: hidden;
+  background-color: var(--bs-white);
 }
 
 .success-icon {

@@ -129,6 +129,10 @@
   border-radius: var(--radius-default);
 }
 
+.appointment-list-page:not(.personnel-page) .appointments-card {
+  background-color: var(--bs-white);
+}
+
 .appointment-list-page .appointments-body {
   padding: 1.5rem;
 }

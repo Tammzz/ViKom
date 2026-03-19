@@ -51,7 +51,7 @@ const LoginPage: React.FC = () => {
       {/* Carely Logo */}
       <div className="login-logo">
         <Link to="/">
-          <img src="/HomeCareApp-Logo.png" alt="Carely Logo" />
+          <img src="/logo-placeholder-transparent-2.png" alt="ViKom Logo" />
         </Link>
       </div>
       
