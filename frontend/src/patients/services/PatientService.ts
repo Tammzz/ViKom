@@ -16,9 +16,17 @@ async function handleResponse(response: Response) {
 
 // Service object following demo pattern
 const PatientService = {
-  // fetches all patients (Personnel only)
+  // fetches all patients (Personnel only - now returns linked patients)
   async getAll(): Promise<PatientListDto[]> {
     const response = await fetch(`${API_URL}/api/patients`, {
+      headers: { ...headers, ...getAuthHeader() },
+    });
+    return handleResponse(response);
+  },
+
+  // fetches all patients regardless of links (for admin or linking purposes)
+  async getAllPatients(): Promise<PatientListDto[]> {
+    const response = await fetch(`${API_URL}/api/patients/all`, {
       headers: { ...headers, ...getAuthHeader() },
     });
     return handleResponse(response);

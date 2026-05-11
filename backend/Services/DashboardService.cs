@@ -8,21 +8,32 @@ namespace backend.Services
         private readonly IUserRepository _userRepository;
         private readonly IAppointmentRepository _appointmentRepository;
         private readonly IAvailabilityRepository _availabilityRepository;
+        private readonly IPatientUserLinkRepository _linkRepository;
 
         public DashboardService(
             IUserRepository userRepository,
             IAppointmentRepository appointmentRepository,
-            IAvailabilityRepository availabilityRepository)
+            IAvailabilityRepository availabilityRepository,
+            IPatientUserLinkRepository linkRepository)
         {
             _userRepository = userRepository;
             _appointmentRepository = appointmentRepository;
             _availabilityRepository = availabilityRepository;
+            _linkRepository = linkRepository;
         }
 
         public async Task<PersonnelDashboardDto> GetPersonnelDashboardAsync(string personnelId)
         {
             var personnelName = await _userRepository.GetFullNameAsync(personnelId);
-            var totalPatients = await _appointmentRepository.GetDistinctPatientCountAsync(personnelId);
+            var linkedPatients = await _linkRepository.GetBySecondaryUserIdAsync(personnelId);
+            var totalPatients = linkedPatients.Count();
+
+            if (totalPatients == 0)
+            {
+                // Fallback for old databases or missing link data
+                totalPatients = await _appointmentRepository.GetDistinctPatientCountAsync(personnelId);
+            }
+
             var appointmentsThisWeek = await _appointmentRepository.GetThisWeekCountAsync(personnelId);
             var pendingAppointments = await _appointmentRepository.GetPendingCountAsync(personnelId);
             var cancelledAppointments = await _appointmentRepository.GetCancelledCountAsync(personnelId);

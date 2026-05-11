@@ -1,4 +1,5 @@
 using backend.Models;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
 namespace backend.DAL.Repositories
@@ -34,15 +35,31 @@ namespace backend.DAL.Repositories
 
         public async Task<IEnumerable<User>> GetPatientsByPersonnelAsync(string personnelId)
         {
-            var patientIds = await _context.Appointments
-                .Where(a => a.Availability.PersonnelId == personnelId)
-                .Select(a => a.PatientId)
-                .Distinct()
-                .ToListAsync();
+            try
+            {
+                var patientIds = await _context.PatientUserLinks
+                    .Where(l => l.SecondaryUserId == personnelId)
+                    .Select(l => l.PatientId)
+                    .Distinct()
+                    .ToListAsync();
 
-            return await _context.Users
-                .Where(u => patientIds.Contains(u.Id))
-                .ToListAsync();
+                return await _context.Users
+                    .Where(u => patientIds.Contains(u.Id))
+                    .ToListAsync();
+            }
+            catch (SqliteException)
+            {
+                // If the PatientUserLinks table is missing, fall back to appointment-based patient lookup.
+                var appointmentPatientIds = await _context.Appointments
+                    .Where(a => a.Availability.PersonnelId == personnelId)
+                    .Select(a => a.PatientId)
+                    .Distinct()
+                    .ToListAsync();
+
+                return await _context.Users
+                    .Where(u => appointmentPatientIds.Contains(u.Id))
+                    .ToListAsync();
+            }
         }
 
         public async Task<IEnumerable<User>> GetPersonnelAsync()

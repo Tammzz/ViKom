@@ -8,7 +8,8 @@ namespace backend.DAL
     {
         public static async Task SeedAsync(ApplicationDbContext context, UserManager<User> userManager, RoleManager<IdentityRole> roleManager)
         {
-            context.Database.EnsureCreated();
+            // Apply all pending migrations
+            await context.Database.MigrateAsync();
             await EnsureUserAddressColumnAsync(context);
 
             // Check if roles exist, if not create them
@@ -186,6 +187,7 @@ namespace backend.DAL
                         // 2. Create booked appointment for tomorrow (upcoming appointment)
                         var tomorrowSlot = context.Availabilities
                             .Where(a => a.PersonnelId == personnel.Id && a.Date == DateTime.Today.AddDays(1))
+                            .AsEnumerable()
                             .OrderBy(a => a.StartTime)
                             .Skip(1)
                             .FirstOrDefault();

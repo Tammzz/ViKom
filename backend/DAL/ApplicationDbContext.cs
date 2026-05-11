@@ -13,6 +13,7 @@ namespace backend.DAL
         public DbSet<Availability> Availabilities => Set<Availability>();
         public DbSet<AvailabilityWindow> AvailabilityWindows => Set<AvailabilityWindow>();
         public DbSet<Appointment> Appointments => Set<Appointment>();
+        public DbSet<PatientUserLink> PatientUserLinks => Set<PatientUserLink>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

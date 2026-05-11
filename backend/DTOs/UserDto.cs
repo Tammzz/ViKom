@@ -23,5 +23,10 @@ namespace backend.DTOs
         public string? PhoneNumber { get; set; }
 
         public string? Address { get; set; }
+
+        /// <summary>
+        /// Optional Supabase profile ID for integration. Null if not mapped.
+        /// </summary>
+        public string? SupabaseProfileId { get; set; }
     }
 }
