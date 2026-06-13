@@ -74,10 +74,9 @@ const PreferredTimePage: React.FC = () => {
 
   return (
     <div className="preferred-time-page">
-      {/* Page Header */}
-      <div className="page-header">
-        <h1 className="page-title">Velg ønsket besøkstid</h1>
-        <p className="page-subtitle">
+      <h1 className="mb-3 fw-bold">Velg ønsket besøkstid</h1>
+      <div className="mb-4">
+        <p className="text-dark mb-0 fs-5 lh-base">
           Velg ønsket tidsluke for hjemmebesøket. Dette er en forespørsel – endelig tid bekreftes av en omsorgsperson.
         </p>
       </div>

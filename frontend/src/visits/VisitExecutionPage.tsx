@@ -41,6 +41,11 @@ const VisitExecutionPage: React.FC = () => {
 
   return (
     <div className="visit-execution-page">
+      <h1 className="mb-3 fw-bold">Gjennomfør besøk</h1>
+      <div className="mb-4">
+        <p className="text-dark mb-0 fs-5 lh-base">Dokumenter og fullfør oppgaver for dette besøket.</p>
+      </div>
+
       <div className="visit-topbar">
         <p className="visit-breadcrumb">Pasient {'>'} Avtalt besøk</p>
         <div className="visit-top-actions">

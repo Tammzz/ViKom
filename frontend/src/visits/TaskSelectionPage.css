@@ -6,27 +6,6 @@
   background-color: var(--bs-white);
 }
 
-/* ===== PAGE HEADER ===== */
-.page-header {
-  margin-bottom: 2rem;
-  text-align: center;
-}
-
-.page-title {
-  font-size: 2rem;
-  font-weight: 600;
-  color: var(--bs-dark);
-  margin-bottom: 0.5rem;
-}
-
-.page-subtitle {
-  font-size: 1.125rem;
-  color: var(--bs-dark);
-  margin-bottom: 0;
-  max-width: 600px;
-  margin-left: auto;
-  margin-right: auto;
-}
 
 /* ===== TASK SELECTION CARD ===== */
 .task-selection-card {
@@ -174,13 +153,5 @@
 
   .tasks-grid {
     grid-template-columns: 1fr;
-  }
-
-  .page-title {
-    font-size: 1.5rem;
-  }
-
-  .page-subtitle {
-    font-size: 1rem;
   }
 }

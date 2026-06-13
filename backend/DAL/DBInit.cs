@@ -1,4 +1,5 @@
 using backend.Models;
+using Microsoft.Data.Sqlite;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,9 +9,19 @@ namespace backend.DAL
     {
         public static async Task SeedAsync(ApplicationDbContext context, UserManager<User> userManager, RoleManager<IdentityRole> roleManager)
         {
-            // Apply all pending migrations
-            await context.Database.MigrateAsync();
+            // Apply pending migrations, but tolerate legacy dev SQLite databases
+            // where Identity tables were created before migration history was established.
+            try
+            {
+                await context.Database.MigrateAsync();
+            }
+            catch (SqliteException ex) when (ex.Message.Contains("already exists", StringComparison.OrdinalIgnoreCase))
+            {
+                Console.WriteLine($"Migration warning: {ex.Message}");
+                Console.WriteLine("Continuing startup with existing database schema.");
+            }
             await EnsureUserAddressColumnAsync(context);
+            await EnsureUserSupabaseProfileIdColumnAsync(context);
 
             // Check if roles exist, if not create them
             if (!await roleManager.RoleExistsAsync("Personnel"))
@@ -36,32 +47,19 @@ namespace backend.DAL
                 phoneNumber: "+47 900 00 001",
                 address: "Sognsveien 10, 0450 Oslo");
 
+            // NOTE: The SupabaseProfileId values below are dev-only demo IDs that
+            // match seeded profiles in our development Supabase project. They will
+            // NOT resolve in other Supabase projects (staging/CI), where the
+            // "Ring pasient" signaling link will silently fail until re-mapped.
             await EnsureDemoUserAsync(
                 userManager,
                 userName: "patient@homecare.local",
                 email: "patient@homecare.local",
-                fullName: "Patient Peter",
+                fullName: "Erik Johansen",
                 role: "Patient",
                 phoneNumber: "+47 900 00 101",
-                address: "Hagegata 25, 0653 Oslo");
-
-            await EnsureDemoUserAsync(
-                userManager,
-                userName: "patient.paula@homecare.local",
-                email: "patient.paula@homecare.local",
-                fullName: "Paula Hansen",
-                role: "Patient",
-                phoneNumber: "+47 900 00 102",
-                address: "Rolf Hofmos gate 18, 0655 Oslo");
-
-            await EnsureDemoUserAsync(
-                userManager,
-                userName: "patient.ole@homecare.local",
-                email: "patient.ole@homecare.local",
-                fullName: "Ole Nilsen",
-                role: "Patient",
-                phoneNumber: "+47 900 00 103",
-                address: "Enebakkveien 36, 0657 Oslo");
+                address: "Hagegata 25, 0653 Oslo",
+                supabaseProfileId: "5a262e4e-e2d3-4179-a30a-5a003a652817");
 
             await EnsureDemoUserAsync(
                 userManager,
@@ -70,16 +68,21 @@ namespace backend.DAL
                 fullName: "Ingrid Berg",
                 role: "Patient",
                 phoneNumber: "+47 900 00 104",
-                address: "Grensen 12, 0159 Oslo");
+                address: "Grensen 12, 0159 Oslo",
+                supabaseProfileId: "c9f53a55-1375-48e6-95ce-25917f55be2d");
 
-            await EnsureDemoUserAsync(
+            // Remove demo patients that were dropped from the seed set so they do
+            // not linger in pre-existing dev databases and confuse testing.
+            await RemoveLegacyDemoPatientsAsync(
+                context,
                 userManager,
-                userName: "patient.karim@homecare.local",
-                email: "patient.karim@homecare.local",
-                fullName: "Karim Ali",
-                role: "Patient",
-                phoneNumber: "+47 900 00 105",
-                address: "Kampengata 7, 0654 Oslo");
+                "patient.paula@homecare.local",
+                "patient.ole@homecare.local",
+                "patient.karim@homecare.local");
+
+            // Link demo patients to the nurse so they appear in her patient list.
+            await EnsurePatientPersonnelLinkAsync(context, userManager, "patient@homecare.local", "nurse@homecare.local");
+            await EnsurePatientPersonnelLinkAsync(context, userManager, "patient.ingrid@homecare.local", "nurse@homecare.local");
 
             // Seed availability windows if none exist (NEW SYSTEM)
             if (!context.AvailabilityWindows.Any())
@@ -286,6 +289,103 @@ namespace backend.DAL
             }
         }
 
+        private static async Task EnsureUserSupabaseProfileIdColumnAsync(ApplicationDbContext context)
+        {
+            var connection = context.Database.GetDbConnection();
+            await connection.OpenAsync();
+
+            try
+            {
+                using var checkCommand = connection.CreateCommand();
+                checkCommand.CommandText = "PRAGMA table_info('AspNetUsers');";
+
+                var hasSupabaseProfileIdColumn = false;
+                using (var reader = await checkCommand.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        var columnName = reader[1]?.ToString();
+                        if (string.Equals(columnName, "SupabaseProfileId", StringComparison.OrdinalIgnoreCase))
+                        {
+                            hasSupabaseProfileIdColumn = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!hasSupabaseProfileIdColumn)
+                {
+                    using var alterCommand = connection.CreateCommand();
+                    alterCommand.CommandText = "ALTER TABLE AspNetUsers ADD COLUMN SupabaseProfileId TEXT NULL;";
+                    await alterCommand.ExecuteNonQueryAsync();
+                }
+            }
+            finally
+            {
+                await connection.CloseAsync();
+            }
+        }
+
+        private static async Task EnsurePatientPersonnelLinkAsync(
+            ApplicationDbContext context,
+            UserManager<User> userManager,
+            string patientUserName,
+            string personnelUserName)
+        {
+            var patient = await userManager.FindByNameAsync(patientUserName);
+            var personnel = await userManager.FindByNameAsync(personnelUserName);
+            if (patient == null || personnel == null) return;
+
+            var linkExists = await context.PatientUserLinks.AnyAsync(l =>
+                l.PatientId == patient.Id &&
+                l.SecondaryUserId == personnel.Id &&
+                l.RelationshipType == "Personnel");
+
+            if (!linkExists)
+            {
+                context.PatientUserLinks.Add(new PatientUserLink
+                {
+                    PatientId = patient.Id,
+                    SecondaryUserId = personnel.Id,
+                    RelationshipType = "Personnel"
+                });
+                await context.SaveChangesAsync();
+            }
+        }
+
+        private static async Task RemoveLegacyDemoPatientsAsync(
+            ApplicationDbContext context,
+            UserManager<User> userManager,
+            params string[] userNames)
+        {
+            foreach (var userName in userNames)
+            {
+                var user = await userManager.FindByNameAsync(userName);
+                if (user == null) continue;
+
+                // If the patient still has appointments, leave the account intact
+                // rather than risk a foreign-key failure on delete.
+                var hasAppointments = await context.Appointments.AnyAsync(a => a.PatientId == user.Id);
+                if (hasAppointments)
+                {
+                    Console.WriteLine($"Skipping removal of legacy demo patient '{userName}': appointments still reference it.");
+                    continue;
+                }
+
+                // Clean up any patient-personnel links referencing this user first.
+                var links = await context.PatientUserLinks
+                    .Where(l => l.PatientId == user.Id || l.SecondaryUserId == user.Id)
+                    .ToListAsync();
+                if (links.Count > 0)
+                {
+                    context.PatientUserLinks.RemoveRange(links);
+                    await context.SaveChangesAsync();
+                }
+
+                await userManager.DeleteAsync(user);
+            }
+        }
+
         private static async Task EnsureDemoUserAsync(
             UserManager<User> userManager,
             string userName,
@@ -293,7 +393,8 @@ namespace backend.DAL
             string fullName,
             string role,
             string phoneNumber,
-            string address)
+            string address,
+            string? supabaseProfileId = null)
         {
             var existingUser = await userManager.FindByNameAsync(userName);
 
@@ -307,7 +408,8 @@ namespace backend.DAL
                     Role = role,
                     PhoneNumber = phoneNumber,
                     Address = address,
-                    EmailConfirmed = true
+                    EmailConfirmed = true,
+                    SupabaseProfileId = supabaseProfileId
                 };
 
                 var createResult = await userManager.CreateAsync(newUser, "Pass123!");
@@ -325,7 +427,8 @@ namespace backend.DAL
                 existingUser.Role != role ||
                 existingUser.PhoneNumber != phoneNumber ||
                 existingUser.Address != address ||
-                !existingUser.EmailConfirmed;
+                !existingUser.EmailConfirmed ||
+                existingUser.SupabaseProfileId != supabaseProfileId;
 
             if (requiresUpdate)
             {
@@ -335,6 +438,7 @@ namespace backend.DAL
                 existingUser.PhoneNumber = phoneNumber;
                 existingUser.Address = address;
                 existingUser.EmailConfirmed = true;
+                existingUser.SupabaseProfileId = supabaseProfileId;
                 await userManager.UpdateAsync(existingUser);
             }
 

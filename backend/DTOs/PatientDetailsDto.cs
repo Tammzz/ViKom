@@ -1,6 +1,6 @@
 namespace backend.DTOs
 {
-    public class PatientListDto
+    public class PatientDetailsDto
     {
         public string Id { get; set; } = string.Empty;
         public string FullName { get; set; } = string.Empty;
@@ -10,5 +10,6 @@ namespace backend.DTOs
         public string? SupabaseProfileId { get; set; }
         public int TotalAppointments { get; set; }
         public string LastAppointmentDate { get; set; } = string.Empty;
+        public List<AppointmentSummaryDto> UpcomingAppointments { get; set; } = new();
     }
 }

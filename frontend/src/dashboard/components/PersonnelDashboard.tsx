@@ -301,10 +301,9 @@ const PersonnelDashboard: React.FC = () => {
 
   return (
     <div className="personnel-dashboard">
-      {/* renders welcome section with personnel name */}
-      <div className="welcome-section">
-        <h1 className="welcome-title">Velkommen tilbake, {dashboard.personnelName}!</h1>
-        <p className="welcome-subtitle">Her er en oversikt over timeplanen og pasientene dine</p>
+      <h1 className="mb-3 fw-bold">Velkommen tilbake, {dashboard.personnelName}!</h1>
+      <div className="mb-4">
+        <p className="text-dark mb-0 fs-5 lh-base">Her er en oversikt over timeplanen og pasientene dine</p>
       </div>
 
       {/* displays quick stats overview with key metrics */}

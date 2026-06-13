@@ -313,9 +313,9 @@ const AppointmentListPage: React.FC = () => {
           </div>
         )}
 
-        <h1 className="page-title">Mine pasientavtaler</h1>
-        <div className="page-subtitle">
-          <p>Start og fullfør oppgaver for pasientene dine direkte her.</p>
+        <h1 className="mb-3 fw-bold">Mine pasientavtaler</h1>
+        <div className="mb-4">
+          <p className="text-dark mb-0 fs-5 lh-base">Start og fullfør oppgaver for pasientene dine direkte her.</p>
         </div>
 
         <div className="tabs-container">
@@ -397,12 +397,9 @@ const AppointmentListPage: React.FC = () => {
         </div>
       )}
 
-      {/* main page title */}
-      <h1 className="page-title">Mine avtaler</h1>
-
-      {/* page subtitle */}
-      <div className="page-subtitle">
-        <p>Se og administrer alle dine avtaler på ett sted.</p>
+      <h1 className="mb-3 fw-bold">Mine avtaler</h1>
+      <div className="mb-4">
+        <p className="text-dark mb-0 fs-5 lh-base">Se og administrer alle dine avtaler på ett sted.</p>
       </div>
 
       {/* creates new appointment button */}

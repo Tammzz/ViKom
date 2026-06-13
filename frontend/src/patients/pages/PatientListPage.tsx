@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Table, Alert } from 'react-bootstrap';
+import { Link } from 'react-router-dom';
+import { Table, Alert } from 'react-bootstrap';
 import { getUserInfo } from '../../auth/AuthService';
 import PatientService from '../services/PatientService';
 import type { PatientListDto } from '../types/patient';
@@ -41,15 +42,14 @@ const PatientListPage: React.FC = () => {
 
   if (loading) {
     return (
-      <Container fluid className={isPersonnel ? 'personnel-page' : ''}>
+      <div className={isPersonnel ? 'patient-list-page personnel-page' : 'patient-list-page'}>
         <p>Laster pasienter...</p>
-      </Container>
+      </div>
     );
   }
 
   return (
-    <div className={isPersonnel ? 'personnel-page' : ''}>
-      <Container fluid>
+    <div className={isPersonnel ? 'patient-list-page personnel-page' : 'patient-list-page'}>
         {error && (
           <Alert variant="danger" dismissible onClose={() => setError('')}>
             {error}
@@ -79,18 +79,22 @@ const PatientListPage: React.FC = () => {
               <Table hover className="mb-0 bg-white rounded patient-table">
                 <thead className="table-light">
                   <tr>
-                    <th className="fw-bold text-dark py-3 px-4 border-bottom border-dark">Navn</th>
+                    <th className="fw-bold text-dark py-3 px-4 border-bottom border-dark" style={{ minWidth: '160px' }}>Navn</th>
                     <th className="fw-bold text-dark py-3 px-4 border-bottom border-dark">E-post</th>
                     <th className="fw-bold text-dark py-3 px-4 border-bottom border-dark">Telefon</th>
-                    <th className="fw-bold text-dark py-3 px-4 border-bottom border-dark">Adresse</th>
-                    <th className="fw-bold text-dark py-3 px-4 border-bottom border-dark">Totalt antall avtaler</th>
+                    <th className="fw-bold text-dark py-3 px-4 border-bottom border-dark" style={{ minWidth: '180px' }}>Adresse</th>
+                    <th className="fw-bold text-dark py-3 px-4 border-bottom border-dark" style={{ width: '100px' }}>Totalt avtaler</th>
                     <th className="fw-bold text-dark py-3 px-4 border-bottom border-dark">Siste avtaledato</th>
                   </tr>
                 </thead>
                 <tbody>
                   {patients.map((patient) => (
                     <tr key={patient.id}>
-                      <td className="py-3 px-4 text-dark">{patient.fullName}</td>
+                      <td className="py-3 px-4 text-dark">
+                        <Link to={`/patients/${patient.id}`} className="text-dark fw-semibold text-decoration-none">
+                          {patient.fullName}
+                        </Link>
+                      </td>
                       <td className="py-3 px-4 text-dark">{patient.email}</td>
                       <td className="py-3 px-4 text-dark">{patient.phoneNumber}</td>
                       <td className="py-3 px-4 text-dark">{patient.address || 'Ikke oppgitt'}</td>
@@ -103,7 +107,6 @@ const PatientListPage: React.FC = () => {
             </div>
           </div>
         )}
-      </Container>
     </div>
   );
 };

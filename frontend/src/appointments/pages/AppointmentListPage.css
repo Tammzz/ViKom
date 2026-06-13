@@ -3,10 +3,6 @@
   padding: 2rem;
 }
 
-.appointment-list-page.personnel-page {
-  background-color: var(--bs-light);
-}
-
 /* ===== ERROR ALERT ===== */
 .appointment-list-page .error-alert {
   background-color: #f8d7da;
@@ -38,6 +34,7 @@
 /* ===== PAGE SUBTITLE ===== */
 .appointment-list-page .page-subtitle {
   margin-bottom: 1.5rem;
+  
 }
 
 .appointment-list-page .page-subtitle p {

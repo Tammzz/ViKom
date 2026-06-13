@@ -3,6 +3,10 @@
    Matches MVC table layout
    ================================== */
 
+.patient-list-page {
+  padding: 2rem;
+}
+
 /* Card Styles */
 .card {
   box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);

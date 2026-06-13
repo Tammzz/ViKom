@@ -6,5 +6,6 @@ namespace backend.Services
     {
         Task<IEnumerable<PatientListDto>> GetAllPatientsAsync();
         Task<IEnumerable<PatientListDto>> GetLinkedPatientsAsync(string personnelId);
+        Task<PatientDetailsDto?> GetPatientByIdAsync(string patientId);
     }
 }

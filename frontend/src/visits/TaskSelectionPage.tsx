@@ -58,10 +58,9 @@ const TaskSelectionPage: React.FC = () => {
 
   return (
     <div className="task-selection-page">
-      {/* Page Header */}
-      <div className="page-header">
-        <h1 className="page-title">Be om hjemmesykepleie</h1>
-        <p className="page-subtitle">
+      <h1 className="mb-3 fw-bold">Be om hjemmesykepleie</h1>
+      <div className="mb-4">
+        <p className="text-dark mb-0 fs-5 lh-base">
           Velg tjenestene du trenger hjelp med. En omsorgsperson vil se på forespørselen og planlegge et besøk.
         </p>
       </div>

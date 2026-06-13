@@ -121,6 +121,12 @@ h1, h2, h3, h4, h5, h6 {
 } */
 
 
+/* Bootstrap Card Overrides */
+.card {
+  border-radius: var(--radius-default) !important;
+  overflow: hidden;
+}
+
 /* Badge Styling */
 .badge {
   font-size: 0.875rem;

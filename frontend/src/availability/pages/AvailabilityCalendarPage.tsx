@@ -181,12 +181,9 @@ const AvailabilityCalendarPage: React.FC = () => {
         </div>
       )}
 
-      {/* renders page title */}
-      <h1 className="page-title">Min kalender</h1>
-
-      {/* displays page subtitle */}
-      <div className="page-subtitle">
-        <p>Administrer din ukentlige og daglige tilgjengelighetsplan.</p>
+      <h1 className="mb-3 fw-bold">Min kalender</h1>
+      <div className="mb-4">
+        <p className="text-dark mb-0 fs-5 lh-base">Administrer din ukentlige og daglige tilgjengelighetsplan.</p>
       </div>
 
       {/* provides view mode toggle and navigation controls */}

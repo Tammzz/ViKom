@@ -44,7 +44,8 @@ const Sidebar: React.FC = () => {
             to="/appointments" 
             className={isActive('/appointments') ? 'active' : ''}
           >
-            My Appointments
+            <i className="bi bi-calendar" aria-hidden="true"></i>
+            Mine avtaler
           </Nav.Link>
         )}
 
@@ -56,6 +57,7 @@ const Sidebar: React.FC = () => {
               to="/task-selection" 
               className={isActive('/task-selection') ? 'active' : ''}
             >
+              <i className="bi bi-chat-dots" aria-hidden="true"></i>
               Be om tjenester
             </Nav.Link>
             <Nav.Link 
@@ -63,6 +65,7 @@ const Sidebar: React.FC = () => {
               to="/preferred-time" 
               className={isActive('/preferred-time') ? 'active' : ''}
             >
+              <i className="bi bi-calendar-plus" aria-hidden="true"></i>
               Planlegg besøk
             </Nav.Link>
           </>

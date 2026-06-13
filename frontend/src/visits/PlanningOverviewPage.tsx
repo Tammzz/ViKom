@@ -157,10 +157,9 @@ const PlanningOverviewPage: React.FC = () => {
         </div>
       )}
 
-      {/* Page Header */}
-      <div className="page-header">
-        <h1 className="page-title">Oversikt over planlagte besøk</h1>
-        <p className="page-subtitle">Planlegg og organiser hjemmebesøk etter område og oppgavetype</p>
+      <h1 className="mb-3 fw-bold">Oversikt over planlagte besøk</h1>
+      <div className="mb-4">
+        <p className="text-dark mb-0 fs-5 lh-base">Planlegg og organiser hjemmebesøk etter område og oppgavetype</p>
       </div>
 
       {/* Filters */}

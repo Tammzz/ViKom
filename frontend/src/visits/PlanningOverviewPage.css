@@ -3,24 +3,6 @@
   padding: 2rem;
 }
 
-/* ===== PAGE HEADER ===== */
-.page-header {
-  margin-bottom: 2rem;
-  text-align: center;
-}
-
-.page-title {
-  font-size: 2rem;
-  font-weight: 600;
-  color: var(--bs-dark);
-  margin-bottom: 0.5rem;
-}
-
-.page-subtitle {
-  font-size: 1.125rem;
-  color: var(--bs-dark);
-  margin-bottom: 0;
-}
 
 /* ===== FILTERS CARD ===== */
 .filters-card {

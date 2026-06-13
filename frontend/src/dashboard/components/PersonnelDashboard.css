@@ -11,24 +11,6 @@
 }
 
 /* ===== WELCOME SECTION ===== */
-.personnel-dashboard .welcome-section {
-  margin-bottom: 2rem;
-}
-
-.personnel-dashboard .welcome-title {
-  font-size: 2rem;
-  font-weight: 600;
-  color: var(--bs-dark);
-  margin-bottom: 0.5rem;
-  line-height: 1.2;
-}
-
-.personnel-dashboard .welcome-subtitle {
-  font-size: 1.125rem;
-  color: var(--bs-dark);
-  margin-bottom: 0;
-  line-height: 1.5;
-}
 
 /* ===== STATS GRID ===== */
 .personnel-dashboard .stats-grid {
@@ -950,14 +932,6 @@
     padding: 1.5rem;
   }
 
-  .personnel-dashboard .welcome-title {
-    font-size: 1.75rem;
-  }
-
-  .personnel-dashboard .welcome-subtitle {
-    font-size: 1rem;
-  }
-
   .personnel-dashboard .stats-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 0.875rem;
@@ -1023,18 +997,6 @@
 @media (max-width: 767px) {
   .personnel-dashboard {
     padding: 1rem;
-  }
-
-  .personnel-dashboard .welcome-section {
-    margin-bottom: 1.5rem;
-  }
-
-  .personnel-dashboard .welcome-title {
-    font-size: 1.5rem;
-  }
-
-  .personnel-dashboard .welcome-subtitle {
-    font-size: 0.9375rem;
   }
 
   .personnel-dashboard .stats-grid {
