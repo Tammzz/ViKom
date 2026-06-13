@@ -4,7 +4,7 @@ Hey! Here's a rundown of what I just added. Short version: a caregiver can now o
 
 The big milestone: the call signaling flow is now working end-to-end between the webapp and TV app. A caregiver can open a patient profile, click Ring pasient, the TV receives the incoming call, and the response comes back to the webapp through Supabase Realtime. This is still signaling-only with a dummy SDP (no real audio/video yet), but the complete round-trip communication path is now functioning.
 
-The full plan for this is available in this doc: [`call-flow-plan.md`](call-flow-plan.md). I have implemented phases 1, 2, 3 and 4 of that plan. There are still phases 5 and 6 left to complete of that plan.
+The full plan for this is available in this doc: [`integration-roadmap.md`](integration-roadmap.md). I have implemented phases 1, 2, 3 and 4 of that plan. There are still phases 5 and 6 left to complete of that plan.
 
 ## What works today
 
@@ -365,7 +365,7 @@ Hitting Call dispatches a `call_offer` → the TV's `IncomingCallActivity` wakes
 - The TV expects a specific inner payload on `call_offer`/`call_ended`: `callerId`, `callerUserId`, `callerName`, `callerUsername`, `sdp`, `mediaType`. If you change those field names on either side, the other stops deserializing.
 - The web client filters inbound messages by **`targetUserId`**, so messages have to be addressed to the right UID.
 
-## What's still left (from [`Plan.md`](Plan.md))
+## What's still left (from [`integration-roadmap.md`](integration-roadmap.md))
 
 - **Phase 4 — Appointment Flow:** have the backend emit realtime events on appointment create/update, build the TV `AppointmentActivity.kt` + listeners, and send responses back to the backend.
 - **Phase 6 — WebRTC media layer:** swap the dummy SDP for a real `RTCPeerConnection` (actual browser camera/mic) and get ICE candidate exchange working between web and TV. This is what turns the POC into a real video call.

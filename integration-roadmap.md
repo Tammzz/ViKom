@@ -1,4 +1,4 @@
-## Plan: ViKom Integration & Call Flow
+## ViKom Integration Roadmap
 
 This plan establishes the realtime ecosystem between the Caregiver Webapp, backend, and TV app using Supabase, culminating in WebRTC calls and appointment sync. We prioritized the **Call Flow (Phase 4)** ahead of the **Appointment Flow (Phase 5)** to ship a fast, high-value proof-of-concept (POC) using the TV app's pre-existing call activities.
 
@@ -39,28 +39,6 @@ Legend: ✅ done · ⬜ not started
 
 11. Frontend: Implement `RTCPeerConnection` to replace the dummy SDP string with live browser camera/microphone media.
 12. System: Ensure ICE candidate exchange passes between Webapp and Android TV WebRTC managers.
-
-**Relevant files**
-
-Backend (modified / new):
-
-- `backend/Models/User.cs` — adds `SupabaseProfileId`
-- `backend/DTOs/PatientListDto.cs`, `backend/DTOs/PatientDetailsDto.cs` (New)
-- `backend/Controllers/PatientsController.cs` — `GET /api/patients/{id}`
-- `backend/Services/PatientService.cs` / `IPatientService.cs`
-- `backend/DAL/DBInit.cs` — migration tolerance + demo seed rework
-- `backend/Migrations/*AddSupabaseProfileId*`
-
-Frontend (modified / new):
-
-- `frontend/src/patients/pages/PatientDetailsPage.tsx` (New)
-- `frontend/src/components/common/CallModal.tsx` (New)
-- `frontend/src/services/SupabaseSignalingService.ts` (New)
-- `frontend/src/App.tsx`, `frontend/src/patients/pages/PatientListPage.tsx`, `frontend/src/patients/services/PatientService.ts`, `frontend/src/patients/types/patient.ts`
-
-Phase 5 (not yet created):
-
-- `vikom_project/.../activities/AppointmentActivity.kt` (New)
 
 **Verification**
 
