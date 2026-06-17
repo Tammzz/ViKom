@@ -46,8 +46,10 @@ export function isAuthenticated(): boolean {
   return getToken() !== null;
 }
 
-// logs in user and stores JWT token
-export async function login(loginDto: LoginDto): Promise<boolean> {
+// logs in user and stores JWT token; returns a result with a reason on failure
+export async function login(
+  loginDto: LoginDto
+): Promise<{ success: boolean; message?: string }> {
   try {
     const response = await fetch(`${API_URL}/api/auth/login`, {
       method: 'POST',
@@ -56,13 +58,18 @@ export async function login(loginDto: LoginDto): Promise<boolean> {
     });
 
     if (!response.ok) {
-      return false;
+      // 401 from AuthController => bad credentials; anything else is a server-side issue
+      const message =
+        response.status === 401
+          ? 'Feil brukernavn eller passord'
+          : 'Noe gikk galt på serveren. Prøv igjen senere.';
+      return { success: false, message };
     }
 
     const data = await response.json();
 
     if (!data?.token) {
-      return false;
+      return { success: false, message: 'Uventet svar fra serveren.' };
     }
 
     setToken(data.token);
@@ -73,9 +80,13 @@ export async function login(loginDto: LoginDto): Promise<boolean> {
       userId: data.userId,
     });
 
-    return true;
+    return { success: true };
   } catch {
-    return false;
+    // fetch throws on connection-refused / CORS block => backend not reachable
+    return {
+      success: false,
+      message: 'Får ikke kontakt med serveren. Sjekk at backend kjører (port 5084).',
+    };
   }
 }
 

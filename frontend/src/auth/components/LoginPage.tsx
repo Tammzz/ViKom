@@ -33,14 +33,14 @@ const LoginPage: React.FC = () => {
     setError('');
 
     // attempts to authenticate user with provided credentials
-    const success = await AuthService.login({ userName, password });
-    
+    const result = await AuthService.login({ userName, password });
+
     // redirects to dashboard if login successful
-    if (success) {
+    if (result.success) {
       navigate('/dashboard');
     } else {
-      // displays error message if login fails
-      setError('Feil brukernavn eller passord');
+      // displays the specific failure reason (bad credentials vs. server unreachable)
+      setError(result.message ?? 'Feil brukernavn eller passord');
     }
   };
 
