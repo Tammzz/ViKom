@@ -14,6 +14,7 @@ namespace backend.DAL
         public DbSet<AvailabilityWindow> AvailabilityWindows => Set<AvailabilityWindow>();
         public DbSet<Appointment> Appointments => Set<Appointment>();
         public DbSet<PatientUserLink> PatientUserLinks => Set<PatientUserLink>();
+        public DbSet<CallLog> CallLogs => Set<CallLog>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -32,6 +33,20 @@ namespace backend.DAL
                 .WithOne(a => a.AvailabilityWindow)
                 .HasForeignKey(a => a.AvailabilityWindowId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // CallLog has two FKs to AspNetUsers (patient + personnel); use Restrict
+            // to avoid multiple cascade paths on the same table.
+            modelBuilder.Entity<CallLog>()
+                .HasOne(c => c.Patient)
+                .WithMany()
+                .HasForeignKey(c => c.PatientId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<CallLog>()
+                .HasOne(c => c.Personnel)
+                .WithMany()
+                .HasForeignKey(c => c.PersonnelId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

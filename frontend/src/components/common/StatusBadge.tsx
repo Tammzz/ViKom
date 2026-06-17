@@ -1,5 +1,6 @@
 import React from 'react';
 import { Badge } from 'react-bootstrap';
+import './StatusBadge.css';
 
 interface StatusBadgeProps {
   status: string;
@@ -47,10 +48,12 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ status, className = '' }) => 
     }
   };
 
+  const isPlanned = status.toLowerCase() === 'booked';
+
   return (
-    <Badge 
-      bg={getVariant(status)} 
-      className={className}
+    <Badge
+      bg={getVariant(status)}
+      className={`${isPlanned ? 'vk-status-planned' : ''} ${className}`.trim()}
     >
       {getDisplayText(status)}
     </Badge>

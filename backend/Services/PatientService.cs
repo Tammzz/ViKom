@@ -1,6 +1,7 @@
 using backend.DTOs;
 using backend.DAL.Repositories;
 using backend.Models;
+using Microsoft.AspNetCore.Identity;
 
 namespace backend.Services
 {
@@ -9,15 +10,21 @@ namespace backend.Services
         private readonly IUserRepository _userRepository;
         private readonly IAppointmentRepository _appointmentRepository;
         private readonly IPatientUserLinkRepository _linkRepository;
+        private readonly ICallLogService _callLogService;
+        private readonly UserManager<User> _userManager;
 
         public PatientService(
             IUserRepository userRepository,
             IAppointmentRepository appointmentRepository,
-            IPatientUserLinkRepository linkRepository)
+            IPatientUserLinkRepository linkRepository,
+            ICallLogService callLogService,
+            UserManager<User> userManager)
         {
             _userRepository = userRepository;
             _appointmentRepository = appointmentRepository;
             _linkRepository = linkRepository;
+            _callLogService = callLogService;
+            _userManager = userManager;
         }
 
         public async Task<IEnumerable<PatientListDto>> GetAllPatientsAsync()
@@ -97,6 +104,8 @@ namespace backend.Services
 
             var appointments = (await _appointmentRepository.GetByPatientIdAsync(patientId)).ToList();
             var upcomingAppointments = (await _appointmentRepository.GetUpcomingByPatientIdAsync(patientId, 10)).ToList();
+            var pastAppointments = (await _appointmentRepository.GetHistoryByPatientIdAsync(patientId)).ToList();
+            var recentCalls = (await _callLogService.GetRecentByPatientAsync(patientId, 5)).ToList();
             var lastAppointment = appointments
                 .OrderByDescending(a => a.Availability.Date)
                 .FirstOrDefault();
@@ -111,8 +120,72 @@ namespace backend.Services
                 SupabaseProfileId = patient.SupabaseProfileId,
                 TotalAppointments = appointments.Count,
                 LastAppointmentDate = lastAppointment?.Availability.Date.ToString("dd/MM/yyyy") ?? "Never",
-                UpcomingAppointments = upcomingAppointments.Select(MapToAppointmentSummary).ToList()
+                Notes = patient.Notes,
+                NotesUpdatedAt = patient.NotesUpdatedAt,
+                UpcomingAppointments = upcomingAppointments.Select(MapToAppointmentSummary).ToList(),
+                PastAppointments = pastAppointments.Select(MapToAppointmentSummary).ToList(),
+                RecentCalls = recentCalls
             };
+        }
+
+        public async Task<bool> UpdatePatientNotesAsync(string patientId, string? notes)
+        {
+            var patient = await _userRepository.GetByIdAsync(patientId);
+            if (patient == null || !string.Equals(patient.Role, "Patient", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            patient.Notes = notes;
+            patient.NotesUpdatedAt = DateTime.UtcNow;
+            await _userRepository.UpdateAsync(patient);
+            return true;
+        }
+
+        public async Task<PatientDetailsDto?> UpdatePatientAsync(string patientId, PatientUpdateDto dto)
+        {
+            var patient = await _userRepository.GetByIdAsync(patientId);
+            if (patient == null || !string.Equals(patient.Role, "Patient", StringComparison.OrdinalIgnoreCase))
+            {
+                return null;
+            }
+
+            patient.FullName = dto.FullName;
+            patient.PhoneNumber = dto.PhoneNumber;
+            patient.Address = dto.Address;
+
+            // Email changes go through UserManager so the normalized columns stay
+            // consistent. Seeded accounts use the email as their username, so keep
+            // them in sync only when that is currently the case.
+            var emailChanged = !string.Equals(patient.Email, dto.Email, StringComparison.OrdinalIgnoreCase);
+            if (emailChanged)
+            {
+                var usernameMatchesEmail = string.Equals(patient.UserName, patient.Email, StringComparison.OrdinalIgnoreCase);
+
+                // Note: SetEmailAsync resets EmailConfirmed to false. That's fine
+                // here because patients authenticate via Supabase (not this
+                // backend) and the web portal login is Personnel-only; revisit if
+                // confirmed-email sign-in is ever enforced on this backend.
+                var emailResult = await _userManager.SetEmailAsync(patient, dto.Email);
+                if (!emailResult.Succeeded)
+                {
+                    throw new InvalidOperationException(string.Join("; ", emailResult.Errors.Select(e => e.Description)));
+                }
+
+                if (usernameMatchesEmail)
+                {
+                    var userNameResult = await _userManager.SetUserNameAsync(patient, dto.Email);
+                    if (!userNameResult.Succeeded)
+                    {
+                        throw new InvalidOperationException(string.Join("; ", userNameResult.Errors.Select(e => e.Description)));
+                    }
+                }
+            }
+
+            // Persist the non-Identity fields (FullName/PhoneNumber/Address).
+            await _userRepository.UpdateAsync(patient);
+
+            return await GetPatientByIdAsync(patientId);
         }
 
         private static AppointmentSummaryDto MapToAppointmentSummary(Appointment appointment)

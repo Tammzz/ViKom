@@ -10,6 +10,10 @@ namespace backend.DTOs
         public string? SupabaseProfileId { get; set; }
         public int TotalAppointments { get; set; }
         public string LastAppointmentDate { get; set; } = string.Empty;
+        public string? Notes { get; set; }
+        public DateTime? NotesUpdatedAt { get; set; }
         public List<AppointmentSummaryDto> UpcomingAppointments { get; set; } = new();
+        public List<AppointmentSummaryDto> PastAppointments { get; set; } = new();
+        public List<CallLogDto> RecentCalls { get; set; } = new();
     }
 }

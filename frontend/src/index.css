@@ -27,8 +27,9 @@
   /* Custom variables */
   --font-primary: 'Poppins', sans-serif;
   --font-heading: 'Nunito', sans-serif;
-  --radius-default: 0.75rem;
-  --radius-card: 1rem;
+  --radius-sm: 0.75rem;
+  --radius-default: 1rem;
+  --radius-card: 1.25rem;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -50,6 +51,12 @@ body {
   line-height: 1.6;
   color: var(--bs-dark);
   background-color: var(--bs-white);
+}
+
+/* Personnel-facing portal uses a denser 16px base; the patient-facing
+   experience keeps the larger 18px default for elderly users. */
+body.role-personnel {
+  font-size: 1rem;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -127,9 +134,10 @@ h1, h2, h3, h4, h5, h6 {
   overflow: hidden;
 }
 
-/* Badge Styling */
+/* Badge Styling — status badges render as pills */
 .badge {
   font-size: 0.875rem;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.5rem;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  border-radius: 50rem;
 }

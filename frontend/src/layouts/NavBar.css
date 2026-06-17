@@ -17,6 +17,17 @@
     left: 16.25rem; /* matches sidebar width */
     width: calc(100% - 16.25rem);
     border-bottom: none; /* removes border for authenticated layout */
+    /* The authenticated navbar is a transparent fixed overlay. Let clicks fall
+       through its empty area to the page content beneath (e.g. breadcrumb
+       links), while its own controls re-enable pointer events below. */
+    pointer-events: none;
+}
+
+.navbar-with-sidebar .user-dropdown-wrapper,
+.navbar-with-sidebar .navbar-toggler,
+.navbar-with-sidebar .mobile-sidebar-menu,
+.navbar-with-sidebar .mobile-logout-wrapper {
+    pointer-events: auto;
 }
 
 /* Logo in navbar - only visible when user is not authenticated */

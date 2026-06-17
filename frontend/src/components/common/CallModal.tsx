@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Modal, Button, Spinner, Alert } from 'react-bootstrap';
 import { signalingService } from '../../services/SupabaseSignalingService';
 import { getUserInfo } from '../../auth/AuthService';
+import PatientService from '../../patients/services/PatientService';
 
 export type CallState = 'Idle' | 'Calling' | 'Ringing' | 'Accepted' | 'Declined' | 'Ended' | 'Failed';
 
@@ -9,10 +10,11 @@ interface CallModalProps {
   show: boolean;
   onHide: () => void;
   targetSupabaseProfileId?: string | null;
+  patientId?: string;
   patientName: string;
 }
 
-const CallModal: React.FC<CallModalProps> = ({ show, onHide, targetSupabaseProfileId, patientName }) => {
+const CallModal: React.FC<CallModalProps> = ({ show, onHide, targetSupabaseProfileId, patientId, patientName }) => {
   const [callState, setCallState] = useState<CallState>('Idle');
   const [errorMessage, setErrorMessage] = useState<string>('');
 
@@ -23,7 +25,30 @@ const CallModal: React.FC<CallModalProps> = ({ show, onHide, targetSupabaseProfi
     callStateRef.current = callState;
   }, [callState]);
 
+  // Id of the CallLog row created for the in-progress call, so its outcome
+  // can be updated as the call state changes.
+  const callLogIdRef = useRef<number | null>(null);
+  // The in-flight create request, so an outcome that arrives before the create
+  // resolves (e.g. a near-instant answer) still updates the right row.
+  const callLogCreateRef = useRef<Promise<void> | null>(null);
+
   const userInfo = getUserInfo();
+
+  // Persist the outcome of the currently-logged call (best-effort; a logging
+  // failure must never interfere with the actual call flow).
+  const updateCallStatus = async (status: string) => {
+    if (!patientId) return;
+    // Make sure the create has settled so callLogIdRef is populated.
+    if (callLogCreateRef.current) {
+      await callLogCreateRef.current;
+    }
+    if (callLogIdRef.current === null) return;
+    try {
+      await PatientService.updateCall(patientId, callLogIdRef.current, status);
+    } catch (e) {
+      console.warn('Failed to update call log status', e);
+    }
+  };
 
   useEffect(() => {
     if (!show) return;
@@ -32,6 +57,7 @@ const CallModal: React.FC<CallModalProps> = ({ show, onHide, targetSupabaseProfi
     const onCallAnswer = (payload: any) => {
       console.log('Call answered:', payload);
       setCallState('Accepted');
+      updateCallStatus('Answered');
     };
 
     // Listen for call rejections
@@ -39,6 +65,7 @@ const CallModal: React.FC<CallModalProps> = ({ show, onHide, targetSupabaseProfi
       console.log('Call rejected:', payload);
       setCallState('Declined');
       setErrorMessage(payload?.reason || 'Pasienten avviste anropet.');
+      updateCallStatus('Declined');
     };
 
     // Listen for call endings
@@ -49,6 +76,11 @@ const CallModal: React.FC<CallModalProps> = ({ show, onHide, targetSupabaseProfi
       if (previous !== 'Accepted' && previous !== 'Declined') {
         setErrorMessage(payload?.reason || 'Anropet ble avsluttet.');
       }
+      // Don't clobber an already-recorded terminal outcome (e.g. a decline that
+      // the TV follows up with a call_ended).
+      if (previous !== 'Declined') {
+        updateCallStatus('Ended');
+      }
     };
 
     // Register listeners BEFORE sending the offer so a fast answer/rejection
@@ -58,6 +90,8 @@ const CallModal: React.FC<CallModalProps> = ({ show, onHide, targetSupabaseProfi
     signalingService.on('call_ended', onCallEnded);
 
     // Reset state when modal opens, then place the call.
+    callLogIdRef.current = null;
+    callLogCreateRef.current = null;
     setCallState('Calling');
     setErrorMessage('');
     initiateCall();
@@ -94,6 +128,19 @@ const CallModal: React.FC<CallModalProps> = ({ show, onHide, targetSupabaseProfi
         userInfo.fullName || 'Helsepersonell'
       );
 
+      // Record the call attempt (best-effort; never block the call flow). We
+      // keep the promise so a fast outcome can await it before updating.
+      if (patientId) {
+        callLogCreateRef.current = (async () => {
+          try {
+            const logged = await PatientService.createCall(patientId);
+            callLogIdRef.current = logged.id;
+          } catch (e) {
+            console.warn('Failed to log call', e);
+          }
+        })();
+      }
+
       // Wait a moment before showing "Ringing" state
       setTimeout(() => {
         setCallState(current => current === 'Calling' ? 'Ringing' : current);
@@ -118,6 +165,8 @@ const CallModal: React.FC<CallModalProps> = ({ show, onHide, targetSupabaseProfi
       } catch (e) {
         console.warn('Failed to send call_ended', e);
       }
+      // Record the final outcome: a hung-up accepted call vs. an unanswered one.
+      await updateCallStatus(callState === 'Accepted' ? 'Ended' : 'Missed');
     }
     // Tear down the realtime subscription so it doesn't linger after the modal
     // closes; it is re-initialized on the next call.

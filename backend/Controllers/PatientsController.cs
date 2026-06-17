@@ -12,13 +12,16 @@ namespace backend.Controllers
     public class PatientsController : ControllerBase
     {
         private readonly IPatientService _patientService;
+        private readonly ICallLogService _callLogService;
         private readonly ILogger<PatientsController> _logger;
 
         public PatientsController(
             IPatientService patientService,
+            ICallLogService callLogService,
             ILogger<PatientsController> logger)
         {
             _patientService = patientService;
+            _callLogService = callLogService;
             _logger = logger;
         }
 
@@ -79,6 +82,116 @@ namespace backend.Controllers
             {
                 _logger.LogError(ex, "Error getting patient {PatientId}", id);
                 return StatusCode(500, "An error occurred while retrieving the patient");
+            }
+        }
+
+        // PUT: api/patients/{id}
+        [HttpPut("{id}")]
+        public async Task<ActionResult<PatientDetailsDto>> UpdatePatient(string id, [FromBody] PatientUpdateDto dto)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                var updated = await _patientService.UpdatePatientAsync(id, dto);
+                if (updated == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(updated);
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogWarning(ex, "Invalid operation when updating patient {PatientId}", id);
+                return BadRequest(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating patient {PatientId}", id);
+                return StatusCode(500, "An error occurred while updating the patient");
+            }
+        }
+
+        // PUT: api/patients/{id}/notes
+        [HttpPut("{id}/notes")]
+        public async Task<IActionResult> UpdatePatientNotes(string id, [FromBody] PatientNotesUpdateDto dto)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                var updated = await _patientService.UpdatePatientNotesAsync(id, dto.Notes);
+                if (!updated)
+                {
+                    return NotFound();
+                }
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating notes for patient {PatientId}", id);
+                return StatusCode(500, "An error occurred while updating the patient notes");
+            }
+        }
+
+        // POST: api/patients/{id}/calls
+        [HttpPost("{id}/calls")]
+        public async Task<ActionResult<CallLogDto>> LogCall(string id)
+        {
+            try
+            {
+                var personnelId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(personnelId))
+                {
+                    return Unauthorized();
+                }
+
+                var created = await _callLogService.CreateAsync(id, personnelId);
+                if (created == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(created);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error logging call for patient {PatientId}", id);
+                return StatusCode(500, "An error occurred while logging the call");
+            }
+        }
+
+        // PUT: api/patients/{id}/calls/{callId}
+        [HttpPut("{id}/calls/{callId}")]
+        public async Task<IActionResult> UpdateCall(string id, int callId, [FromBody] CallLogUpdateDto dto)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                var updated = await _callLogService.UpdateStatusAsync(id, callId, dto.Status);
+                if (!updated)
+                {
+                    return NotFound();
+                }
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating call {CallId} for patient {PatientId}", callId, id);
+                return StatusCode(500, "An error occurred while updating the call");
             }
         }
     }

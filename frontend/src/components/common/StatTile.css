@@ -1,0 +1,37 @@
+/* ===== STAT TILE ===== */
+.vk-stat-tile {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1.1rem;
+  background-color: var(--bs-white);
+  border: 1px solid var(--bs-dark);
+  border-radius: var(--radius-default);
+  min-width: 0;
+}
+
+.vk-stat-tile-icon {
+  font-size: 1.5rem;
+  color: var(--bs-dark);
+  flex-shrink: 0;
+}
+
+.vk-stat-tile-text {
+  min-width: 0;
+}
+
+.vk-stat-tile-value {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 1.35rem;
+  line-height: 1.1;
+  color: var(--bs-secondary);
+}
+
+.vk-stat-tile-label {
+  font-size: 0.8rem;
+  color: #6c757d;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

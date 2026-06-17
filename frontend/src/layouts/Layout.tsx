@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import NavBar from './NavBar';
 import Sidebar from './Sidebar';
@@ -15,6 +15,14 @@ const Layout: React.FC = () => {
   
   // gets current route location
   const location = useLocation();
+
+  // Personnel see a denser 16px base font; the patient-facing experience keeps
+  // the larger 18px default. Role is session-wide, so toggle a class on <body>.
+  const role = isAuthenticated ? AuthService.getUserInfo()?.role : undefined;
+  useEffect(() => {
+    document.body.classList.toggle('role-personnel', role === 'Personnel');
+    return () => document.body.classList.remove('role-personnel');
+  }, [role]);
   
   // defines routes where sidebar should not be displayed
   const noSidebarRoutes = ['/login', '/register', '/'];

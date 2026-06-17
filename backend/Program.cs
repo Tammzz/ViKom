@@ -77,6 +77,7 @@ builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
 builder.Services.AddScoped<IAvailabilityRepository, AvailabilityRepository>();
 builder.Services.AddScoped<IAvailabilityWindowRepository, AvailabilityWindowRepository>();
 builder.Services.AddScoped<IPatientUserLinkRepository, PatientUserLinkRepository>();
+builder.Services.AddScoped<ICallLogRepository, CallLogRepository>();
 
 // Register services
 builder.Services.AddScoped<backend.Services.IAppointmentService, backend.Services.AppointmentService>();
@@ -84,6 +85,7 @@ builder.Services.AddScoped<backend.Services.IAvailabilityService, backend.Servic
 builder.Services.AddScoped<backend.Services.IPatientService, backend.Services.PatientService>();
 builder.Services.AddScoped<backend.Services.IDashboardService, backend.Services.DashboardService>();
 builder.Services.AddScoped<backend.Services.IPatientUserLinkService, backend.Services.PatientUserLinkService>();
+builder.Services.AddScoped<backend.Services.ICallLogService, backend.Services.CallLogService>();
 
 // Configure Swagger with JWT support
 builder.Services.AddEndpointsApiExplorer();

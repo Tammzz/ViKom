@@ -25,5 +25,17 @@ namespace backend.Models
         /// </summary>
         [Display(Name = "Supabase Profile ID")]
         public string? SupabaseProfileId { get; set; }
+
+        /// <summary>
+        /// Free-text care note that personnel can write and update for a patient.
+        /// Null if no note has been written yet.
+        /// </summary>
+        [Display(Name = "Notes")]
+        public string? Notes { get; set; }
+
+        /// <summary>
+        /// Timestamp (UTC) of the last time <see cref="Notes"/> was updated.
+        /// </summary>
+        public DateTime? NotesUpdatedAt { get; set; }
     }
 }
