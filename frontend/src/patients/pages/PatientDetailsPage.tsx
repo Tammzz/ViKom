@@ -201,7 +201,7 @@ const PatientDetailsPage: React.FC = () => {
                 label="Status"
                 value={
                   <Badge
-                    bg={deviceStatus.variant}
+                    bg={deviceStatus.variant === 'success' ? '' : deviceStatus.variant}
                     className={deviceStatus.variant === 'success' ? 'vk-tv-status-connected' : ''}
                   >
                     {deviceStatus.label}

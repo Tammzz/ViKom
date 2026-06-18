@@ -1,21 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { Table, Alert } from 'react-bootstrap';
+import { Link, useNavigate } from 'react-router-dom';
+import { Alert, Container, Spinner } from 'react-bootstrap';
 import { getUserInfo } from '../../auth/AuthService';
 import PatientService from '../services/PatientService';
 import type { PatientListDto } from '../types/patient';
-import './PatientListPage.css';
+import DataTable, { type DataTableColumn } from '../../components/common/DataTable';
 
 const PatientListPage: React.FC = () => {
   const userInfo = getUserInfo();
   const isPersonnel = userInfo?.role === 'Personnel';
+  const navigate = useNavigate();
 
-  // State
   const [patients, setPatients] = useState<PatientListDto[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
 
-  // Load patients
   const loadPatients = async () => {
     try {
       setLoading(true);
@@ -34,80 +33,68 @@ const PatientListPage: React.FC = () => {
     loadPatients();
   }, []);
 
-  // Format date from backend (dd/MM/yyyy)
-  const formatDate = (dateString: string): string => {
-    if (!dateString) return 'N/A';
-    return dateString; // Backend already formats as dd/MM/yyyy
-  };
+  const columns: DataTableColumn<PatientListDto>[] = [
+    {
+      key: 'fullName',
+      header: 'Navn',
+      style: { minWidth: '160px' },
+      render: (patient) => (
+        <Link
+          to={`/patients/${patient.id}`}
+          className="fw-semibold text-dark text-decoration-none"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {patient.fullName}
+        </Link>
+      ),
+    },
+    { key: 'email', header: 'E-post' },
+    { key: 'phoneNumber', header: 'Telefon' },
+    {
+      key: 'address',
+      header: 'Adresse',
+      style: { minWidth: '180px' },
+      render: (patient) => patient.address || 'Ikke oppgitt',
+    },
+    { key: 'totalAppointments', header: 'Totalt avtaler', style: { width: '150px' } },
+    {
+      key: 'lastAppointmentDate',
+      header: 'Siste avtaledato',
+      render: (patient) => patient.lastAppointmentDate || 'N/A',
+    },
+  ];
 
   if (loading) {
     return (
-      <div className={isPersonnel ? 'patient-list-page personnel-page' : 'patient-list-page'}>
-        <p>Laster pasienter...</p>
-      </div>
+      <Container fluid className={isPersonnel ? 'personnel-page' : ''}>
+        <div className="d-flex align-items-center gap-2 py-4">
+          <Spinner animation="border" size="sm" />
+          <span>Laster pasienter...</span>
+        </div>
+      </Container>
     );
   }
 
   return (
-    <div className={isPersonnel ? 'patient-list-page personnel-page' : 'patient-list-page'}>
-        {error && (
-          <Alert variant="danger" dismissible onClose={() => setError('')}>
-            {error}
-          </Alert>
-        )}
+    <Container fluid className={isPersonnel ? 'personnel-page' : ''}>
+      {error && (
+        <Alert variant="danger" dismissible onClose={() => setError('')}>
+          {error}
+        </Alert>
+      )}
 
-        <h1 className="mb-3 fw-bold">Mine pasienter</h1>
+      <h1 className="fw-bold mb-2">Mine pasienter</h1>
+      <p className="text-dark fs-5 mb-4">Se og administrer alle pasientene dine.</p>
 
-        <div className="mb-4">
-          <p className="text-dark mb-0 fs-5 lh-base">
-            Se og administrer alle pasientene dine.
-          </p>
-        </div>
-
-        {patients.length === 0 ? (
-          <div className="card border-1 border-dark bg-light">
-            <div className="card-body p-4">
-              <div className="text-center py-4">
-                <i className="bi bi-people display-4 text-muted mb-3 d-block"></i>
-                <p className="text-dark mb-0">Ingen pasienter funnet.</p>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="card border-1 border-dark bg-white mt-3 overflow-hidden">
-            <div className="card-body p-0">
-              <Table hover className="mb-0 bg-white rounded patient-table">
-                <thead className="table-light">
-                  <tr>
-                    <th className="fw-bold text-dark py-3 px-4 border-bottom border-dark" style={{ minWidth: '160px' }}>Navn</th>
-                    <th className="fw-bold text-dark py-3 px-4 border-bottom border-dark">E-post</th>
-                    <th className="fw-bold text-dark py-3 px-4 border-bottom border-dark">Telefon</th>
-                    <th className="fw-bold text-dark py-3 px-4 border-bottom border-dark" style={{ minWidth: '180px' }}>Adresse</th>
-                    <th className="fw-bold text-dark py-3 px-4 border-bottom border-dark" style={{ width: '100px' }}>Totalt avtaler</th>
-                    <th className="fw-bold text-dark py-3 px-4 border-bottom border-dark">Siste avtaledato</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {patients.map((patient) => (
-                    <tr key={patient.id}>
-                      <td className="py-3 px-4 text-dark">
-                        <Link to={`/patients/${patient.id}`} className="text-dark fw-semibold text-decoration-none">
-                          {patient.fullName}
-                        </Link>
-                      </td>
-                      <td className="py-3 px-4 text-dark">{patient.email}</td>
-                      <td className="py-3 px-4 text-dark">{patient.phoneNumber}</td>
-                      <td className="py-3 px-4 text-dark">{patient.address || 'Ikke oppgitt'}</td>
-                      <td className="py-3 px-4 text-dark">{patient.totalAppointments}</td>
-                      <td className="py-3 px-4 text-dark">{formatDate(patient.lastAppointmentDate)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </Table>
-            </div>
-          </div>
-        )}
-    </div>
+      <DataTable
+        columns={columns}
+        data={patients}
+        rowKey={(patient) => patient.id}
+        onRowClick={(patient) => navigate(`/patients/${patient.id}`)}
+        emptyIcon="people"
+        emptyText="Ingen pasienter funnet."
+      />
+    </Container>
   );
 };
 

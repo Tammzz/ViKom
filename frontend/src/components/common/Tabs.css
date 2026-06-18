@@ -78,3 +78,17 @@
     display: none;
   }
 }
+
+/* ===== CARD VARIANT =====
+   Wraps the tab bar + active content in a bordered rounded box. */
+.vk-tabs-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--bs-dark);
+  border-radius: var(--radius-card);
+  padding: 1.25rem;
+}
+
+.vk-tabs-content {
+  flex: 1 1 auto;
+}

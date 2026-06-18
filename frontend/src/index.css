@@ -27,9 +27,64 @@
   /* Custom variables */
   --font-primary: 'Poppins', sans-serif;
   --font-heading: 'Nunito', sans-serif;
+
+  /* Radius scale */
   --radius-sm: 0.75rem;
   --radius-default: 1rem;
   --radius-card: 1.25rem;
+  --radius-pill: 999px;
+
+  /* Neutral / gray scale — replaces raw hex repeated across feature CSS */
+  --gray-100: #f8f9fa;
+  --gray-200: #e9ecef;
+  --gray-300: #dee2e6;
+  --gray-400: #ced4da;
+  --gray-500: #adb5bd;
+  --gray-600: #6c757d;
+  --gray-700: #495057;
+  --gray-800: #343a40;
+  --gray-900: #111215;
+
+  /* Semantic neutrals */
+  --border-color: var(--gray-300);
+  --border-strong: var(--bs-dark);
+  --text-muted: var(--gray-600);
+  --surface-muted: var(--gray-100);
+
+  /* Danger / error surface (shared by alerts) */
+  --danger-surface-bg: #f8d7da;
+  --danger-surface-fg: #842029;
+  --danger-surface-border: #f5c2c7;
+
+  /* Success surface */
+  --success-surface-bg: #d4edda;
+  --success-surface-fg: #155724;
+  --success-surface-border: #c3e6cb;
+
+  /* Spacing scale (Bootstrap-aligned: prefer padding/margin/gap utilities in JSX) */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+
+  /* Font-size scale */
+  --fs-xs: 0.75rem;
+  --fs-sm: 0.875rem;
+  --fs-base: 1rem;
+  --fs-md: 1.125rem;
+  --fs-lg: 1.25rem;
+  --fs-xl: 1.5rem;
+  --fs-2xl: 2rem;
+  --fs-hero: 4rem;
+
+  /* Elevation / shadow scale */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+  --focus-ring: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.2);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -46,7 +101,7 @@
 
 body {
   font-family: var(--font-primary);
-  font-size: 1.125rem;
+  font-size: var(--fs-md);
   font-weight: 400;
   line-height: 1.6;
   color: var(--bs-dark);
@@ -56,7 +111,7 @@ body {
 /* Personnel-facing portal uses a denser 16px base; the patient-facing
    experience keeps the larger 18px default for elderly users. */
 body.role-personnel {
-  font-size: 1rem;
+  font-size: var(--fs-base);
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -68,7 +123,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Bootstrap Button Overrides */
 .btn {
-  font-size: 1.125rem;
+  font-size: var(--fs-md);
   font-weight: 500;
   padding: 1rem 1.75rem;
   border-radius: var(--radius-default);
@@ -98,7 +153,7 @@ h1, h2, h3, h4, h5, h6 {
 .btn-outline-primary {
   color: var(--bs-primary);
   background-color: transparent;
-  border: 1px solid var(--bs-primary) !important;
+  border: 1px solid var(--bs-primary);
 }
 
 .btn-outline-primary:hover {
@@ -110,7 +165,7 @@ h1, h2, h3, h4, h5, h6 {
 .btn-outline-secondary {
   color: var(--bs-secondary);
   background-color: transparent;
-  border: 1px solid var(--bs-secondary) !important;
+  border: 1px solid var(--bs-secondary);
 }
 
 .btn-outline-secondary:hover {
@@ -130,14 +185,43 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Bootstrap Card Overrides */
 .card {
-  border-radius: var(--radius-default) !important;
+  border-radius: var(--radius-default);
   overflow: hidden;
 }
 
 /* Badge Styling — status badges render as pills */
 .badge {
-  font-size: 0.875rem;
+  font-size: var(--fs-sm);
   font-weight: 600;
   padding: 0.5rem 1rem;
-  border-radius: 50rem;
+  border-radius: var(--radius-pill);
+}
+
+/* Shared dismissible error alert — single source for the inline page-level
+   error banner previously duplicated across feature CSS files. */
+.vk-error-alert {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--danger-surface-bg);
+  color: var(--danger-surface-fg);
+  border: 1px solid var(--danger-surface-border);
+  border-radius: var(--radius-default);
+  padding: var(--space-4) var(--space-5);
+  margin-bottom: var(--space-5);
+}
+
+.vk-error-alert__close {
+  background: none;
+  border: none;
+  font-size: var(--fs-xl);
+  color: var(--danger-surface-fg);
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  transition: opacity 0.2s ease;
+}
+
+.vk-error-alert__close:hover {
+  opacity: 0.7;
 }

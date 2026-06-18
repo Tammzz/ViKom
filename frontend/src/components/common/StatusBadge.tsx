@@ -52,7 +52,7 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ status, className = '' }) => 
 
   return (
     <Badge
-      bg={getVariant(status)}
+      bg={isPlanned ? '' : getVariant(status)}
       className={`${isPlanned ? 'vk-status-planned' : ''} ${className}`.trim()}
     >
       {getDisplayText(status)}

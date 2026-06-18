@@ -4,8 +4,10 @@ import * as AuthService from '../../auth/AuthService';
 import AppointmentService from '../services/AppointmentService';
 import AppointmentModal from '../components/AppointmentModal';
 import AppointmentDeleteModal from '../components/AppointmentDeleteModal';
-import TaskBadges from '../../components/common/TaskBadges';
-import StatusBadge from '../../components/common/StatusBadge';
+import AppointmentCard from '../components/AppointmentCard';
+import PageHeader from '../../components/common/PageHeader';
+import Tabs from '../../components/common/Tabs';
+import EmptyState from '../../components/common/EmptyState';
 import type { Appointment } from '../types/appointment';
 import './AppointmentListPage.css';
 
@@ -22,6 +24,13 @@ const formatDateNorwegian = (dateString?: string) => {
     day: 'numeric',
     year: 'numeric',
   });
+};
+
+// Builds the "<date> • <start> - <end>" line shown on each appointment card.
+const formatDateTime = (appointment: Appointment) => {
+  const datePart = formatDateNorwegian(appointment.date);
+  const timePart = appointment.startTime ? ` • ${appointment.startTime} - ${appointment.endTime}` : '';
+  return `${datePart}${timePart}`;
 };
 
 const AppointmentListPage: React.FC = () => {
@@ -197,6 +206,16 @@ const AppointmentListPage: React.FC = () => {
     }
   };
 
+  // shared dismissible error banner
+  const errorBanner = error && (
+    <div className="vk-error-alert">
+      <span>{error}</span>
+      <button className="vk-error-alert__close" onClick={() => setError('')}>
+        <i className="bi bi-x"></i>
+      </button>
+    </div>
+  );
+
   // renders loading state
   if (loading) {
     return (
@@ -208,6 +227,13 @@ const AppointmentListPage: React.FC = () => {
 
   // Render UI for personnel (nurse) view
   if (role === 'Personnel') {
+    const personnelTabs = [
+      { key: 'all', label: 'Alle', count: allActiveAppointments.length },
+      { key: 'scheduled', label: 'Planlagt', count: scheduledAppointments.length },
+      { key: 'inprogress', label: 'Pågår', count: inProgressAppointments.length },
+      { key: 'completed', label: 'Fullført', count: completedAppointments.length },
+    ];
+
     const showList = (tab: PersonnelTab) => {
       const list =
         tab === 'all'
@@ -220,373 +246,172 @@ const AppointmentListPage: React.FC = () => {
 
       if (list.length === 0) {
         return (
-          <div className="appointments-empty">
-            <i className="empty-icon bi bi-calendar-x"></i>
-            <h2 className="empty-title">Ingen avtaler</h2>
-            <p className="empty-text">
-              Det finnes ingen avtaler som matcher dette filteret.
-            </p>
-          </div>
+          <EmptyState
+            icon="calendar-x"
+            text="Det finnes ingen avtaler som matcher dette filteret."
+          />
         );
       }
 
       return (
-        <div className="appointments-list">
-          {list.map((appointment) => {
-            const isBooked = appointment.status === 'Booked';
-            const isInProgress = appointment.status === 'InProgress';
-            const isCompleted = appointment.status === 'Completed';
-
-            return (
-              <div key={appointment.id} className="appointment-item">
-                <div className="appointment-content">
-                  <div className="appointment-main">
-                    <div className="appointment-icon">
-                      <i className="bi bi-calendar-event"></i>
-                    </div>
-                    <div className="appointment-details">
-                      <div className="appointment-top-row">
-                        <p className="appointment-datetime">
-                          {formatDateNorwegian(appointment.date)}
-                          {appointment.startTime ? ` • ${appointment.startTime} - ${appointment.endTime}` : ''}
-                        </p>
-                        <div className="appointment-status-badges">
-                          <StatusBadge status={appointment.status} />
-                        </div>
-                      </div>
-
-                      {appointment.patientName && (
-                        <p className="appointment-personnel">
-                          Pasient: {appointment.patientName}
-                        </p>
-                      )}
-
-                      <div className="appointment-tasks">
-                        <TaskBadges tasks={appointment.tasks} variant="secondary" />
-                      </div>
-
-                      {isCompleted && (
-                        <small className="appointment-warning">
-                          Oppgaven er fullført.
-                        </small>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="appointment-actions">
-                    {isBooked && (
-                      <button
-                        className="btn btn-primary"
-                        onClick={() => handleStatusUpdate(appointment, 'InProgress')}
-                      >
-                        Start
-                      </button>
-                    )}
-                    {isInProgress && (
-                      <button
-                        className="btn btn-success"
-                        onClick={() => handleStatusUpdate(appointment, 'Completed')}
-                      >
-                        Fullfør
-                      </button>
-                    )}
-                    {isCompleted && (
-                      <span className="badge bg-success">Oppgave fullført</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+        <div className="d-flex flex-column gap-3">
+          {list.map((appointment) => (
+            <AppointmentCard
+              key={appointment.id}
+              appointment={appointment}
+              dateTimeText={formatDateTime(appointment)}
+              subject={appointment.patientName ? `Pasient: ${appointment.patientName}` : null}
+              actions={
+                <>
+                  {appointment.status === 'Booked' && (
+                    <button
+                      className="btn btn-primary"
+                      onClick={() => handleStatusUpdate(appointment, 'InProgress')}
+                    >
+                      Start
+                    </button>
+                  )}
+                  {appointment.status === 'InProgress' && (
+                    <button
+                      className="btn btn-success"
+                      onClick={() => handleStatusUpdate(appointment, 'Completed')}
+                    >
+                      Fullfør
+                    </button>
+                  )}
+                </>
+              }
+            />
+          ))}
         </div>
       );
     };
 
     return (
       <div className="appointment-list-page personnel-page">
-        {error && (
-          <div className="error-alert">
-            <span>{error}</span>
-            <button className="error-close" onClick={() => setError('')}>
-              <i className="bi bi-x"></i>
-            </button>
-          </div>
-        )}
+        {errorBanner}
 
-        <h1 className="mb-3 fw-bold">Mine pasientavtaler</h1>
-        <div className="mb-4">
-          <p className="text-dark mb-0 fs-5 lh-base">Start og fullfør oppgaver for pasientene dine direkte her.</p>
-        </div>
-
-        <div className="tabs-container">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-            <button
-              className="btn btn-warning"
-              type="button"
-              onClick={() => setActiveTab('completed')}
-            >
+        <PageHeader
+          title="Mine pasientavtaler"
+          subtitle="Start og fullfør oppgaver for pasientene dine direkte her."
+          actions={
+            <button className="btn btn-warning" type="button" onClick={() => setActiveTab('completed')}>
               Rydd opp fullførte
             </button>
-            <ul className="tab-navigation" role="tablist">
-              <li className="tab-item" role="presentation">
-                <button
-                  className={`tab-button ${activeTab === 'all' ? 'active' : ''}`}
-                  type="button"
-                  role="tab"
-                  onClick={() => setActiveTab('all')}
-                >
-                  Alle ({allActiveAppointments.length})
-                </button>
-              </li>
-              <li className="tab-item" role="presentation">
-                <button
-                  className={`tab-button ${activeTab === 'scheduled' ? 'active' : ''}`}
-                  type="button"
-                  role="tab"
-                  onClick={() => setActiveTab('scheduled')}
-                >
-                  Planlagt ({scheduledAppointments.length})
-                </button>
-              </li>
-              <li className="tab-item" role="presentation">
-                <button
-                  className={`tab-button ${activeTab === 'inprogress' ? 'active' : ''}`}
-                  type="button"
-                  role="tab"
-                  onClick={() => setActiveTab('inprogress')}
-                >
-                  Pågår ({inProgressAppointments.length})
-                </button>
-              </li>
-              <li className="tab-item" role="presentation">
-                <button
-                  className={`tab-button ${activeTab === 'completed' ? 'active' : ''}`}
-                  type="button"
-                  role="tab"
-                  onClick={() => setActiveTab('completed')}
-                >
-                  Fullført ({completedAppointments.length})
-                </button>
-              </li>
-            </ul>
-          </div>
+          }
+        />
 
-          <div className="tab-content">
-            <div className="tab-panel">
-              <div className="appointments-card">
-                <div className="appointments-body">
-                  {showList(activeTab as PersonnelTab)}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <Tabs
+          tabs={personnelTabs}
+          activeKey={activeTab}
+          onChange={(key) => setActiveTab(key as PersonnelTab)}
+          card
+        >
+          {showList(activeTab as PersonnelTab)}
+        </Tabs>
       </div>
     );
   }
 
+  // Render UI for patient view
+  const patientTabs = [
+    { key: 'upcoming', label: 'Kommende', count: upcomingAppointments.length },
+    { key: 'past', label: 'Tidligere', count: pastAppointments.length },
+  ];
+
   return (
     <div className="appointment-list-page">
-      {/* displays error message if present */}
-      {error && (
-        <div className="error-alert">
-          <span>{error}</span>
-          <button className="error-close" onClick={() => setError('')}>
-            <i className="bi bi-x"></i>
+      {errorBanner}
+
+      <PageHeader
+        title="Mine avtaler"
+        subtitle="Se og administrer alle dine avtaler på ett sted."
+        actions={
+          <button className="btn btn-primary" onClick={handleCreate}>
+            <i className="bi bi-calendar-plus me-2"></i>Ny avtale
           </button>
-        </div>
-      )}
+        }
+      />
 
-      <h1 className="mb-3 fw-bold">Mine avtaler</h1>
-      <div className="mb-4">
-        <p className="text-dark mb-0 fs-5 lh-base">Se og administrer alle dine avtaler på ett sted.</p>
-      </div>
+      <Tabs
+        tabs={patientTabs}
+        activeKey={activeTab}
+        onChange={(key) => setActiveTab(key as PatientTab)}
+        card
+      >
+        {/* Upcoming Appointments Tab */}
+        {activeTab === 'upcoming' &&
+        (upcomingAppointments.length > 0 ? (
+          <div className="d-flex flex-column gap-3">
+            {upcomingAppointments.map((appointment) => {
+              const within24Hours = isWithin24Hours(appointment);
+              const modifiable = canModify(appointment);
 
-      {/* creates new appointment button */}
-      <div className="create-btn-wrapper">
-        <button className="btn-create" onClick={handleCreate}>
-          <i className="bi bi-calendar-plus"></i>Ny avtale
-        </button>
-      </div>
-
-      <div className="tabs-container">
-        {/* provides tab navigation for upcoming and past appointments */}
-        <ul className="tab-navigation" role="tablist">
-          <li className="tab-item" role="presentation">
-            <button
-              className={`tab-button ${activeTab === 'upcoming' ? 'active' : ''}`}
-              id="upcoming-tab"
-              aria-selected={activeTab === 'upcoming'}
-              aria-controls="upcoming-panel"
-              onClick={() => setActiveTab('upcoming')}
-              type="button"
-              role="tab"
-            >
-              Kommende
-            </button>
-          </li>
-          <li className="tab-item" role="presentation">
-            <button
-              className={`tab-button ${activeTab === 'past' ? 'active' : ''}`}
-              id="past-tab"
-              aria-selected={activeTab === 'past'}
-              aria-controls="past-panel"
-              onClick={() => setActiveTab('past')}
-              type="button"
-              role="tab"
-            >
-              Tidligere
-            </button>
-          </li>
-        </ul>
-
-        {/* displays tab content based on active tab */}
-        <div className="tab-content">
-          {/* Upcoming Appointments Tab */}
-          {activeTab === 'upcoming' && (
-            <div className="tab-panel">
-              <div className="appointments-card">
-                <div className="appointments-body">
-                  {upcomingAppointments.length > 0 ? (
-                    <div className="appointments-list">
-                      {upcomingAppointments.map((appointment) => {
-                        const within24Hours = isWithin24Hours(appointment);
-                        const modifiable = canModify(appointment);
-                        
-                        return (
-                          <div key={appointment.id} className="appointment-item">
-                            <div className="appointment-content">
-                              <div className="appointment-main">
-                                <div className="appointment-icon">
-                                  <i className="bi bi-calendar-event"></i>
-                                </div>
-                                <div className="appointment-details">
-                                
-                                  <div className="appointment-top-row">
-                                    <p className="appointment-datetime">
-                                      {appointment.date && formatDateNorwegian(appointment.date)}
-                                      {appointment.startTime ? ` • ${appointment.startTime} - ${appointment.endTime}` : ''}
-                                    </p>
-                                    <div className="appointment-status-badges">
-                                      <StatusBadge status={appointment.status} />
-                                    </div>
-                                  </div>
-
-                                  {appointment.personnelName && (
-                                    <p className="appointment-personnel">
-                                      {appointment.personnelName}
-                                    </p>
-                                  )}
-
-                                  <div className="appointment-tasks">
-                                    <TaskBadges tasks={appointment.tasks} variant="secondary" />
-                                  </div>
-
-                                  {within24Hours && appointment.status === 'Booked' && (
-                                    <small className="appointment-warning">
-                                      <i className="bi bi-exclamation-triangle"></i>
-                                      Avbestilling må skje minst 24 timer før
-                                    </small>
-                                  )}
-                                </div>
-                              </div>
-                              <div className="appointment-actions">
-                                <button
-                                  className="btn btn-secondary btn-edit"
-                                  onClick={() => handleEdit(appointment)}
-                                  disabled={!modifiable}
-                                  title={!modifiable ? 'Kan ikke endres innen 24 timer eller hvis ikke planlagt' : 'Endre avtale'}
-                                >
-                                  <i className="bi bi-pencil"></i> Endre
-                                </button>
-                                <button
-                                  className="btn btn-danger btn-delete"
-                                  onClick={() => handleDelete(appointment)}
-                                  disabled={!modifiable}
-                                  title={!modifiable ? 'Kan ikke avbestilles innen 24 timer eller hvis ikke planlagt' : 'Avbryt avtale'}
-                                >
-                                  <i className="bi bi-trash"></i> Avbryt
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <div className="appointments-empty">
-                      <i className="empty-icon bi bi-calendar-x"></i>
-                      <h2 className="empty-title">Ingen kommende avtaler</h2>
-                      <p className="empty-text">
-                        Du har ingen planlagte avtaler.
-                      </p>
-                      <button className="btn-create" onClick={handleCreate}>
-                        <i className="bi bi-calendar-plus"></i>Book første avtale
+              return (
+                <AppointmentCard
+                  key={appointment.id}
+                  appointment={appointment}
+                  dateTimeText={formatDateTime(appointment)}
+                  footerNote={
+                    within24Hours && appointment.status === 'Booked' ? (
+                      <span className="d-inline-flex align-items-center gap-2 text-danger small">
+                        <i className="bi bi-exclamation-triangle" aria-hidden="true"></i>
+                        Avbestilling må skje minst 24 timer før
+                      </span>
+                    ) : undefined
+                  }
+                  actions={
+                    <>
+                      <button
+                        className="btn btn-secondary"
+                        onClick={() => handleEdit(appointment)}
+                        disabled={!modifiable}
+                        title={!modifiable ? 'Kan ikke endres innen 24 timer eller hvis ikke planlagt' : 'Endre avtale'}
+                      >
+                        <i className="bi bi-pencil me-2"></i>Endre
                       </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
+                      <button
+                        className="btn btn-danger"
+                        onClick={() => handleDelete(appointment)}
+                        disabled={!modifiable}
+                        title={!modifiable ? 'Kan ikke avbestilles innen 24 timer eller hvis ikke planlagt' : 'Avbryt avtale'}
+                      >
+                        <i className="bi bi-trash me-2"></i>Avbryt
+                      </button>
+                    </>
+                  }
+                />
+              );
+            })}
+          </div>
+        ) : (
+          <EmptyState
+            icon="calendar-x"
+            text="Du har ingen planlagte avtaler."
+            action={
+              <button className="btn btn-primary" onClick={handleCreate}>
+                <i className="bi bi-calendar-plus me-2"></i>Book første avtale
+              </button>
+            }
+          />
+        ))}
 
-          {/* Past Appointments Tab */}
-          {activeTab === 'past' && (
-            <div className="tab-panel">
-              <div className="appointments-card">
-                <div className="appointments-body">
-                  {pastAppointments.length > 0 ? (
-                    <div className="appointments-list">
-                      {pastAppointments.map((appointment) => (
-                        <div key={appointment.id} className="appointment-item">
-                          <div className="appointment-content">
-                            <div className="appointment-main">
-                                <div className={`appointment-icon ${appointment.status === 'Completed' ? 'secondary' : appointment.status === 'Cancelled' ? 'secondary' : ''}`}>
-                                  <i className={`bi ${appointment.status === 'Completed' ? 'bi-calendar-check' : appointment.status === 'Cancelled' ? 'bi-calendar-x' : 'bi-calendar-event'}`}></i>
-                                </div>
-                              <div className="appointment-details">
-
-                                <div className="appointment-top-row">
-                                  <p className="appointment-datetime">
-                                    {appointment.date && formatDateNorwegian(appointment.date)}
-                                    {appointment.startTime ? ` • ${appointment.startTime} - ${appointment.endTime}` : ''}
-                                  </p>
-
-                                  <div className="appointment-status-badges">
-                                    <StatusBadge status={appointment.status} />
-                                  </div>
-                                </div>
-
-                                {appointment.personnelName && (
-                                  <p className="appointment-personnel">
-                                    {appointment.personnelName}
-                                  </p>
-                                )}
-
-                                <div className="appointment-tasks">
-                                  <TaskBadges tasks={appointment.tasks} variant="secondary" />
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="appointments-empty">
-                      <i className="empty-icon bi bi-calendar-x"></i>
-                      <h2 className="empty-title">Ingen tidligere avtaler</h2>
-                      <p className="empty-text">
-                        Historikken vises her.
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+      {/* Past Appointments Tab */}
+      {activeTab === 'past' &&
+        (pastAppointments.length > 0 ? (
+          <div className="d-flex flex-column gap-3">
+            {pastAppointments.map((appointment) => (
+              <AppointmentCard
+                key={appointment.id}
+                appointment={appointment}
+                dateTimeText={formatDateTime(appointment)}
+              />
+            ))}
+          </div>
+        ) : (
+          <EmptyState icon="calendar-x" text="Historikken vises her." />
+        ))}
+      </Tabs>
 
       {/* appointment modals */}
       <AppointmentModal

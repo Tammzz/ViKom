@@ -173,9 +173,9 @@ const AvailabilityCalendarPage: React.FC = () => {
     <div className="availability-calendar-page">
       {/* displays error message if data fetch fails */}
       {error && (
-        <div className="error-alert">
+        <div className="vk-error-alert">
           <span>{error}</span>
-          <button className="error-close" onClick={() => setError('')}>
+          <button className="vk-error-alert__close" onClick={() => setError('')}>
             <i className="bi bi-x"></i>
           </button>
         </div>
