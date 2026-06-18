@@ -46,7 +46,7 @@
   margin-bottom: 0.5rem;
   border-radius: var(--radius-card);
   font-family: var(--font-primary);
-  font-size: 1rem;
+  font-size: var(--fs-base);
   font-weight: 400;
   display: flex;
   align-items: center;
@@ -59,12 +59,6 @@
   font-size: 1rem;
   line-height: 1;
 }
-
-/* Navigation link hover state
-.sidebar .nav-link:hover {
-  background-color: #e9ecef;
-  color: var(--bs-light);
-} */
 
 /* Active navigation link - highlights current page */
 .sidebar .nav-link.active {

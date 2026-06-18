@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
-import { Card, Button } from 'react-bootstrap';
+import { Button } from 'react-bootstrap';
 import TaskBadges from '../components/common/TaskBadges';
+import PageHeader from '../components/common/PageHeader';
+import SectionCard from '../components/common/SectionCard';
+import EmptyState from '../components/common/EmptyState';
+import StatusBadge from '../components/common/StatusBadge';
 import './VisitExecutionPage.css';
 
 // Mock data for visit
@@ -41,10 +45,10 @@ const VisitExecutionPage: React.FC = () => {
 
   return (
     <div className="visit-execution-page">
-      <h1 className="mb-3 fw-bold">Gjennomfør besøk</h1>
-      <div className="mb-4">
-        <p className="text-dark mb-0 fs-5 lh-base">Dokumenter og fullfør oppgaver for dette besøket.</p>
-      </div>
+      <PageHeader
+        title="Gjennomfør besøk"
+        subtitle="Dokumenter og fullfør oppgaver for dette besøket."
+      />
 
       <div className="visit-topbar">
         <p className="visit-breadcrumb">Pasient {'>'} Avtalt besøk</p>
@@ -57,53 +61,44 @@ const VisitExecutionPage: React.FC = () => {
 
       <div className="visit-grid-layout">
         <div className="visit-grid-left">
-          <Card className="patient-info-card">
-            <Card.Header>
-              <h2 className="card-title">Pasientoversikt</h2>
-            </Card.Header>
-            <Card.Body>
-              <div className="patient-details">
-                <div className="detail-row">
-                  <strong>Navn:</strong> {mockVisit.patientName}
-                </div>
-                <div className="detail-row">
-                  <strong>Adresse:</strong> {mockVisit.patientAddress}
-                </div>
-                <div className="detail-row">
-                  <strong>Telefon:</strong> {mockVisit.patientPhone}
-                </div>
-                <div className="detail-row">
-                  <strong>Tidspunkt:</strong> {mockVisit.startTime} - {mockVisit.endTime}
-                </div>
-                <div className="detail-row">
-                  <strong>Status:</strong> <span className="status-badge in-progress">{mockVisit.status}</span>
-                </div>
-                <div className="detail-row">
-                  <strong>Planlagte oppgaver:</strong>
-                  <div className="tasks-badges">
-                    <TaskBadges tasks={mockVisit.tasks} />
-                  </div>
+          <SectionCard title="Pasientoversikt" className="patient-info-card">
+            <div className="patient-details">
+              <div className="detail-row">
+                <strong>Navn:</strong> {mockVisit.patientName}
+              </div>
+              <div className="detail-row">
+                <strong>Adresse:</strong> {mockVisit.patientAddress}
+              </div>
+              <div className="detail-row">
+                <strong>Telefon:</strong> {mockVisit.patientPhone}
+              </div>
+              <div className="detail-row">
+                <strong>Tidspunkt:</strong> {mockVisit.startTime} - {mockVisit.endTime}
+              </div>
+              <div className="detail-row">
+                <strong>Status:</strong> <StatusBadge status="InProgress" />
+              </div>
+              <div className="detail-row">
+                <strong>Planlagte oppgaver:</strong>
+                <div className="tasks-badges">
+                  <TaskBadges tasks={mockVisit.tasks} />
                 </div>
               </div>
-            </Card.Body>
-          </Card>
+            </div>
+          </SectionCard>
 
-          <Card className="patient-map-card">
-            <Card.Header>
-              <h2 className="card-title">Pasientens addresse</h2>
-            </Card.Header>
-            <Card.Body className="patient-map-body">
-              <div className="patient-map-placeholder">
-                <i className="bi bi-geo-alt-fill"></i>
-              </div>
-            </Card.Body>
-          </Card>
+          <SectionCard title="Pasientens addresse" className="patient-map-card" bodyClassName="patient-map-body p-0">
+            <div className="patient-map-placeholder">
+              <i className="bi bi-geo-alt-fill"></i>
+            </div>
+          </SectionCard>
         </div>
 
         <div className="visit-grid-right">
-          <Card className="task-checklist-card">
-            <Card.Header className="d-flex justify-content-between align-items-center">
-              <h2 className="card-title">Oppgaveliste</h2>
+          <SectionCard
+            title="Oppgaveliste"
+            className="task-checklist-card"
+            action={
               <Button
                 variant="outline-secondary"
                 size="sm"
@@ -111,50 +106,39 @@ const VisitExecutionPage: React.FC = () => {
               >
                 {hideCompleted ? 'Vis fullførte' : 'Skjul fullførte'}
               </Button>
-            </Card.Header>
-            <Card.Body>
-              {displayedTasks.length > 0 ? (
-                <div className="task-list">
-                  {displayedTasks.map((task) => (
-                    <div key={task.id} className={`task-item ${task.completed ? 'completed' : ''}`}>
-                      <div className="task-content">
-                        <div className="task-description">
-                          {task.description}
-                        </div>
-                        <Button
-                          variant={task.completed ? 'success' : 'outline-secondary'}
-                          size="sm"
-                          onClick={() => toggleTask(task.id)}
-                          className="task-toggle-btn"
-                        >
-                          {task.completed ? '✓ Fullført' : 'Marker som fullført'}
-                        </Button>
-                      </div>
+            }
+          >
+            {displayedTasks.length > 0 ? (
+              <div className="task-list">
+                {displayedTasks.map((task) => (
+                  <div key={task.id} className={`task-item ${task.completed ? 'completed' : ''}`}>
+                    <div className="task-content">
+                      <div className="task-description">{task.description}</div>
+                      <Button
+                        variant={task.completed ? 'success' : 'outline-secondary'}
+                        size="sm"
+                        onClick={() => toggleTask(task.id)}
+                        className="task-toggle-btn"
+                      >
+                        {task.completed ? '✓ Fullført' : 'Marker som fullført'}
+                      </Button>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="empty-state">
-                  <i className="bi bi-check-circle-fill empty-icon"></i>
-                  <p className="empty-text">Alle oppgaver er fullført!</p>
-                </div>
-              )}
-            </Card.Body>
-          </Card>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <EmptyState icon="check-circle-fill" text="Alle oppgaver er fullført!" />
+            )}
+          </SectionCard>
 
-          <Card className="visit-notes-card">
-            <Card.Header>
-              <h2 className="card-title">Notater</h2>
-            </Card.Header>
-            <Card.Body>
-              <textarea
-                className="visit-notes-input"
-                placeholder="Skriv notater fra besøket..."
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-              />
-            </Card.Body>
-          </Card>
+          <SectionCard title="Notater" className="visit-notes-card">
+            <textarea
+              className="visit-notes-input"
+              placeholder="Skriv notater fra besøket..."
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+            />
+          </SectionCard>
         </div>
       </div>
     </div>

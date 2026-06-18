@@ -4,6 +4,7 @@ import type { DayAvailability, AvailabilityWindow } from '../types/availability'
 import { formatTime12Hour } from '../../utils/dateUtils';
 import TaskBadges from '../../components/common/TaskBadges';
 import StatusBadge from '../../components/common/StatusBadge';
+import EmptyState from '../../components/common/EmptyState';
 
 interface DailyViewProps {
   dayData: DayAvailability;
@@ -141,16 +142,15 @@ const DailyView: React.FC<DailyViewProps> = ({ dayData, onEdit, onDelete, onCrea
 
       {/* Empty State */}
       {dayData.windows.length === 0 && dayData.appointments.length === 0 && (
-        <div className="availability-empty">
-          <i className="empty-icon bi bi-calendar-x"></i>
-          <h3 className="empty-title">No Availability or Appointments</h3>
-          <p className="empty-text">
-            You have no availability windows or appointments scheduled for this day.
-          </p>
-          <button className="btn-create" onClick={onCreate}>
-            <i className="bi bi-calendar-plus"></i>Create Availability Window
-          </button>
-        </div>
+        <EmptyState
+          icon="calendar-x"
+          text="You have no availability windows or appointments scheduled for this day."
+          action={
+            <button className="btn btn-primary" onClick={onCreate}>
+              <i className="bi bi-calendar-plus me-2"></i>Create Availability Window
+            </button>
+          }
+        />
       )}
     </div>
   );

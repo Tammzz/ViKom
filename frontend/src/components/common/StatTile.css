@@ -23,14 +23,14 @@
 .vk-stat-tile-value {
   font-family: var(--font-heading);
   font-weight: 700;
-  font-size: 1.35rem;
+  font-size: var(--fs-lg);
   line-height: 1.1;
   color: var(--bs-secondary);
 }
 
 .vk-stat-tile-label {
-  font-size: 0.8rem;
-  color: #6c757d;
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

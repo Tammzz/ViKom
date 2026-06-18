@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Card, Button, Alert } from 'react-bootstrap';
+import PageHeader from '../components/common/PageHeader';
+import SectionCard from '../components/common/SectionCard';
 import './PreferredTimePage.css';
 
 // Mock available time slots
@@ -74,28 +76,24 @@ const PreferredTimePage: React.FC = () => {
 
   return (
     <div className="preferred-time-page">
-      <h1 className="mb-3 fw-bold">Velg ønsket besøkstid</h1>
-      <div className="mb-4">
-        <p className="text-dark mb-0 fs-5 lh-base">
-          Velg ønsket tidsluke for hjemmebesøket. Dette er en forespørsel – endelig tid bekreftes av en omsorgsperson.
-        </p>
-      </div>
+      <PageHeader
+        title="Velg ønsket besøkstid"
+        subtitle="Velg ønsket tidsluke for hjemmebesøket. Dette er en forespørsel – endelig tid bekreftes av en omsorgsperson."
+      />
 
       {/* Time Slots */}
       <div className="time-slots-container">
         {Object.entries(groupedSlots).map(([date, slots]) => (
-          <Card key={date} className="date-card">
-            <Card.Header>
-              <h3 className="date-title">
-                {new Date(date).toLocaleDateString('nb-NO', {
-                  weekday: 'long',
-                  month: 'long',
-                  day: 'numeric',
-                  year: 'numeric',
-                })}
-              </h3>
-            </Card.Header>
-            <Card.Body>
+          <SectionCard
+            key={date}
+            className="date-card"
+            title={new Date(date).toLocaleDateString('nb-NO', {
+              weekday: 'long',
+              month: 'long',
+              day: 'numeric',
+              year: 'numeric',
+            })}
+          >
               <div className="time-slots-grid">
                 {slots.map((slot) => (
                   <div
@@ -112,8 +110,7 @@ const PreferredTimePage: React.FC = () => {
                   </div>
                 ))}
               </div>
-            </Card.Body>
-          </Card>
+          </SectionCard>
         ))}
       </div>
 

@@ -108,10 +108,10 @@ body {
   background-color: var(--bs-white);
 }
 
-/* Personnel-facing portal uses a denser 16px base; the patient-facing
+/* Personnel-facing portal uses a denser 14px base; the patient-facing
    experience keeps the larger 18px default for elderly users. */
 body.role-personnel {
-  font-size: var(--fs-base);
+  font-size: var(--fs-sm);
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -121,13 +121,40 @@ h1, h2, h3, h4, h5, h6 {
   line-height: 1.2;
 }
 
-/* Bootstrap Button Overrides */
+/* Heading scale — sized from the type tokens so headings stay coherent with the
+   body scale (replaces Bootstrap's root-relative defaults). Components may still
+   override per-context (e.g. .card-title, .vk-page-title). */
+h1 { font-size: var(--fs-2xl); }
+h2 { font-size: var(--fs-xl); }
+h3 { font-size: var(--fs-lg); }
+h4 { font-size: var(--fs-md); }
+h5 { font-size: var(--fs-base); }
+h6 { font-size: var(--fs-sm); }
+
+/* Bootstrap Button Overrides.
+   The base button matches the Patient Details "Ring pasient" button — the
+   app-wide standard size. Use Bootstrap's size="sm"/size="lg" (.btn-sm/.btn-lg)
+   for compact row actions or prominent submit buttons. */
 .btn {
-  font-size: var(--fs-md);
+  font-size: 0.95rem;
   font-weight: 500;
-  padding: 1rem 1.75rem;
-  border-radius: var(--radius-default);
+  padding: 0.4rem 1rem;
+  border-radius: var(--radius-sm);
   transition: all 0.2s ease;
+}
+
+/* Re-assert the small/large sizes so they win over the .btn override above
+   (same specificity → must come after .btn in source order). */
+.btn-sm {
+  font-size: var(--fs-sm);
+  padding: 0.25rem 0.6rem;
+  border-radius: var(--radius-sm);
+}
+
+.btn-lg {
+  font-size: var(--fs-md);
+  padding: 0.6rem 1.4rem;
+  border-radius: var(--radius-default);
 }
 
 .btn-primary {
@@ -174,15 +201,6 @@ h1, h2, h3, h4, h5, h6 {
   border-color: var(--bs-secondary);
 }
 
-/* Bootstrap Form Overrides
-.form-control, .form-select {
-  font-size: 1.125rem;
-  padding: 0.75rem 1rem;
-  border: 2px solid #dee2e6;
-  border-radius: var(--radius-default);
-} */
-
-
 /* Bootstrap Card Overrides */
 .card {
   border-radius: var(--radius-default);
@@ -224,4 +242,50 @@ h1, h2, h3, h4, h5, h6 {
 
 .vk-error-alert__close:hover {
   opacity: 0.7;
+}
+
+/* Bootstrap Form theming (app-wide) */
+.form-label {
+  font-size: var(--fs-base);
+  font-weight: 600;
+  color: var(--bs-dark);
+  margin-bottom: var(--space-2);
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--bs-dark);
+  box-shadow: none;
+}
+
+.form-control::placeholder {
+  color: var(--gray-500);
+  opacity: 1;
+}
+
+/* Personnel portal: form controls match the denser 14px base (Bootstrap inputs
+   don't inherit the body size, so they need an explicit role-aware rule). */
+body.role-personnel .form-control,
+body.role-personnel .form-select {
+  font-size: var(--fs-sm);
+}
+
+/* Bootstrap Alert theming (app-wide) */
+.alert {
+  padding: var(--space-4);
+  border-radius: var(--radius-default);
+  margin-bottom: var(--space-4);
+  font-size: var(--fs-sm);
+}
+
+.alert-danger {
+  background-color: var(--danger-surface-bg);
+  color: var(--danger-surface-fg);
+  border: 1px solid var(--danger-surface-border);
+}
+
+.alert-success {
+  background-color: var(--success-surface-bg);
+  color: var(--success-surface-fg);
+  border: 1px solid var(--success-surface-border);
 }

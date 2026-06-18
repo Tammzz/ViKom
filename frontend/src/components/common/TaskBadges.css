@@ -2,7 +2,7 @@
 
 /* Override Bootstrap badge styles for task badges */
 .task-badges .badge {
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   font-weight: 600;
   padding: 0.5rem 1rem;
   border-radius: var(--radius-default);

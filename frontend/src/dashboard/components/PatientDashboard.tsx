@@ -1,10 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchPatientDashboard } from '../services/DashboardService';
-import TaskBadges from '../../components/common/TaskBadges';
-import StatusBadge from '../../components/common/StatusBadge';
+import PageHeader from '../../components/common/PageHeader';
+import SectionCard from '../../components/common/SectionCard';
+import AppointmentCard from '../../appointments/components/AppointmentCard';
+import EmptyState from '../../components/common/EmptyState';
 import type { PatientViewModel } from '../types/dashboard';
+import type { AppointmentSummary } from '../../appointments/types/appointment';
 import './PatientDashboard.css';
+
+const formatShortDate = (date: string) =>
+  new Date(date).toLocaleDateString('nb-NO', { day: 'numeric', month: 'short', year: 'numeric' });
+
+const formatHistoryDateTime = (appointment: AppointmentSummary) => {
+  const datePart = appointment.date
+    ? new Date(appointment.date).toLocaleDateString('nb-NO', { weekday: 'long', month: 'short', day: 'numeric' })
+    : '';
+  return `${datePart} • ${appointment.startTime} - ${appointment.endTime}`;
+};
 
 // patient dashboard component
 const PatientDashboard: React.FC = () => {
@@ -45,20 +58,18 @@ const PatientDashboard: React.FC = () => {
     );
   }
 
+  const upcomingCount = dashboard.upcomingAppointments.length;
+
   return (
     <div className="patient-dashboard">
-      {/* Welcome Section */}
-      <div className="welcome-section">
-        <h1 className="welcome-title">Velkommen tilbake, {dashboard.patientName}!</h1>
-        {dashboard.upcomingAppointments.length > 0 ? (
-          <p className="welcome-subtitle">
-            Du har {dashboard.upcomingAppointments.length} avtale
-            {dashboard.upcomingAppointments.length > 1 ? 'r' : ''} i vente.
-          </p>
-        ) : (
-          <p className="welcome-subtitle">Du har ingen avtaler i dag.</p>
-        )}
-      </div>
+      <PageHeader
+        title={`Velkommen tilbake, ${dashboard.patientName}!`}
+        subtitle={
+          upcomingCount > 0
+            ? `Du har ${upcomingCount} avtale${upcomingCount > 1 ? 'r' : ''} i vente.`
+            : 'Du har ingen avtaler i dag.'
+        }
+      />
 
       <div className="dashboard-content">
         {/* First Row - Action Cards and Care Team */}
@@ -78,141 +89,93 @@ const PatientDashboard: React.FC = () => {
               <h3 className="cta-title">Kontakt helsehjelp</h3>
             </div>
           </a>
+
           {/* Care Team Card */}
-          <div className="care-team-card" id="careTeam">
-            <div className="care-team-body">
-              <h2 className="care-team-title">Mitt omsorgsteam</h2>
-              {dashboard.availableCaregivers.length > 0 ? (
-                <div className="caregivers-list">
-                  {dashboard.availableCaregivers.map((caregiver) => {
-                    const formattedDate = caregiver.nextAvailableDate 
-                      ? new Date(caregiver.nextAvailableDate).toLocaleDateString('nb-NO', {
-                          day: 'numeric',
-                          month: 'long',
-                          year: 'numeric'
-                        })
-                      : 'Ingen ledig tid';
-                    
-                    return (
-                      <div key={caregiver.personnelId} className="caregiver-item">
-                        <p className="caregiver-name">
-                          <i className="bi bi-person-fill"></i> {caregiver.personnelName}
-                        </p>
-                        <p className="caregiver-availability">
-                          Neste ledige: {formattedDate}
-                        </p>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="care-team-empty">
-                  <i className="empty-icon bi bi-people"></i>
-                  <p className="empty-text">Ingen omsorgspersoner tilgjengelig akkurat nå.</p>
-                </div>
-              )}
-            </div>
-          </div>
+          <SectionCard title="Mitt omsorgsteam" icon="people">
+            {dashboard.availableCaregivers.length > 0 ? (
+              <div className="d-flex flex-column gap-3">
+                {dashboard.availableCaregivers.map((caregiver) => {
+                  const formattedDate = caregiver.nextAvailableDate
+                    ? new Date(caregiver.nextAvailableDate).toLocaleDateString('nb-NO', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric',
+                      })
+                    : 'Ingen ledig tid';
+
+                  return (
+                    <div key={caregiver.personnelId} className="caregiver-item">
+                      <p className="caregiver-name">
+                        <i className="bi bi-person-fill"></i> {caregiver.personnelName}
+                      </p>
+                      <p className="caregiver-availability">Neste ledige: {formattedDate}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <EmptyState icon="people" text="Ingen omsorgspersoner tilgjengelig akkurat nå." />
+            )}
+          </SectionCard>
         </div>
 
         {/* Second Row - Upcoming and Recent Appointments */}
         <div className="dashboard-bottom-row">
           {/* Upcoming Appointments */}
-          <div className="appointments-card">
-            <div className="appointments-body">
-              <div className="appointments-header">
-                <h2 className="appointments-title">Kommende avtaler</h2>
-                <Link to="/appointments" className="btn btn-secondary btn-sm">
-                  +
-                </Link>
+          <SectionCard
+            title="Kommende avtaler"
+            action={
+              <Link to="/appointments" className="btn btn-secondary btn-sm" aria-label="Se alle avtaler">
+                <i className="bi bi-plus-lg"></i>
+              </Link>
+            }
+          >
+            {upcomingCount > 0 ? (
+              <div className="d-flex flex-column gap-3">
+                {dashboard.upcomingAppointments.map((appointment) => (
+                  <AppointmentCard
+                    key={appointment.id}
+                    appointment={appointment}
+                    dateTimeText={`${formatShortDate(appointment.date)} • ${appointment.startTime}`}
+                  />
+                ))}
               </div>
-              {dashboard.upcomingAppointments.length > 0 ? (
-                <div className="appointments-list">
-                  {dashboard.upcomingAppointments.map((appointment) => (
-                    <div
-                      key={appointment.id}
-                      className="appointment-item"
-                    >
-                      <div className="appointment-left">
-                        <p className="appointment-personnel">{appointment.personnelName}</p>
-                        <div className="appointment-badges">
-                          <TaskBadges tasks={appointment.tasks} variant="secondary" />
-                        </div>
-                      </div>
-                      <div className="appointment-right">
-                        <div className="appointment-date">
-                          {new Date(appointment.date).toLocaleDateString('nb-NO', {
-                            day: 'numeric',
-                            month: 'short',
-                            year: 'numeric',
-                          })}
-                        </div>
-                        <div className="appointment-time">{appointment.startTime}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="appointments-empty">
-                  <i className="empty-icon bi bi-calendar-x"></i>
-                  <p className="empty-text">Ingen kommende avtaler planlagt.</p>
-                  <Link to="/appointments" className="book-btn">
-                    <i className="bi bi-plus-circle"></i>Bestill avtale
+            ) : (
+              <EmptyState
+                icon="calendar-x"
+                text="Ingen kommende avtaler planlagt."
+                action={
+                  <Link to="/appointments" className="btn btn-primary">
+                    <i className="bi bi-plus-circle me-2"></i>Bestill avtale
                   </Link>
-                </div>
-              )}
-            </div>
-          </div>
+                }
+              />
+            )}
+          </SectionCard>
 
           {/* Recent Appointments */}
-          <div className="appointments-card">
-            <div className="appointments-body">
-              <div className="appointments-header">
-                <h2 className="appointments-title">Siste avtaler</h2>
-                <Link to="/appointments?tab=past" className="btn btn-secondary btn-sm">
-                  +
-                </Link>
+          <SectionCard
+            title="Siste avtaler"
+            action={
+              <Link to="/appointments?tab=past" className="btn btn-secondary btn-sm" aria-label="Se tidligere avtaler">
+                <i className="bi bi-plus-lg"></i>
+              </Link>
+            }
+          >
+            {dashboard.appointmentHistory.length > 0 ? (
+              <div className="d-flex flex-column gap-3">
+                {dashboard.appointmentHistory.slice(0, 5).map((appointment) => (
+                  <AppointmentCard
+                    key={appointment.id}
+                    appointment={appointment}
+                    dateTimeText={formatHistoryDateTime(appointment)}
+                  />
+                ))}
               </div>
-              {dashboard.appointmentHistory.length > 0 ? (
-                <div className="appointments-list">
-                  {dashboard.appointmentHistory.slice(0, 5).map((appointment) => (
-                    <div key={appointment.id} className="appointment-item">
-                      <div className="appointment-content">
-                        <div className="appointment-main">
-                          <div className="appointment-details">
-                            <div className="appointment-top-row">
-                              <p className="appointment-datetime">
-                                {appointment.date && new Date(appointment.date).toLocaleDateString('en-US', {
-                                  weekday: 'long',
-                                  month: 'short',
-                                  day: 'numeric',
-                                })}{' '}
-                                • {appointment.startTime} - {appointment.endTime}
-                              </p>
-                              {(appointment.status === 'Completed' || appointment.status === 'Cancelled') && (
-                                <StatusBadge status={appointment.status} />
-                              )}
-                            </div>
-                            <p className="appointment-personnel">
-                              <i className="bi bi-person-fill"></i> {appointment.personnelName}
-                            </p>
-                            <div className="appointment-tasks">
-                              <TaskBadges tasks={appointment.tasks} variant="secondary" />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="appointments-empty">
-                  <i className="empty-icon bi bi-calendar-x"></i>
-                  <p className="empty-text">Ingen avtalehistorikk tilgjengelig.</p>
-                </div>
-              )}
-            </div>
-          </div>
+            ) : (
+              <EmptyState icon="calendar-x" text="Ingen avtalehistorikk tilgjengelig." />
+            )}
+          </SectionCard>
         </div>
       </div>
     </div>

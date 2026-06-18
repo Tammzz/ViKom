@@ -12,8 +12,43 @@ Stack: React + TypeScript + Vite · Bootstrap 5.3 · react-bootstrap · bootstra
 > **Increment 2 (done):** `PageHeader` + `Tabs` components; `AppointmentCard`
 > extended with subject/actions/footer slots; **Appointments** refactored onto
 > the shared components (its custom CSS is now just page padding).
-> Remaining feature refactors (dashboards, visits, availability) land in later
-> increments and will be reflected here as they ship.
+> **Increment 3 (done):** **Dashboards** — `PatientDashboard` fully on
+> PageHeader/SectionCard/AppointmentCard/EmptyState; `PersonnelDashboard` on
+> PageHeader + AppointmentCard (recent) + EmptyState. PersonnelDashboard's
+> bespoke widgets (calendar, today's timeline, availability planner) and its
+> stats grid stay custom by design — they aren't duplicated elsewhere.
+> **Increment 4 (done):** **Visits** (PlanningOverview, PreferredTime,
+> TaskSelection, VisitExecution) on PageHeader + SectionCard + EmptyState +
+> StatusBadge; fixed unscoped global CSS leaks (`.empty-state`, `.success-*`,
+> `.submit-*`, `.task-description`) by scoping every rule to its page root and
+> tokenizing. The submission "success card" markup is still duplicated across
+> TaskSelection/PreferredTime (scoped per page) — candidate for a shared
+> component later.
+> **Increment 5 (done):** **Availability** (AvailabilityCalendarPage + DailyView)
+> on PageHeader + EmptyState; scoped all previously-global day-card / table /
+> preview / status-badge selectors to the page root and tokenized them; deleted
+> 8 orphan (never-imported) component CSS files.
+> **Increment 6 (done):** **Auth/Home** — moved global form/alert theming out of
+> `css/Forms.css` into `index.css` (tokenized); rewrote Forms.css as auth-scoped
+> only and removed its biggest leaks: a global `.btn` override (with
+> `border:none`) that competed with index.css, a leaky `.mb-0 a` rule, and two
+> broken vars (`var(--dark)`, `var(--primary)`). HomePage CSS scoped to `.hero`
+> and tokenized. Deleted 7 more orphan CSS files (Login/Register/Dashboard page
+> CSS, the 3 appointment modal CSS files, and the Vite-demo `App.css`).
+> **All feature areas + the global stylesheet are now refactored.**
+>
+> **Increment 7 (done):** button-sizing standard + personnel density. The base
+> `.btn` now matches the Patient Details button (the app-wide standard);
+> `.btn-sm` / `.btn-lg` are re-asserted in `index.css` so `size="sm"`/`"lg"`
+> work again (compact row actions finally shrink). Personnel base font dropped
+> to **14px** (`body.role-personnel`); personnel appointment row actions
+> (Start/Fullfør) marked `btn-sm`.
+> **Increment 8 (done):** typography coherence. Headings now sized from the type
+> tokens (`h1–h6` in `index.css`) instead of Bootstrap's oversized defaults;
+> `PageHeader` titles/subtitles are role-aware (personnel 24/16, patient 32/18);
+> swept all ad-hoc raw-rem **text** sizes onto `--fs-*` tokens (PersonnelDashboard
+> ~30 values, PatientProfileHeader, StatTile, Timeline, DataTable, Tabs, Sidebar,
+> TaskBadges). Icons, buttons, Avatar, and the Home hero left as-is.
 
 ---
 
@@ -101,10 +136,23 @@ focus ring — use everywhere instead of ad-hoc focus shadows).
 - **Body:** Poppins (`--font-primary`). **Headings:** Nunito (`--font-heading`).
 - **Role-based base size** (set on `<body>` by the layout):
   - Patient-facing → 18px (`--fs-md`) default, larger for elderly users.
-  - `body.role-personnel` → 16px (`--fs-base`), denser portal.
-- Headings `h1–h6` are globally styled (Nunito, weight 700, secondary colour).
-  Don't restyle headings per page; use Bootstrap size utilities (`fs-1`…`fs-6`)
-  if you need a different visual size.
+  - `body.role-personnel` → 14px (`--fs-sm`), denser portal. Form controls
+    (`.form-control`/`.form-select`) don't inherit the body size, so a role-aware
+    rule in `index.css` drops them to 14px on personnel too.
+- **Buttons:** the base `.btn` is the standard size (matches the Patient Details
+  button). Use `size="sm"` for compact row/card actions and `size="lg"` for
+  prominent submit buttons — both work via `.btn-sm`/`.btn-lg` in `index.css`.
+- **Heading scale** (`index.css`, sized from the type tokens — not Bootstrap's
+  defaults): `h1 → --fs-2xl (32) · h2 → --fs-xl (24) · h3 → --fs-lg (20) ·
+  h4 → --fs-md (18) · h5 → --fs-base (16) · h6 → --fs-sm (14)`. Don't restyle bare
+  headings per page; if a specific size is needed, override with a token.
+- **Page titles** use the `PageHeader` component, which is **role-aware**
+  (`PageHeader.css`): personnel title `--fs-xl` (24) / subtitle `--fs-base` (16);
+  patient title `--fs-2xl` (32) / subtitle `--fs-md` (18). Titles stay
+  proportional to each side's body text.
+- **No raw-rem font-sizes for text.** Every text size must come from a `--fs-*`
+  token. (Icon glyph sizes, the marketing hero, and button text are the only
+  exceptions.)
 
 ---
 
@@ -129,10 +177,10 @@ pattern each one replaces.
 | `PageHeader`                             | Page title + subtitle + right-aligned actions                    | `title`, `subtitle`, `actions`                                               | Inline `<h1>` + subtitle + action-row per page      |
 | `AppointmentCard`                        | Appointment card (date/time, subject, status, tasks, actions)    | `appointment`, `taskVariant`, `dateTimeText`, `subject`, `footerNote`, `actions` | Inline appointment-item markup                  |
 
-**Still underused (target for upcoming refactors):** `AppointmentCard`,
-`EmptyState`, `Tabs`, and `PageHeader` are wired into the patient feature and the
-Appointments page. Dashboards and visits still re-implement these by hand —
-prefer the shared versions in new work.
+**Still underused (target for upcoming refactors):** the shared components are
+wired into the patient feature, the Appointments page, and both dashboards. The
+**visits** and **availability** pages still re-implement cards, empty states and
+toolbars by hand — prefer the shared versions in new work.
 
 ### Shared CSS utilities (global, in `index.css`)
 

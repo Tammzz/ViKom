@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Card, Button, Form, Alert } from 'react-bootstrap';
+import PageHeader from '../components/common/PageHeader';
+import SectionCard from '../components/common/SectionCard';
 import './TaskSelectionPage.css';
 
 // Mock allowed tasks for the patient
@@ -58,20 +60,14 @@ const TaskSelectionPage: React.FC = () => {
 
   return (
     <div className="task-selection-page">
-      <h1 className="mb-3 fw-bold">Be om hjemmesykepleie</h1>
-      <div className="mb-4">
-        <p className="text-dark mb-0 fs-5 lh-base">
-          Velg tjenestene du trenger hjelp med. En omsorgsperson vil se på forespørselen og planlegge et besøk.
-        </p>
-      </div>
+      <PageHeader
+        title="Be om hjemmesykepleie"
+        subtitle="Velg tjenestene du trenger hjelp med. En omsorgsperson vil se på forespørselen og planlegge et besøk."
+      />
 
       {/* Task Selection Form */}
-      <Card className="task-selection-card">
-        <Card.Header>
-          <h2 className="card-title">Tilgjengelige tjenester</h2>
+      <SectionCard title="Tilgjengelige tjenester" className="task-selection-card">
           <p className="card-subtitle">Merk av alle tjenester du ønsker hjelp med</p>
-        </Card.Header>
-        <Card.Body>
           <Form onSubmit={handleSubmit}>
             <div className="tasks-grid">
               {allowedTasks.map((task) => (
@@ -131,8 +127,7 @@ const TaskSelectionPage: React.FC = () => {
               )}
             </div>
           </Form>
-        </Card.Body>
-      </Card>
+      </SectionCard>
     </div>
   );
 };

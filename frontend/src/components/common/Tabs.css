@@ -62,7 +62,7 @@
   min-width: 1.5rem;
   height: 1.5rem;
   padding: 0 0.4rem;
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   border-radius: 999px;
   background-color: rgba(var(--bs-dark-rgb), 0.1);
   color: var(--bs-dark);

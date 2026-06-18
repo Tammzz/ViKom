@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Alert, Badge, Button, Col, Container, Row, Spinner } from 'react-bootstrap';
-import { getUserInfo } from '../../auth/AuthService';
+import { Alert, Badge, Button, Col, Row, Spinner } from 'react-bootstrap';
 import PatientService from '../services/PatientService';
 import type { PatientDetailsDto } from '../types/patient';
 import SectionCard from '../../components/common/SectionCard';
@@ -49,8 +48,6 @@ const formatCallTime = (iso: string): string => {
 
 const PatientDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const userInfo = getUserInfo();
-  const isPersonnel = userInfo?.role === 'Personnel';
 
   const [patient, setPatient] = useState<PatientDetailsDto | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -121,23 +118,23 @@ const PatientDetailsPage: React.FC = () => {
 
   if (loading) {
     return (
-      <Container fluid className={isPersonnel ? 'personnel-page' : ''}>
+      <div className="patient-details-page">
         <div className="d-flex align-items-center gap-2 py-4">
           <Spinner animation="border" size="sm" />
           <span>Laster pasientdetaljer...</span>
         </div>
-      </Container>
+      </div>
     );
   }
 
   if (!patient) {
     return (
-      <Container fluid className={isPersonnel ? 'personnel-page' : ''}>
+      <div className="patient-details-page">
         <Alert variant="danger">Fant ikke pasientdata.</Alert>
         <Link to="/patients" className="btn btn-outline-dark">
           Tilbake til pasientlisten
         </Link>
-      </Container>
+      </div>
     );
   }
 
@@ -153,7 +150,7 @@ const PatientDetailsPage: React.FC = () => {
   ];
 
   return (
-    <Container fluid className={`patient-details-page ${isPersonnel ? 'personnel-page' : ''}`}>
+    <div className="patient-details-page">
       <nav className="vk-breadcrumb" aria-label="Brødsmulesti">
         <Link to="/patients" className="vk-breadcrumb-back">
           <i className="bi bi-arrow-left" aria-hidden="true"></i>
@@ -328,7 +325,7 @@ const PatientDetailsPage: React.FC = () => {
         patientId={patient.id}
         patientName={patient.fullName}
       />
-    </Container>
+    </div>
   );
 };
 

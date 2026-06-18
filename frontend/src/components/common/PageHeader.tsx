@@ -1,4 +1,5 @@
 import React from 'react';
+import './PageHeader.css';
 
 interface PageHeaderProps {
   title: React.ReactNode;
@@ -19,8 +20,8 @@ const PageHeader: React.FC<PageHeaderProps> = ({ title, subtitle, actions, class
       className={`d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 ${className}`.trim()}
     >
       <div>
-        <h1 className="fw-bold mb-1">{title}</h1>
-        {subtitle && <p className="text-dark mb-0 fs-5 lh-base">{subtitle}</p>}
+        <h1 className="vk-page-title fw-bold mb-1">{title}</h1>
+        {subtitle && <p className="vk-page-subtitle text-dark mb-0 lh-base">{subtitle}</p>}
       </div>
       {actions && <div className="d-flex flex-wrap gap-2 flex-shrink-0">{actions}</div>}
     </div>

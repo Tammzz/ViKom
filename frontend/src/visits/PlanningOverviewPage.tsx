@@ -1,9 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Card, Button, Form, Badge } from 'react-bootstrap';
+import { Button, Form, Badge, Alert } from 'react-bootstrap';
 import * as AuthService from '../auth/AuthService';
 import AppointmentService from '../appointments/services/AppointmentService';
 import type { Appointment } from '../appointments/types/appointment';
 import TaskBadges from '../components/common/TaskBadges';
+import PageHeader from '../components/common/PageHeader';
+import SectionCard from '../components/common/SectionCard';
+import EmptyState from '../components/common/EmptyState';
 import './PlanningOverviewPage.css';
 
 type PlanningVisit = {
@@ -151,20 +154,15 @@ const PlanningOverviewPage: React.FC = () => {
 
   return (
     <div className="planning-overview-page">
-      {error && (
-        <div className="empty-state">
-          <p className="empty-text">{error}</p>
-        </div>
-      )}
+      {error && <Alert variant="danger">{error}</Alert>}
 
-      <h1 className="mb-3 fw-bold">Oversikt over planlagte besøk</h1>
-      <div className="mb-4">
-        <p className="text-dark mb-0 fs-5 lh-base">Planlegg og organiser hjemmebesøk etter område og oppgavetype</p>
-      </div>
+      <PageHeader
+        title="Oversikt over planlagte besøk"
+        subtitle="Planlegg og organiser hjemmebesøk etter område og oppgavetype"
+      />
 
       {/* Filters */}
-      <Card className="filters-card">
-        <Card.Body>
+      <div className="filters-bar">
           <div className="controls-bar">
             <Form.Control
               type="search"
@@ -208,18 +206,13 @@ const PlanningOverviewPage: React.FC = () => {
               <option value="area">Sort: Area</option>
             </Form.Select>
           </div>
-        </Card.Body>
-      </Card>
+      </div>
 
       {/* Main Content Grid */}
       <div className="planning-content">
         {/* Visits List */}
         <div className="visits-section">
-          <Card className="visits-card">
-            <Card.Header>
-              <h2 className="card-title">Planlagte besøk ({filteredVisits.length})</h2>
-            </Card.Header>
-            <Card.Body>
+          <SectionCard title={`Planlagte besøk (${filteredVisits.length})`} className="visits-card">
               {displayedVisits.length > 0 ? (
                 <div className="visits-list">
                   {displayedVisits.map((visit) => (
@@ -264,22 +257,14 @@ const PlanningOverviewPage: React.FC = () => {
                   ))}
                 </div>
               ) : (
-                <div className="empty-state">
-                  <i className="bi bi-calendar-x empty-icon"></i>
-                  <p className="empty-text">Ingen besøk matcher valgte filtre.</p>
-                </div>
+                <EmptyState icon="calendar-x" text="Ingen besøk matcher valgte filtre." />
               )}
-            </Card.Body>
-          </Card>
+          </SectionCard>
         </div>
 
         {/* Map Placeholder */}
         <div className="map-section">
-          <Card className="map-card">
-            <Card.Header>
-              <h2 className="card-title">Kart over områder</h2>
-            </Card.Header>
-            <Card.Body className="map-body">
+          <SectionCard title="Kart over områder" className="map-card" bodyClassName="map-body p-0">
               <div className="map-placeholder">
                 <div className="map-content">
                   <i className="bi bi-geo-alt-fill map-icon"></i>
@@ -307,8 +292,7 @@ const PlanningOverviewPage: React.FC = () => {
                   </div>
                 </div>
               </div>
-            </Card.Body>
-          </Card>
+          </SectionCard>
         </div>
       </div>
     </div>

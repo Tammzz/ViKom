@@ -20,7 +20,7 @@
   top: 1.75rem;
   bottom: 0;
   width: 1px;
-  background-color: #dee2e6;
+  background-color: var(--border-color);
 }
 
 .vk-timeline-item:last-child {
@@ -64,14 +64,14 @@
 }
 
 .vk-timeline-date {
-  font-size: 0.8rem;
-  color: #6c757d;
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
   white-space: nowrap;
   flex-shrink: 0;
 }
 
 .vk-timeline-meta {
-  font-size: 0.875rem;
-  color: #6c757d;
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
   margin-top: 0.15rem;
 }

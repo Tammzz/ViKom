@@ -265,7 +265,7 @@ const AppointmentListPage: React.FC = () => {
                 <>
                   {appointment.status === 'Booked' && (
                     <button
-                      className="btn btn-primary"
+                      className="btn btn-primary btn-sm"
                       onClick={() => handleStatusUpdate(appointment, 'InProgress')}
                     >
                       Start
@@ -273,7 +273,7 @@ const AppointmentListPage: React.FC = () => {
                   )}
                   {appointment.status === 'InProgress' && (
                     <button
-                      className="btn btn-success"
+                      className="btn btn-success btn-sm"
                       onClick={() => handleStatusUpdate(appointment, 'Completed')}
                     >
                       Fullfør

@@ -1,0 +1,21 @@
+/* Page title/subtitle sizing is role-aware: proportional to each side's body
+   text. Patient-facing pages (18px body) get larger titles; the personnel
+   portal (14px body) stays denser. */
+
+/* Patient / default */
+.vk-page-title {
+  font-size: var(--fs-2xl); /* 32px */
+}
+
+.vk-page-subtitle {
+  font-size: var(--fs-md); /* 18px */
+}
+
+/* Personnel portal — denser */
+body.role-personnel .vk-page-title {
+  font-size: var(--fs-xl); /* 24px */
+}
+
+body.role-personnel .vk-page-subtitle {
+  font-size: var(--fs-base); /* 16px */
+}

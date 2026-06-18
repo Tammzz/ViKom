@@ -2,9 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchPersonnelDashboard } from '../services/DashboardService';
 import TaskBadges from '../../components/common/TaskBadges';
-import StatusBadge from '../../components/common/StatusBadge';
+import PageHeader from '../../components/common/PageHeader';
+import AppointmentCard from '../../appointments/components/AppointmentCard';
+import EmptyState from '../../components/common/EmptyState';
 import type { PersonnelViewModel } from '../types/dashboard';
+import type { AppointmentSummary } from '../../appointments/types/appointment';
 import './PersonnelDashboard.css';
+
+// "<weekday> <month> <day> • <start> - <end>" line for the recent appointments list.
+const formatRecentDateTime = (appointment: AppointmentSummary) => {
+  const datePart = appointment.date
+    ? new Date(appointment.date).toLocaleDateString('nb-NO', { weekday: 'long', month: 'short', day: 'numeric' })
+    : '';
+  return `${datePart} • ${appointment.startTime} - ${appointment.endTime}`;
+};
 
 // personnel dashboard component
 const PersonnelDashboard: React.FC = () => {
@@ -301,10 +312,10 @@ const PersonnelDashboard: React.FC = () => {
 
   return (
     <div className="personnel-dashboard">
-      <h1 className="mb-3 fw-bold">Velkommen tilbake, {dashboard.personnelName}!</h1>
-      <div className="mb-4">
-        <p className="text-dark mb-0 fs-5 lh-base">Her er en oversikt over timeplanen og pasientene dine</p>
-      </div>
+      <PageHeader
+        title={`Velkommen tilbake, ${dashboard.personnelName}!`}
+        subtitle="Her er en oversikt over timeplanen og pasientene dine"
+      />
 
       {/* displays quick stats overview with key metrics */}
       <div className="stats-grid">
@@ -418,36 +429,6 @@ const PersonnelDashboard: React.FC = () => {
           </div>
           </div>
 
-          {/* Today's Tasks section 
-        <div className="card tasks-overview">
-          <div className="card-header">
-            <h2 className="card-title">Dagens oppgaver</h2>
-          </div>
-          <div className="card-body">
-            <div className="tasks-list">
-              {[
-                { id: 1, patient: 'Jane Smith', task: 'Emergency Visit', time: '09:15', tone: 'rose', icon: 'bi bi-heart-pulse-fill' },
-                { id: 2, patient: 'Samantha Williams', task: 'Routine Check-Up', time: '09:15', tone: 'blue', icon: 'bi bi-clipboard2-pulse' },
-                { id: 3, patient: 'Amy White', task: 'Video Consultation', time: '09:15', tone: 'violet', icon: 'bi bi-camera-video' },
-                { id: 4, patient: 'Tyler Young', task: 'Report', time: '09:45', tone: 'olive', icon: 'bi bi-briefcase-medical' },
-              ].map((task) => (
-                <div key={task.id} className={`task-item task-tone-${task.tone}`}>
-                  <div className="task-icon-wrap">
-                    <div className="task-icon">
-                      <i className={task.icon}></i>
-                    </div>
-                  </div>
-                  <div className="task-main">
-                    <p className="task-patient-name">{task.patient}</p>
-                    <p className="task-description">{task.task}</p>
-                  </div>
-                  <div className="task-time-pill">{task.time} AM</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div> */}
-
           <div className="card timeline-overview">
             <div className="card-header">
               <h2 className="card-title">Dagens tidslinje</h2>
@@ -504,13 +485,10 @@ const PersonnelDashboard: React.FC = () => {
                   )}
                 </div>
               ) : (
-                <div className="empty-state">
-                  <i className="bi bi-calendar-x empty-icon"></i>
-                  <p className="empty-text">Ingen planlagte avtaler i dag.</p>
-                </div>
+                <EmptyState icon="calendar-x" text="Ingen planlagte avtaler i dag." />
               )}
 
-              <Link to="/availability" className="timeline-view-more-btn">
+              <Link to="/availability" className="btn btn-secondary btn-sm w-100 mt-3">
                 Vis mer
               </Link>
             </div>
@@ -591,17 +569,11 @@ const PersonnelDashboard: React.FC = () => {
                       ))}
                     </div>
                   ) : (
-                    <div className="empty-state">
-                      <i className="bi bi-calendar-x empty-icon"></i>
-                      <p className="empty-text">Ingen tilgjengelige tider for valgt dag.</p>
-                    </div>
+                    <EmptyState icon="calendar-x" text="Ingen tilgjengelige tider for valgt dag." />
                   )}
                 </div>
               ) : (
-                <div className="empty-state">
-                  <i className="bi bi-calendar-x empty-icon"></i>
-                  <p className="empty-text">Ingen planlagt tilgjengelighet.</p>
-                </div>
+                <EmptyState icon="calendar-x" text="Ingen planlagt tilgjengelighet." />
               )}
             </div>
           </div>
@@ -612,42 +584,18 @@ const PersonnelDashboard: React.FC = () => {
             </div>
             <div className="card-body">
               {dashboard.recentAppointments.length > 0 ? (
-                <div className="appointments-list">
+                <div className="d-flex flex-column gap-3">
                   {dashboard.recentAppointments.map((appointment) => (
-                    <div key={appointment.id} className="appointment-item">
-                      <div className="appointment-content">
-                        <div className="appointment-main">
-                          <div className="appointment-details">
-                            <div className="appointment-top-row">
-                              <p className="appointment-datetime">
-                                {appointment.date && new Date(appointment.date).toLocaleDateString('nb-NO', {
-                                  weekday: 'long',
-                                  month: 'short',
-                                  day: 'numeric',
-                                })}{' '}
-                                • {appointment.startTime} - {appointment.endTime}
-                              </p>
-                              {(appointment.status === 'Completed' || appointment.status === 'Cancelled') && (
-                                <StatusBadge status={appointment.status} />
-                              )}
-                            </div>
-                            <p className="appointment-patient">
-                              <i className="bi bi-person-fill"></i> {appointment.patientName}
-                            </p>
-                            <div className="appointment-tasks">
-                              <TaskBadges tasks={appointment.tasks} variant="secondary" />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                    <AppointmentCard
+                      key={appointment.id}
+                      appointment={appointment}
+                      dateTimeText={formatRecentDateTime(appointment)}
+                      subject={appointment.patientName ? `Pasient: ${appointment.patientName}` : null}
+                    />
                   ))}
                 </div>
               ) : (
-                <div className="empty-state">
-                  <i className="bi bi-calendar-x empty-icon"></i>
-                  <p className="empty-text">Ingen nylige avtaler å vise.</p>
-                </div>
+                <EmptyState icon="calendar-x" text="Ingen nylige avtaler å vise." />
               )}
             </div>
           </div>

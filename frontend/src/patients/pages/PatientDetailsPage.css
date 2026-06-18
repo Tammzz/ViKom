@@ -1,12 +1,29 @@
 /* ===== PATIENT DETAILS PAGE ===== */
 
+/* Standard page padding — matches the other feature pages. */
+.patient-details-page {
+  padding: var(--space-6);
+}
+
+@media (max-width: 991px) {
+  .patient-details-page {
+    padding: var(--space-5);
+  }
+}
+
+@media (max-width: 767px) {
+  .patient-details-page {
+    padding: var(--space-4);
+  }
+}
+
 /* Breadcrumb */
 .patient-details-page .vk-breadcrumb {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   margin-bottom: 1rem;
-  font-size: 0.95rem;
+  font-size: var(--fs-base);
 }
 
 .patient-details-page .vk-breadcrumb-back {
@@ -23,11 +40,12 @@
 }
 
 .patient-details-page .vk-breadcrumb-sep {
-  color: #adb5bd;
+  color: var(--gray-500);
+  font-size: var(--fs-sm);
 }
 
 .patient-details-page .vk-breadcrumb-current {
-  color: #6c757d;
+  color: var(--text-muted);
 }
 
 /* Vertical stack of cards within a column — fills its column height so the

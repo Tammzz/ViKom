@@ -7,7 +7,7 @@
 /* ===== ERROR STATE ===== */
 .personnel-dashboard .error-text {
   color: var(--bs-danger);
-  font-size: 1rem;
+  font-size: var(--fs-base);
 }
 
 /* ===== WELCOME SECTION ===== */
@@ -39,7 +39,7 @@
 }
 
 .personnel-dashboard .stat-number {
-  font-size: 2rem;
+  font-size: var(--fs-2xl);
   font-weight: 600;
   color: var(--bs-dark);
   line-height: 1.2;
@@ -47,7 +47,7 @@
 }
 
 .personnel-dashboard .stat-label {
-  font-size: 1rem;
+  font-size: var(--fs-base);
   color: var(--bs-dark);
   margin-bottom: 0;
   line-height: 1.5;
@@ -156,7 +156,7 @@
 }
 
 .personnel-dashboard .card-title {
-  font-size: 1.25rem;
+  font-size: var(--fs-lg);
   font-weight: 600;
   color: var(--bs-dark);
   margin-bottom: 0;
@@ -203,7 +203,7 @@
 }
 
 .personnel-dashboard .data-table tbody tr {
-  border-bottom: 1px solid #dee2e6;
+  border-bottom: 1px solid var(--border-color);
   transition: background-color 0.2s ease;
 }
 
@@ -221,106 +221,8 @@
   vertical-align: middle;
 }
 
-/* ===== STATUS BADGES ===== */
-/* Status badges now use Bootstrap Badge component via StatusBadge.tsx */
-
-/* ===== APPOINTMENT CARDS ===== */
-.personnel-dashboard .appointments-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.personnel-dashboard .appointment-item {
-  background-color: var(--bs-white);
-  border: 1px solid var(--bs-dark);
-  border-radius: var(--radius-default);
-  padding: 1rem;
-  transition: all 0.2s ease;
-}
-
-.personnel-dashboard .appointment-content {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.personnel-dashboard .appointment-main {
-  display: flex;
-  gap: 1rem;
-  flex: 1;
-}
-
-.personnel-dashboard .appointment-top-row {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 2rem;
-  margin-bottom: 0.5rem;
-}
-
-.personnel-dashboard .appointment-icon {
-  font-size: 1.5rem;
-  color: var(--bs-dark);
-  background: var(--bs-light);
-  border-radius: 50%;
-  width: 3.5rem;
-  height: 3.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.personnel-dashboard .appointment-icon.success {
-  color: var(--bs-success);
-}
-
-.personnel-dashboard .appointment-details {
-  flex: 1;
-}
-
-.personnel-dashboard .appointment-datetime {
-  color: var(--bs-dark);
-  margin: 0;
-  flex: 1;
-  font-weight: 500;
-}
-
-.personnel-dashboard .appointment-patient {
-  margin-bottom: 0.5rem;
-  color: var(--bs-dark);
-  line-height: 1.75;
-  font-weight: 500;
-}
-
-.personnel-dashboard .appointment-tasks {
-  margin-bottom: 0;
-  /*display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 0.5rem;*/
-}
-
-/* ===== EMPTY STATE ===== */
-.personnel-dashboard .empty-state {
-  text-align: center;
-  padding: 3rem 1rem;
-}
-
-.personnel-dashboard .empty-icon {
-  font-size: 4rem;
-  color: var(--bs-dark);
-  margin-bottom: 1rem;
-  display: block;
-}
-
-.personnel-dashboard .empty-text {
-  color: var(--bs-dark);
-  font-size: 1rem;
-  margin-bottom: 0;
-  line-height: 1.5;
-}
+/* Recent appointments now use the shared AppointmentCard; empty blocks use the
+   shared EmptyState. Their former styles lived here and have been removed. */
 
 /* ===== CALENDAR OVERVIEW ===== */
 .personnel-dashboard .calendar-overview {
@@ -345,7 +247,7 @@
 }
 
 .personnel-dashboard .calendar-month-label {
-  font-size: 1rem;
+  font-size: var(--fs-base);
   font-weight: 600;
   color: var(--bs-dark);
   margin: 0;
@@ -379,7 +281,7 @@
 
 .personnel-dashboard .calendar-weekday {
   text-align: center;
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   font-weight: 600;
   color: var(--bs-secondary);
 }
@@ -422,7 +324,7 @@
 }
 
 .personnel-dashboard .day-number {
-  font-size: 0.8125rem;
+  font-size: var(--fs-sm);
   font-weight: 500;
   color: var(--bs-dark);
 }
@@ -436,51 +338,7 @@
   bottom: 0.2rem;
 }
 
-/* ===== TASKS LIST ===== */
-.personnel-dashboard .tasks-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.65rem;
-}
-
-.personnel-dashboard .tasks-overview {
-  width: 100%;
-  max-width: 100%;
-}
-
-.personnel-dashboard .tasks-overview .card-body {
-  padding: 0.8rem;
-}
-
-.personnel-dashboard .tasks-overview .card-header {
-  padding: 0.8rem 0.8rem 0.6rem;
-}
-
-.personnel-dashboard .task-item {
-  border: 1px solid transparent;
-  border-radius: 1rem;
-  padding: 0.6rem 0.75rem;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.personnel-dashboard .task-tone-rose {
-  background-color: rgba(var(--bs-pink-rgb), 0.25);
-}
-
-.personnel-dashboard .task-tone-blue {
-  background-color: rgba(var(--bs-primary-rgb), 0.15);
-}
-
-.personnel-dashboard .task-tone-violet {
-  background-color: rgba(var(--bs-purple-rgb), 0.2);
-}
-
-.personnel-dashboard .task-tone-olive {
-  background-color: rgba(var(--bs-success-rgb), 0.2);
-}
-
+/* ===== DAY TIMELINE TONES ===== */
 .personnel-dashboard .timeline-item.timeline-tone-rose {
   background-color: rgba(var(--bs-pink-rgb), 0.25);
 }
@@ -495,55 +353,6 @@
 
 .personnel-dashboard .timeline-item.timeline-tone-olive {
   background-color: rgba(var(--bs-success-rgb), 0.2);
-}
-
-.personnel-dashboard .task-icon-wrap {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.personnel-dashboard .task-icon {
-  width: 2.15rem;
-  height: 2.15rem;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: rgba(var(--bs-light-rgb), 0.9);
-  color: var(--bs-dark);
-  font-size: 1rem;
-}
-
-.personnel-dashboard .task-main {
-  flex: 1;
-  min-width: 0;
-}
-
-.personnel-dashboard .task-patient-name {
-  margin: 0;
-  font-size: 0.96rem;
-  font-weight: 600;
-  color: var(--bs-dark);
-}
-
-.personnel-dashboard .task-description {
-  margin: 0;
-  font-size: 0.83rem;
-  color: var(--bs-secondary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.personnel-dashboard .task-time-pill {
-  border-radius: 999px;
-  background-color: rgba(var(--bs-light-rgb), 0.95);
-  color: var(--bs-dark);
-  font-size: 0.78rem;
-  font-weight: 600;
-  padding: 0.35rem 0.65rem;
-  white-space: nowrap;
 }
 
 /* ===== DAY TIMELINE ===== */
@@ -571,7 +380,7 @@
   border-radius: 999px;
   background-color: var(--bs-secondary);
   color: var(--bs-white);
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   font-weight: 600;
   padding: 0.35rem 1.8rem 0.35rem 0.65rem;
   appearance: none;
@@ -586,7 +395,7 @@
   top: 50%;
   transform: translateY(-50%);
   color: var(--bs-white);
-  font-size: 0.68rem;
+  font-size: var(--fs-xs);
   pointer-events: none;
 }
 
@@ -597,7 +406,7 @@
 
 .personnel-dashboard .timeline-date-label {
   margin: 0 0 0.7rem;
-  font-size: 1.1rem;
+  font-size: var(--fs-md);
   font-weight: 600;
   color: var(--bs-dark);
   text-transform: capitalize;
@@ -617,7 +426,7 @@
 }
 
 .personnel-dashboard .timeline-time {
-  font-size: 0.72rem;
+  font-size: var(--fs-xs);
   font-weight: 600;
   color: var(--bs-secondary);
   line-height: 1.8rem;
@@ -668,7 +477,7 @@
 
 .personnel-dashboard .timeline-patient-name {
   margin: 0;
-  font-size: 0.92rem;
+  font-size: var(--fs-sm);
   font-weight: 600;
   color: var(--bs-dark);
 }
@@ -678,7 +487,7 @@
 }
 
 .personnel-dashboard .timeline-task-badges .badge {
-  font-size: 0.66rem;
+  font-size: var(--fs-xs);
   padding: 0.52rem 0.69rem;
   font-weight: 500;
 }
@@ -686,36 +495,19 @@
 .personnel-dashboard .timeline-address {
   margin: 0;
   margin-top: 0.35rem;
-  font-size: 0.74rem;
+  font-size: var(--fs-xs);
   color: var(--bs-secondary);
 }
 
 .personnel-dashboard .timeline-visit-type {
   margin: 0;
   margin-top: 0.35rem;
-  font-size: 0.74rem;
+  font-size: var(--fs-xs);
   color: var(--bs-secondary);
   font-weight: 600;
 }
 
-.personnel-dashboard .timeline-view-more-btn {
-  margin-top: 0.85rem;
-  width: 100%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 999px;
-  padding: 0.5rem 0.9rem;
-  background-color: var(--bs-secondary);
-  color: var(--bs-white);
-  text-decoration: none;
-  font-size: 0.85rem;
-  font-weight: 600;
-}
-
-.personnel-dashboard .timeline-view-more-btn:hover {
-  color: var(--bs-white);
-}
+/* "Vis mer" now uses the standard Bootstrap button (btn btn-secondary btn-sm). */
 
 /* ===== AVAILABILITY OVERVIEW ===== */
 .personnel-dashboard .availability-overview .card-body {
@@ -730,18 +522,6 @@
 
 .personnel-dashboard .availability-days-nav {
   display: block;
-}
-
-.personnel-dashboard .availability-nav-btn {
-  border: none;
-  background-color: var(--bs-light);
-  color: var(--bs-dark);
-  width: 2rem;
-  height: 2rem;
-  border-radius: 50%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .personnel-dashboard .availability-days-strip {
@@ -771,18 +551,18 @@
 }
 
 .personnel-dashboard .availability-day-chip-label {
-  font-size: 0.7rem;
+  font-size: var(--fs-xs);
   font-weight: 500;
 }
 
 .personnel-dashboard .availability-day-chip-number {
-  font-size: 1.1rem;
+  font-size: var(--fs-md);
   font-weight: 700;
   line-height: 1.1;
 }
 
 .personnel-dashboard .availability-day-chip-month {
-  font-size: 0.72rem;
+  font-size: var(--fs-xs);
   text-transform: capitalize;
 }
 
@@ -801,7 +581,7 @@
 
 .personnel-dashboard .availability-active-date {
   margin: 0;
-  font-size: 1rem;
+  font-size: var(--fs-base);
   font-weight: 600;
   color: var(--bs-dark);
 }
@@ -831,90 +611,9 @@
 }
 
 .personnel-dashboard .availability-slot-time {
-  font-size: 2rem;
+  font-size: var(--fs-2xl);
   font-weight: 700;
   color: var(--bs-dark);
-}
-
-.personnel-dashboard .availability-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.personnel-dashboard .availability-item {
-  border: 1px solid var(--bs-dark);
-  border-radius: var(--radius-default);
-  background-color: var(--bs-white);
-  padding: 0.75rem;
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: 0.75rem;
-  align-items: center;
-}
-
-.personnel-dashboard .availability-date-chip {
-  min-width: 3rem;
-  border-radius: var(--radius-default);
-  background-color: var(--bs-light);
-  border: 1px solid var(--bs-dark);
-  padding: 0.35rem 0.4rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  line-height: 1.1;
-}
-
-.personnel-dashboard .availability-day {
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--bs-dark);
-}
-
-.personnel-dashboard .availability-month {
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  color: var(--bs-secondary);
-}
-
-.personnel-dashboard .availability-details {
-  min-width: 0;
-}
-
-.personnel-dashboard .availability-time-range {
-  margin: 0;
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--bs-dark);
-}
-
-.personnel-dashboard .availability-visit-types {
-  margin-top: 0.28rem;
-}
-
-.personnel-dashboard .availability-visit-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 999px;
-  padding: 0.18rem 0.58rem;
-  font-size: 0.74rem;
-  font-weight: 600;
-}
-
-.personnel-dashboard .availability-visit-badge.fysisk {
-  background-color: rgba(var(--bs-success-rgb), 0.18);
-  color: var(--bs-success);
-}
-
-.personnel-dashboard .availability-visit-badge.digital {
-  background-color: rgba(var(--bs-primary-rgb), 0.14);
-  color: var(--bs-primary);
-}
-
-.personnel-dashboard .availability-status-wrap {
-  display: flex;
-  justify-content: flex-end;
 }
 
 /* ===== MEDIA QUERIES ===== */
@@ -942,7 +641,7 @@
   }
 
   .personnel-dashboard .stat-number {
-    font-size: 1.75rem;
+    font-size: var(--fs-2xl);
   }
 
   .personnel-dashboard .stat-icon {
@@ -988,7 +687,7 @@
   .personnel-dashboard .data-table th,
   .personnel-dashboard .data-table td {
     padding: 0.75rem 0.875rem;
-    font-size: 0.875rem;
+    font-size: var(--fs-sm);
     white-space: nowrap;
   }
 }
@@ -1010,7 +709,7 @@
   }
 
   .personnel-dashboard .stat-number {
-    font-size: 1.75rem;
+    font-size: var(--fs-2xl);
   }
 
   .personnel-dashboard .stat-icon {
@@ -1028,13 +727,8 @@
   }
 
   .personnel-dashboard .mini-column,
-  .personnel-dashboard .calendar-overview,
-  .personnel-dashboard .tasks-overview {
+  .personnel-dashboard .calendar-overview {
     max-width: 100%;
-  }
-
-  .personnel-dashboard .availability-item {
-    grid-template-columns: auto 1fr;
   }
 
   .personnel-dashboard .availability-days-strip {
@@ -1047,30 +741,12 @@
   }
 
   .personnel-dashboard .availability-slot-time {
-    font-size: 1.75rem;
+    font-size: var(--fs-2xl);
   }
 
   .personnel-dashboard .quick-action-btn {
     min-height: 4.4rem;
     font-size: 0.8rem;
-  }
-
-  .personnel-dashboard .availability-status-wrap {
-    grid-column: 1 / -1;
-    justify-content: flex-start;
-  }
-
-  .personnel-dashboard .task-patient-name {
-    font-size: 0.9rem;
-  }
-
-  .personnel-dashboard .task-description {
-    font-size: 0.78rem;
-  }
-
-  .personnel-dashboard .task-time-pill {
-    font-size: 0.72rem;
-    padding: 0.3rem 0.55rem;
   }
 
   .personnel-dashboard .timeline-row {
@@ -1090,7 +766,7 @@
   }
 
   .personnel-dashboard .card-title {
-    font-size: 1.125rem;
+    font-size: var(--fs-md);
   }
 
   .personnel-dashboard .card-body {
@@ -1121,7 +797,7 @@
   .personnel-dashboard .data-table th,
   .personnel-dashboard .data-table td {
     padding: 0.625rem 0.75rem;
-    font-size: 0.8125rem;
+    font-size: var(--fs-sm);
     flex: 1;
     min-width: 0;
     overflow: hidden;
@@ -1142,6 +818,6 @@
   }
 
   .personnel-dashboard .empty-text {
-    font-size: 0.9375rem;
+    font-size: var(--fs-base);
   }
 }

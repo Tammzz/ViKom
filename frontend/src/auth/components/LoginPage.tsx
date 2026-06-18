@@ -91,7 +91,7 @@ const LoginPage: React.FC = () => {
             </Form.Group>
             
             {/* submit button */}
-            <Button type="submit" className="w-100 btn-secondary">
+            <Button variant="secondary" type="submit" className="w-100">
               Logg inn
             </Button>
           </Form>

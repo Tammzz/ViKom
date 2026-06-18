@@ -10,6 +10,7 @@ import {
 import WeeklyView from '../components/WeeklyView';
 import DailyView from '../components/DailyView';
 import AvailabilityWindowModal from '../components/AvailabilityWindowModal';
+import PageHeader from '../../components/common/PageHeader';
 import type {
   WeekAvailability,
   DayAvailability,
@@ -181,18 +182,19 @@ const AvailabilityCalendarPage: React.FC = () => {
         </div>
       )}
 
-      <h1 className="mb-3 fw-bold">Min kalender</h1>
-      <div className="mb-4">
-        <p className="text-dark mb-0 fs-5 lh-base">Administrer din ukentlige og daglige tilgjengelighetsplan.</p>
-      </div>
+      <PageHeader
+        title="Min kalender"
+        subtitle="Administrer din ukentlige og daglige tilgjengelighetsplan."
+      />
 
       {/* provides view mode toggle and navigation controls */}
       <div className="calendar-controls">
         <div className="controls-left">
           {/* allows switching between day and week views */}
-          <div className="view-toggle">
+          <div className="btn-group" role="group" aria-label="Visningsmodus">
             <button
-              className={`view-btn ${viewMode === 'day' ? 'active' : ''}`}
+              type="button"
+              className={`btn btn-sm ${viewMode === 'day' ? 'btn-secondary' : 'btn-outline-secondary'}`}
               onClick={() => {
                 setViewMode('day');
                 setCurrentDate(new Date());
@@ -201,7 +203,8 @@ const AvailabilityCalendarPage: React.FC = () => {
               Dag
             </button>
             <button
-              className={`view-btn ${viewMode === 'week' ? 'active' : ''}`}
+              type="button"
+              className={`btn btn-sm ${viewMode === 'week' ? 'btn-secondary' : 'btn-outline-secondary'}`}
               onClick={() => {
                 setViewMode('week');
                 setCurrentDate(new Date());
@@ -212,21 +215,21 @@ const AvailabilityCalendarPage: React.FC = () => {
           </div>
 
           {/* navigates to current date */}
-          <button className="today-btn" onClick={handleToday}>
+          <button type="button" className="btn btn-outline-secondary btn-sm" onClick={handleToday}>
             I dag
           </button>
-          <button className="today-btn" onClick={loadData} disabled={loading}>
+          <button type="button" className="btn btn-outline-secondary btn-sm" onClick={loadData} disabled={loading}>
             Oppdater
           </button>
         </div>
 
         {/* displays current date range and navigation arrows */}
         <div className="controls-right">
-          <button className="nav-btn" onClick={handlePrevious}>
+          <button type="button" className="btn btn-outline-secondary btn-sm" onClick={handlePrevious} aria-label="Forrige">
             <i className="bi bi-chevron-left"></i>
           </button>
           <h2 className="date-header">{getHeaderText()}</h2>
-          <button className="nav-btn" onClick={handleNext}>
+          <button type="button" className="btn btn-outline-secondary btn-sm" onClick={handleNext} aria-label="Neste">
             <i className="bi bi-chevron-right"></i>
           </button>
         </div>

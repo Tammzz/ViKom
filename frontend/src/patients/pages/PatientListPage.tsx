@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Alert, Container, Spinner } from 'react-bootstrap';
-import { getUserInfo } from '../../auth/AuthService';
+import { Alert, Spinner } from 'react-bootstrap';
 import PatientService from '../services/PatientService';
 import type { PatientListDto } from '../types/patient';
 import DataTable, { type DataTableColumn } from '../../components/common/DataTable';
+import PageHeader from '../../components/common/PageHeader';
+import './PatientListPage.css';
 
 const PatientListPage: React.FC = () => {
-  const userInfo = getUserInfo();
-  const isPersonnel = userInfo?.role === 'Personnel';
   const navigate = useNavigate();
 
   const [patients, setPatients] = useState<PatientListDto[]>([]);
@@ -66,25 +65,27 @@ const PatientListPage: React.FC = () => {
 
   if (loading) {
     return (
-      <Container fluid className={isPersonnel ? 'personnel-page' : ''}>
+      <div className="patient-list-page">
         <div className="d-flex align-items-center gap-2 py-4">
           <Spinner animation="border" size="sm" />
           <span>Laster pasienter...</span>
         </div>
-      </Container>
+      </div>
     );
   }
 
   return (
-    <Container fluid className={isPersonnel ? 'personnel-page' : ''}>
+    <div className="patient-list-page">
       {error && (
         <Alert variant="danger" dismissible onClose={() => setError('')}>
           {error}
         </Alert>
       )}
 
-      <h1 className="fw-bold mb-2">Mine pasienter</h1>
-      <p className="text-dark fs-5 mb-4">Se og administrer alle pasientene dine.</p>
+      <PageHeader
+        title="Mine pasienter"
+        subtitle="Se og administrer alle pasientene dine."
+      />
 
       <DataTable
         columns={columns}
@@ -94,7 +95,7 @@ const PatientListPage: React.FC = () => {
         emptyIcon="people"
         emptyText="Ingen pasienter funnet."
       />
-    </Container>
+    </div>
   );
 };
 

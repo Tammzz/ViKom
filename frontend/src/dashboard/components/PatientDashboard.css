@@ -1,51 +1,35 @@
-/* ===== PATIENT DASHBOARD CONTAINER ===== */
+/* ===== PATIENT DASHBOARD CONTAINER =====
+   Cards (care team, upcoming, recent) use the shared SectionCard; appointment
+   items use AppointmentCard; empty blocks use EmptyState. Only the page layout
+   and the bespoke CTA + caregiver styles live here. */
 .patient-dashboard {
-  padding: 2rem;
+  padding: var(--space-6);
 }
 
 .patient-dashboard .error-message {
   color: var(--bs-danger);
 }
 
-/* ===== WELCOME SECTION ===== */
-.patient-dashboard .welcome-section {
-  margin-bottom: 3rem;
-}
-
-.patient-dashboard .welcome-title {
-  font-weight: 700;
-  margin-bottom: 1rem;
-  color: var(--bs-dark);
-}
-
-.patient-dashboard .welcome-subtitle {
-  margin-bottom: 0;
-  font-size: 1.25rem;
-  line-height: 1.5;
-  color: var(--bs-dark);
-}
-
 /* ===== DASHBOARD CONTENT LAYOUT ===== */
 .patient-dashboard .dashboard-content {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: var(--space-5);
 }
 
 .patient-dashboard .dashboard-top-row {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  gap: 1.5rem;
+  gap: var(--space-5);
 }
 
 .patient-dashboard .dashboard-bottom-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
+  gap: var(--space-5);
 }
 
-/* ===== ACTION CARDS SECTION ===== */
-
+/* ===== CTA CARDS ===== */
 .patient-dashboard .cta-link {
   text-decoration: none;
   flex: 1;
@@ -55,288 +39,62 @@
   border: 1px solid var(--bs-dark);
   background-color: var(--bs-light);
   text-align: center;
-  padding: 1.5rem;
+  padding: var(--space-5);
   border-radius: var(--radius-default);
   cursor: pointer;
   transition: all 0.2s ease;
+  height: 100%;
 }
 
 .patient-dashboard .cta-icon {
   font-size: 5rem;
   color: var(--bs-secondary);
-  margin-bottom: 1rem;
+  margin-bottom: var(--space-4);
   display: block;
 }
 
 .patient-dashboard .cta-title {
   color: var(--bs-dark);
   margin-bottom: 0;
-  font-size: 1.25rem;
+  font-size: var(--fs-lg);
 }
 
-/* ===== APPOINTMENTS SECTION ===== */
-.patient-dashboard .appointments-card {
-  border: 1px solid var(--bs-dark);
-  background-color: var(--bs-light);
-  border-radius: var(--radius-default);
-}
-
-.patient-dashboard .appointments-body {
-  padding: 1.5rem;
-}
-
-.patient-dashboard .appointments-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-}
-
-.patient-dashboard .appointments-title {
-  font-weight: 700;
-  margin-bottom: 0;
-  color: var(--bs-dark);
-  font-size: 1.25rem;
-}
-
-.patient-dashboard .appointments-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.patient-dashboard .appointment-item {
-  background-color: var(--bs-white);
-  border: 1px solid #dee2e6;
-  border-radius: var(--radius-default);
-  padding: 1rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-}
-
-/* Upcoming Appointments */
-.patient-dashboard .appointment-left {
-  display: flex;
-  flex-direction: column;
-}
-
-.patient-dashboard .appointment-personnel {
-  margin-bottom: 0.5rem;
-  color: var(--bs-dark);
-  font-weight: 500;
-}
-
-.patient-dashboard .appointment-right {
-  text-align: right;
-}
-
-.patient-dashboard .appointment-date {
-  color: var(--bs-dark);
-  font-weight: 500;
-  margin-bottom: 0.5rem;
-}
-
-.patient-dashboard .appointment-time {
-  color: var(--bs-dark);
-  line-height: 1.75;
-}
-
-/* Recent Appointments */
-.patient-dashboard .appointment-content {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-}
-
-.patient-dashboard .appointment-main {
-  display: flex;
-  gap: 1rem;
-  flex: 1;
-}
-
-.patient-dashboard .appointment-details {
-  flex: 1;
-}
-
-.patient-dashboard .appointment-top-row {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0.5rem;
-}
-
-.patient-dashboard .appointment-datetime {
-  color: var(--bs-dark);
-  margin: 0;
-  font-weight: 500;
-}
-
-.patient-dashboard .appointment-tasks {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-}
-
-
-/* Empty state for appointments */
-.patient-dashboard .appointments-empty {
-  text-align: center;
-  padding: 3rem 0;
-}
-
-.patient-dashboard .appointments-empty .empty-icon {
-  font-size: 4rem;
-  color: #6c757d;
-  margin-bottom: 1rem;
-  display: block;
-}
-
-.patient-dashboard .appointments-empty .empty-text {
-  color: #6c757d;
-  margin-bottom: 1rem;
-}
-
-/* Book Appointment Button */
-.patient-dashboard .book-btn {
-  background-color: var(--bs-primary);
-  color: var(--bs-white);
-  padding: 0.5rem 1rem;
-  border-radius: var(--radius-default);
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  transition: background-color 0.2s ease;
-}
-
-.patient-dashboard .book-btn:hover {
-  background-color: var(--bs-primary-hover);
-  color: var(--bs-white);
-}
-
-
-
-/* ===== CARE TEAM CARD ===== */
-.patient-dashboard .care-team-card {
-  border: 1px solid var(--bs-dark);
-  background-color: var(--bs-light);
-  border-radius: var(--radius-default);
-  height: 100%;
-}
-
-.patient-dashboard .care-team-body {
-  padding: 1.5rem;
-}
-
-.patient-dashboard .care-team-title {
-  font-weight: 700;
-  margin-bottom: 1.5rem;
-  color: var(--bs-dark);
-  font-size: 1.25rem;
-}
-
-.patient-dashboard .caregivers-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
+/* ===== CARE TEAM ITEMS ===== */
 .patient-dashboard .caregiver-item {
   background-color: var(--bs-white);
-  border: 1px solid #dee2e6;
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-default);
-  padding: 1rem;
+  padding: var(--space-4);
 }
 
 .patient-dashboard .caregiver-name {
-  margin-bottom: 0.5rem;
+  margin-bottom: var(--space-2);
   font-weight: 500;
   color: var(--bs-dark);
   line-height: 1.5;
-  font-size: 1.25rem;
-}
-
-.patient-dashboard .caregiver-email {
-  margin-bottom: 0.5rem;
-  color: var(--bs-dark);
-  line-height: 1.75;
+  font-size: var(--fs-lg);
 }
 
 .patient-dashboard .caregiver-availability {
   margin-bottom: 0;
-  color: #6c757d;
+  color: var(--text-muted);
   line-height: 1.75;
 }
 
-/* Empty state for care team */
-.patient-dashboard .care-team-empty {
-  text-align: center;
-  padding: 1.5rem 0;
-}
-
-.patient-dashboard .care-team-empty .empty-icon {
-  font-size: 4rem;
-  color: #6c757d;
-  margin-bottom: 1rem;
-  display: block;
-}
-
-.patient-dashboard .care-team-empty .empty-text {
-  color: #6c757d;
-  margin-bottom: 0;
-  font-size: 0.875rem;
-}
-
 /* ===== MEDIA QUERIES ===== */
-
-/* Tablet and below */
 @media (max-width: 991px) {
-  .patient-dashboard .dashboard-content {
-    flex-direction: column;
-  }
-
-  .patient-dashboard .dashboard-right {
-    flex: 1;
-  }
-
-  .patient-dashboard .action-cards-row {
-    flex-direction: column;
+  .patient-dashboard .dashboard-top-row,
+  .patient-dashboard .dashboard-bottom-row {
+    grid-template-columns: 1fr;
   }
 }
 
-/* Mobile */
 @media (max-width: 767px) {
   .patient-dashboard {
-    padding: 1rem;
-  }
-
-  .patient-dashboard .welcome-section {
-    margin-bottom: 2rem;
-  }
-
-  .patient-dashboard .welcome-subtitle {
-    font-size: 1rem;
-  }
-
-  .patient-dashboard .appointments-body,
-  .patient-dashboard .care-team-body {
-    padding: 1rem;
+    padding: var(--space-4);
   }
 
   .patient-dashboard .cta-icon {
     font-size: 3rem;
   }
-
-  .patient-dashboard .appointment-item {
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  .patient-dashboard .appointment-right {
-    text-align: left;
-  }
 }
-
-
