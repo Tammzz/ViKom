@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using backend.Models;
 
@@ -22,6 +23,12 @@ namespace backend.DAL
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            // Patient URL handle is unique when present (SQLite treats NULLs as
+            // distinct, so patients without one don't collide).
+            modelBuilder.Entity<User>()
+                .HasIndex(u => u.ProfileUsername)
+                .IsUnique();
 
             // Configure one-to-one relationship between Appointment and Availability
             modelBuilder.Entity<Appointment>()
@@ -94,6 +101,30 @@ namespace backend.DAL
                 .WithMany(u => u.Medications)
                 .HasForeignKey(m => m.PatientId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // We persist DateTimes as UTC (DateTime.UtcNow), but SQLite returns
+            // them with Kind=Unspecified — which serializes WITHOUT a trailing
+            // 'Z', so the client reads them as local time (e.g. the Økt timer
+            // starting hours in for UTC+offset users). Mark every DateTime as
+            // UTC on read so it serializes with 'Z' and the client parses it
+            // correctly. (Round-trip to the DB is unchanged.)
+            var utcConverter = new ValueConverter<DateTime, DateTime>(
+                v => v,
+                v => DateTime.SpecifyKind(v, DateTimeKind.Utc));
+            var utcNullableConverter = new ValueConverter<DateTime?, DateTime?>(
+                v => v,
+                v => v.HasValue ? DateTime.SpecifyKind(v.Value, DateTimeKind.Utc) : v);
+
+            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+            {
+                foreach (var property in entityType.GetProperties())
+                {
+                    if (property.ClrType == typeof(DateTime))
+                        property.SetValueConverter(utcConverter);
+                    else if (property.ClrType == typeof(DateTime?))
+                        property.SetValueConverter(utcNullableConverter);
+                }
+            }
         }
     }
 }

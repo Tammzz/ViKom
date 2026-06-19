@@ -7,6 +7,7 @@ namespace backend.DAL.Repositories
         Task<IEnumerable<User>> GetAllAsync();
         Task<User?> GetByIdAsync(string id);
         Task<User?> GetByIdWithMedicationsAsync(string id);
+        Task<User?> GetByProfileUsernameWithMedicationsAsync(string username);
         Task<IEnumerable<User>> GetByRoleAsync(string role);
         Task<IEnumerable<User>> GetPatientsAsync();
         Task<IEnumerable<User>> GetPatientsByPersonnelAsync(string personnelId);

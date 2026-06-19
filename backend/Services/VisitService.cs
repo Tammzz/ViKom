@@ -79,22 +79,45 @@ namespace backend.Services
             var summaries = new List<VisitSummaryDto>();
             foreach (var visit in visits)
             {
-                var attempts = (await _callLogRepository.GetByVisitIdAsync(visit.Id)).ToList();
-                summaries.Add(new VisitSummaryDto
-                {
-                    Id = visit.Id,
-                    AppointmentId = visit.AppointmentId,
-                    VisitType = visit.VisitType,
-                    Status = visit.Status,
-                    StartedAt = visit.StartedAt,
-                    EndedAt = visit.EndedAt,
-                    CompletedAt = visit.CompletedAt,
-                    OutcomeReason = visit.OutcomeReason,
-                    CallAttemptCount = attempts.Count,
-                    LastCallAttemptAt = attempts.Count > 0 ? attempts.Max(a => a.StartedAt) : null
-                });
+                summaries.Add(await MapToSummaryAsync(visit));
             }
             return summaries;
+        }
+
+        public async Task<IEnumerable<VisitSummaryDto>> GetByResponsibleUserIdAsync(string nurseId)
+        {
+            var visits = await _visitRepository.GetByResponsibleUserIdAsync(nurseId);
+            var summaries = new List<VisitSummaryDto>();
+            foreach (var visit in visits)
+            {
+                // The archive is a record of documented visits; in-progress
+                // visits aren't finished work, so leave them out.
+                if (visit.Status == "Active") continue;
+                summaries.Add(await MapToSummaryAsync(visit));
+            }
+            return summaries;
+        }
+
+        private async Task<VisitSummaryDto> MapToSummaryAsync(Visit visit)
+        {
+            var attempts = (await _callLogRepository.GetByVisitIdAsync(visit.Id)).ToList();
+            return new VisitSummaryDto
+            {
+                Id = visit.Id,
+                AppointmentId = visit.AppointmentId,
+                PatientId = visit.PatientId,
+                PatientName = visit.Patient?.FullName ?? string.Empty,
+                Date = visit.Appointment?.Availability?.Date.ToString("yyyy-MM-dd"),
+                StartTime = visit.Appointment?.StartTime.ToString(@"hh\:mm"),
+                VisitType = visit.VisitType,
+                Status = visit.Status,
+                StartedAt = visit.StartedAt,
+                EndedAt = visit.EndedAt,
+                CompletedAt = visit.CompletedAt,
+                OutcomeReason = visit.OutcomeReason,
+                CallAttemptCount = attempts.Count,
+                LastCallAttemptAt = attempts.Count > 0 ? attempts.Max(a => a.StartedAt) : null
+            };
         }
 
         public async Task<VisitDto?> UpdateNotesAsync(int visitId, string? notes)

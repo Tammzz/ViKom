@@ -7,6 +7,7 @@ namespace backend.DAL.Repositories
         Task<Visit?> GetByIdAsync(int id);
         Task<Visit?> GetByAppointmentIdAsync(int appointmentId);
         Task<IEnumerable<Visit>> GetByPatientIdAsync(string patientId);
+        Task<IEnumerable<Visit>> GetByResponsibleUserIdAsync(string nurseId);
         Task<Visit> CreateAsync(Visit visit);
         Task<Visit> UpdateAsync(Visit visit);
         Task<VisitTask?> GetTaskByIdAsync(int taskId);

@@ -8,7 +8,6 @@ import SectionCard from '../../components/common/SectionCard';
 import IconButton from '../../components/common/IconButton';
 import InfoRow from '../../components/common/InfoRow';
 import EmptyState from '../../components/common/EmptyState';
-import Timeline from '../../components/common/Timeline';
 import CallModal from '../../components/common/CallModal';
 import VisitDetailsModal from '../../visits/components/VisitDetailsModal';
 import PlannedVisitModal, { type PlannedVisitData } from '../../visits/components/PlannedVisitModal';
@@ -22,12 +21,12 @@ import ClinicalOverviewCard from '../components/ClinicalOverviewCard';
 import DiagnosesCard from '../components/DiagnosesCard';
 import MedicationsCard from '../components/MedicationsCard';
 import TreatmentPlanCard from '../components/TreatmentPlanCard';
-import { buildPatientActivity } from '../utils/patientActivity';
+import * as AuthService from '../../auth/AuthService';
 import './PatientDetailsPage.css';
 
 const PAST_PREVIEW_COUNT = 3;
 
-type RightTab = 'upcoming' | 'past' | 'activity' | 'calls';
+type RightTab = 'upcoming' | 'past' | 'calls';
 
 const callStatusMeta = (status: string): { label: string; variant: BadgeColor } => {
   switch (status.toLowerCase()) {
@@ -56,7 +55,9 @@ const formatCallTime = (iso: string): string => {
 };
 
 const PatientDetailsPage: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  // Route key — the patient's username (falls back to the GUID id for patients
+  // without one). Child API calls still use the resolved patient.id (GUID).
+  const { username: patientKey } = useParams<{ username: string }>();
 
   const [patient, setPatient] = useState<PatientDetailsDto | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -70,7 +71,7 @@ const PatientDetailsPage: React.FC = () => {
   const [plannedVisit, setPlannedVisit] = useState<PlannedVisitData | null>(null);
 
   const loadPatient = useCallback(async () => {
-    if (!id) {
+    if (!patientKey) {
       setError('Mangler pasient-ID.');
       setLoading(false);
       return;
@@ -80,7 +81,7 @@ const PatientDetailsPage: React.FC = () => {
       setLoading(true);
       setError('');
       setInfoMessage('');
-      const data = await PatientService.getById(id);
+      const data = await PatientService.getById(patientKey);
       setPatient(data);
     } catch (err) {
       setError('Kunne ikke laste pasientdetaljer.');
@@ -88,7 +89,7 @@ const PatientDetailsPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  }, [patientKey]);
 
   useEffect(() => {
     loadPatient();
@@ -97,14 +98,14 @@ const PatientDetailsPage: React.FC = () => {
   // Lightweight refetch that doesn't flash the full-page spinner (used after a
   // call is logged so the communication history stays current).
   const refreshPatient = useCallback(async () => {
-    if (!id) return;
+    if (!patientKey) return;
     try {
-      const data = await PatientService.getById(id);
+      const data = await PatientService.getById(patientKey);
       setPatient(data);
     } catch (err) {
       console.error(err);
     }
-  }, [id]);
+  }, [patientKey]);
 
   const deviceStatus = useMemo((): { label: string; color: BadgeColor; bordered: boolean } => {
     if (!patient) {
@@ -152,6 +153,16 @@ const PatientDetailsPage: React.FC = () => {
   const pastAppointments = patient.pastAppointments ?? [];
   const visiblePast = showAllPast ? pastAppointments : pastAppointments.slice(0, PAST_PREVIEW_COUNT);
   const recentCalls = patient.recentCalls ?? [];
+
+  // The visit-execution page is personnel-only, so the "continue visit"
+  // shortcut is offered only to personnel when a visit is currently Active.
+  const isPersonnel = AuthService.getUserInfo()?.role === 'Personnel';
+  const ongoingVisit = isPersonnel
+    ? [...patient.upcomingAppointments, ...pastAppointments].find((a) => a.visitStatus === 'Active')
+    : undefined;
+  const ongoingVisitHref = ongoingVisit
+    ? `/besok/${ongoingVisit.id}${ongoingVisit.visitType === 'Digital' ? '?type=Digital' : ''}`
+    : undefined;
 
   // One document icon per appointment card: the post-visit "Besøksdetaljer"
   // once the visit has ended, otherwise the read-only "Planlagt besøk".
@@ -202,7 +213,6 @@ const PatientDetailsPage: React.FC = () => {
   const tabs: { key: RightTab; label: string; icon: string; count?: number }[] = [
     { key: 'upcoming', label: 'Kommende avtaler', icon: 'calendar-event', count: patient.upcomingAppointments.length },
     { key: 'past', label: 'Tidligere avtaler', icon: 'clock-history', count: pastAppointments.length },
-    { key: 'activity', label: 'Aktivitet', icon: 'activity' },
     { key: 'calls', label: 'Anropslogg', icon: 'telephone', count: recentCalls.length },
   ];
 
@@ -226,22 +236,12 @@ const PatientDetailsPage: React.FC = () => {
         patient={patient}
         onCall={handleCallClick}
         onEdit={() => setShowEditModal(true)}
+        ongoingVisitHref={ongoingVisitHref}
       />
 
       <Row className="g-4">
         <Col lg={4}>
           <div className="vk-card-stack">
-            <SectionCard
-              title="Pasientinformasjon"
-              icon="person-vcard"
-              action={
-                <IconButton icon="pencil" title="Rediger" onClick={() => setShowEditModal(true)} />
-              }
-            >
-              <InfoRow icon="envelope" label="E-post" value={patient.email} />
-              <InfoRow icon="telephone" label="Telefon" value={patient.phoneNumber} />
-              <InfoRow icon="geo-alt" label="Adresse" value={patient.address} />
-            </SectionCard>
 
             <SectionCard title="TV-profil" icon="tv">
               <InfoRow
@@ -339,13 +339,6 @@ const PatientDetailsPage: React.FC = () => {
                     )}
                   </>
                 ))}
-
-              {activeTab === 'activity' && (
-                <Timeline
-                  items={buildPatientActivity(patient)}
-                  emptyText="Ingen registrert aktivitet enda."
-                />
-              )}
 
               {activeTab === 'calls' &&
                 (recentCalls.length === 0 ? (

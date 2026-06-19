@@ -8,6 +8,7 @@ export interface PatientListDto {
   phoneNumber: string;
   address: string;
   supabaseProfileId?: string | null;
+  username?: string | null;
   totalAppointments: number;
   lastAppointmentDate: string;
 }
@@ -50,6 +51,7 @@ export interface PatientDetailsDto {
   phoneNumber: string;
   address?: string;
   supabaseProfileId?: string | null;
+  username?: string | null;
   totalAppointments: number;
   lastAppointmentDate: string;
   notes?: string | null;

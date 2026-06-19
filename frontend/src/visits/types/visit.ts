@@ -62,6 +62,10 @@ export interface Visit {
 export interface VisitSummary {
   id: number;
   appointmentId: number;
+  patientId: string;
+  patientName: string;
+  date?: string | null;
+  startTime?: string | null;
   visitType: VisitType;
   status: VisitStatus;
   startedAt: string;

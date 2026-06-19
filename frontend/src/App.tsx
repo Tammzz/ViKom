@@ -15,6 +15,7 @@ import { AvailabilityCalendarPage } from './availability';
 import { PatientListPage, PatientDetailsPage } from './patients';
 import {
   VisitExecutionPage,
+  VisitArchivePage,
   TaskSelectionPage,
   PreferredTimePage,
   PlanningOverviewPage
@@ -33,8 +34,9 @@ const App: React.FC = () => {
           {/* Protected routes */}
           <Route path="/dashboard" element={<PrivateRoute><DashboardPage /></PrivateRoute>} />
           <Route path="/patients" element={<PrivateRoute><PatientListPage /></PrivateRoute>} />
-          <Route path="/patients/:id" element={<PrivateRoute><PatientDetailsPage /></PrivateRoute>} />
+          <Route path="/patients/:username" element={<PrivateRoute><PatientDetailsPage /></PrivateRoute>} />
           <Route path="/appointments" element={<PrivateRoute><AppointmentListPage /></PrivateRoute>} />
+          <Route path="/appointments/archive" element={<PersonnelOnlyRoute><VisitArchivePage /></PersonnelOnlyRoute>} />
           <Route path="/availability" element={<PersonnelOnlyRoute><AvailabilityCalendarPage /></PersonnelOnlyRoute>} />
 
           {/* New visit-related routes */}

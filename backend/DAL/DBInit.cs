@@ -159,6 +159,7 @@ namespace backend.DAL
         {
             async Task SeedAsync(
                 string userName,
+                string profileUsername,
                 DateTime dob,
                 string kinName,
                 string kinRelation,
@@ -171,6 +172,13 @@ namespace backend.DAL
             {
                 var patient = await userManager.FindByNameAsync(userName);
                 if (patient == null) return;
+
+                // Readable URL handle (from the Supabase profile). Set independently.
+                if (string.IsNullOrEmpty(patient.ProfileUsername))
+                {
+                    patient.ProfileUsername = profileUsername;
+                    await userManager.UpdateAsync(patient);
+                }
 
                 // Treat a null DateOfBirth as "clinical data not seeded yet".
                 if (patient.DateOfBirth == null)
@@ -207,6 +215,7 @@ namespace backend.DAL
 
             await SeedAsync(
                 "patient.ingrid@homecare.local",
+                "ingrid.berg",
                 new DateTime(1948, 3, 14),
                 "Anne Berg",
                 "datter",
@@ -224,6 +233,7 @@ namespace backend.DAL
 
             await SeedAsync(
                 "patient@homecare.local",
+                "erik.johansen",
                 new DateTime(1952, 7, 22),
                 "Maria Johansen",
                 "kone",

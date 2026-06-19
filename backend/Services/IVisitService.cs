@@ -13,6 +13,11 @@ namespace backend.Services
         Task<VisitDto?> GetByIdAsync(int id);
         Task<VisitDto?> GetByAppointmentIdAsync(int appointmentId);
         Task<IEnumerable<VisitSummaryDto>> GetByPatientIdAsync(string patientId);
+        /// <summary>
+        /// All documented (terminal) visits the nurse is responsible for —
+        /// powers the visit archive. Excludes still-active visits.
+        /// </summary>
+        Task<IEnumerable<VisitSummaryDto>> GetByResponsibleUserIdAsync(string nurseId);
         Task<VisitDto?> UpdateNotesAsync(int visitId, string? notes);
         Task<VisitTaskDto?> AddTaskAsync(int visitId, string title);
         Task<VisitTaskDto?> UpdateTaskAsync(int visitId, int taskId, string status, string? skippedReason);

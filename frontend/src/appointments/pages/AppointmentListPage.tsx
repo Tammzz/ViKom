@@ -56,6 +56,11 @@ const AppointmentListPage: React.FC = () => {
   const [detailsVisitId, setDetailsVisitId] = useState<number | null>(null);
   const [plannedAppointment, setPlannedAppointment] = useState<Appointment | null>(null);
 
+  // Front-end-only declutter: hides finished appointments from the active list
+  // for the current view. Resets on reload — the permanent record lives in the
+  // visit archive (/appointments/archive).
+  const [completedHidden, setCompletedHidden] = useState<boolean>(false);
+
   // Active tab state (depends on user role)
   const [activeTab, setActiveTab] = useState<PersonnelTab | PatientTab>(() => {
     if (role === 'Personnel') {
@@ -285,10 +290,26 @@ const AppointmentListPage: React.FC = () => {
       { key: 'all', label: 'Alle', count: allActiveAppointments.length },
       { key: 'scheduled', label: 'Planlagt', count: scheduledAppointments.length },
       { key: 'inprogress', label: 'Pågår', count: inProgressAppointments.length },
-      { key: 'completed', label: 'Fullført', count: completedAppointments.length },
+      { key: 'completed', label: 'Fullført', count: completedHidden ? 0 : completedAppointments.length },
     ];
 
     const showList = (tab: PersonnelTab) => {
+      // Completed appointments are tidied away on demand; the permanent record
+      // stays available in the visit archive.
+      if (tab === 'completed' && completedHidden) {
+        return (
+          <EmptyState
+            icon="archive"
+            text="Fullførte avtaler er ryddet bort. Se besøksarkivet for historikk."
+            action={
+              <button className="btn btn-outline-primary" onClick={() => navigate('/appointments/archive')}>
+                <i className="bi bi-journals me-2" aria-hidden="true"></i>Åpne besøksarkiv
+              </button>
+            }
+          />
+        );
+      }
+
       const list =
         tab === 'all'
           ? allActiveAppointments
@@ -330,9 +351,24 @@ const AppointmentListPage: React.FC = () => {
           title="Mine pasientavtaler"
           subtitle="Start og fullfør oppgaver for pasientene dine direkte her."
           actions={
-            <button className="btn btn-warning" type="button" onClick={() => setActiveTab('completed')}>
-              Rydd opp fullførte
-            </button>
+            <div className="d-flex align-items-center gap-2">
+              <button
+                className="btn btn-secondary"
+                type="button"
+                disabled={completedHidden || completedAppointments.length === 0}
+                onClick={() => {
+                  setActiveTab('completed');
+                  setCompletedHidden(true);
+                }}
+              >
+                Rydd opp fullførte
+              </button>
+              <IconButton
+                icon="journals"
+                title="Besøksarkiv"
+                onClick={() => navigate('/appointments/archive')}
+              />
+            </div>
           }
         />
 

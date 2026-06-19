@@ -1,5 +1,6 @@
 import React from 'react';
 import { Button } from 'react-bootstrap';
+import { Link } from 'react-router-dom';
 import type { PatientDetailsDto } from '../types/patient';
 import Avatar from '../../components/common/Avatar';
 import StatTile from '../../components/common/StatTile';
@@ -11,13 +12,15 @@ interface PatientProfileHeaderProps {
   patient: PatientDetailsDto;
   onCall: () => void;
   onEdit: () => void;
+  /** When set, shows a "Fortsett besøk" shortcut to the active visit-execution page. */
+  ongoingVisitHref?: string;
 }
 
 /**
  * Full-width patient profile header: avatar, name, inline contact chips,
  * an at-a-glance KPI strip and the primary actions (Ring pasient / Rediger).
  */
-const PatientProfileHeader: React.FC<PatientProfileHeaderProps> = ({ patient, onCall, onEdit }) => {
+const PatientProfileHeader: React.FC<PatientProfileHeaderProps> = ({ patient, onCall, onEdit, ongoingVisitHref }) => {
   const contactChips = [
     { icon: 'envelope', value: patient.email },
     { icon: 'telephone', value: patient.phoneNumber },
@@ -44,6 +47,12 @@ const PatientProfileHeader: React.FC<PatientProfileHeaderProps> = ({ patient, on
         </div>
 
         <div className="vk-profile-actions">
+          {ongoingVisitHref && (
+            <Link to={ongoingVisitHref} className="btn btn-success">
+              <i className="bi bi-box-arrow-in-right me-2" aria-hidden="true"></i>
+              Fortsett besøk
+            </Link>
+          )}
           <Button variant="primary" onClick={onCall}>
             <i className="bi bi-telephone-outbound me-2" aria-hidden="true"></i>
             Ring pasient

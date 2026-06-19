@@ -7,6 +7,12 @@ namespace backend.DTOs
     {
         public int Id { get; set; }
         public int AppointmentId { get; set; }
+        public string PatientId { get; set; } = string.Empty;
+        public string PatientName { get; set; } = string.Empty;
+        /// <summary>Scheduled appointment date ("yyyy-MM-dd"), null if unavailable.</summary>
+        public string? Date { get; set; }
+        /// <summary>Scheduled appointment start time ("HH:mm"), null if unavailable.</summary>
+        public string? StartTime { get; set; }
         public string VisitType { get; set; } = "Physical";
         public string Status { get; set; } = "Active";
         public DateTime StartedAt { get; set; }

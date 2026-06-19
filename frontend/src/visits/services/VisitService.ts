@@ -59,6 +59,14 @@ const VisitService = {
     return handleResponse(response);
   },
 
+  // All documented (terminal) visits for the logged-in nurse — powers the archive.
+  getMine: async (): Promise<VisitSummary[]> => {
+    const response = await fetch(`${BASE_URL}/mine`, {
+      headers: { ...headers, ...getAuthHeader() },
+    });
+    return handleResponse(response);
+  },
+
   updateNotes: async (visitId: number, notes: string): Promise<Visit> => {
     const response = await fetch(`${BASE_URL}/${visitId}/notes`, {
       method: 'PUT',

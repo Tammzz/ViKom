@@ -27,6 +27,15 @@ namespace backend.Models
         public string? SupabaseProfileId { get; set; }
 
         /// <summary>
+        /// Human-readable handle (from the Supabase profile, e.g. "ingrid.berg")
+        /// used in patient-detail URLs instead of the GUID id. Optional; the URL
+        /// falls back to the id when absent. Named to avoid clashing with
+        /// Identity's <c>UserName</c> (which is the login email).
+        /// </summary>
+        [Display(Name = "Profile Username")]
+        public string? ProfileUsername { get; set; }
+
+        /// <summary>
         /// Free-text care note that personnel can write and update for a patient.
         /// Null if no note has been written yet.
         /// </summary>

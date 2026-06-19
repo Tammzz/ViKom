@@ -39,7 +39,7 @@ const PatientListPage: React.FC = () => {
       style: { minWidth: '160px' },
       render: (patient) => (
         <Link
-          to={`/patients/${patient.id}`}
+          to={`/patients/${patient.username ?? patient.id}`}
           className="fw-semibold text-dark text-decoration-none"
           onClick={(e) => e.stopPropagation()}
         >
@@ -91,7 +91,7 @@ const PatientListPage: React.FC = () => {
         columns={columns}
         data={patients}
         rowKey={(patient) => patient.id}
-        onRowClick={(patient) => navigate(`/patients/${patient.id}`)}
+        onRowClick={(patient) => navigate(`/patients/${patient.username ?? patient.id}`)}
         emptyIcon="people"
         emptyText="Ingen pasienter funnet."
       />

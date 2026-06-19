@@ -47,6 +47,7 @@ namespace backend.Services
                     PhoneNumber = patient.PhoneNumber ?? string.Empty,
                     Address = patient.Address ?? string.Empty,
                     SupabaseProfileId = patient.SupabaseProfileId,
+                    Username = patient.ProfileUsername,
                     TotalAppointments = appointments.Count(),
                     LastAppointmentDate = lastAppointment?.Availability.Date.ToString("dd/MM/yyyy") ?? "Never"
                 });
@@ -86,6 +87,7 @@ namespace backend.Services
                     PhoneNumber = patient.PhoneNumber ?? string.Empty,
                     Address = patient.Address ?? string.Empty,
                     SupabaseProfileId = patient.SupabaseProfileId,
+                    Username = patient.ProfileUsername,
                     TotalAppointments = appointments.Count(),
                     LastAppointmentDate = lastAppointment?.Availability.Date.ToString("dd/MM/yyyy") ?? "Never"
                 });
@@ -96,16 +98,21 @@ namespace backend.Services
 
         public async Task<PatientDetailsDto?> GetPatientByIdAsync(string patientId)
         {
-            var patient = await _userRepository.GetByIdWithMedicationsAsync(patientId);
+            // The route key may be the readable username or the GUID id; resolve
+            // username first, then fall back to the id.
+            var patient = await _userRepository.GetByProfileUsernameWithMedicationsAsync(patientId)
+                ?? await _userRepository.GetByIdWithMedicationsAsync(patientId);
             if (patient == null || !string.Equals(patient.Role, "Patient", StringComparison.OrdinalIgnoreCase))
             {
                 return null;
             }
 
-            var appointments = (await _appointmentRepository.GetByPatientIdAsync(patientId)).ToList();
-            var upcomingAppointments = (await _appointmentRepository.GetUpcomingByPatientIdAsync(patientId, 10)).ToList();
-            var pastAppointments = (await _appointmentRepository.GetHistoryByPatientIdAsync(patientId)).ToList();
-            var recentCalls = (await _callLogService.GetRecentByPatientAsync(patientId, 5)).ToList();
+            // The route key may be a username, so use the resolved patient's GUID
+            // id for the appointment/call lookups (they filter on PatientId).
+            var appointments = (await _appointmentRepository.GetByPatientIdAsync(patient.Id)).ToList();
+            var upcomingAppointments = (await _appointmentRepository.GetUpcomingByPatientIdAsync(patient.Id, 10)).ToList();
+            var pastAppointments = (await _appointmentRepository.GetHistoryByPatientIdAsync(patient.Id)).ToList();
+            var recentCalls = (await _callLogService.GetRecentByPatientAsync(patient.Id, 5)).ToList();
             var lastAppointment = appointments
                 .OrderByDescending(a => a.Availability.Date)
                 .FirstOrDefault();
@@ -118,6 +125,7 @@ namespace backend.Services
                 PhoneNumber = patient.PhoneNumber ?? string.Empty,
                 Address = patient.Address ?? string.Empty,
                 SupabaseProfileId = patient.SupabaseProfileId,
+                Username = patient.ProfileUsername,
                 TotalAppointments = appointments.Count,
                 LastAppointmentDate = lastAppointment?.Availability.Date.ToString("dd/MM/yyyy") ?? "Never",
                 Notes = patient.Notes,

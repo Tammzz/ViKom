@@ -98,6 +98,26 @@ namespace backend.Controllers
             }
         }
 
+        // GET: api/visits/mine
+        [HttpGet("mine")]
+        public async Task<ActionResult<IEnumerable<VisitSummaryDto>>> GetMyVisits()
+        {
+            try
+            {
+                var nurseId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrEmpty(nurseId))
+                    return Unauthorized();
+
+                var visits = await _visitService.GetByResponsibleUserIdAsync(nurseId);
+                return Ok(visits);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting visits for nurse");
+                return StatusCode(500, "An error occurred while retrieving visits");
+            }
+        }
+
         // PUT: api/visits/{id}/notes
         [HttpPut("{id}/notes")]
         public async Task<ActionResult<VisitDto>> UpdateNotes(int id, [FromBody] UpdateVisitNotesRequest request)

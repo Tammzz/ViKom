@@ -30,6 +30,13 @@ namespace backend.DAL.Repositories
                 .FirstOrDefaultAsync(u => u.Id == id);
         }
 
+        public async Task<User?> GetByProfileUsernameWithMedicationsAsync(string username)
+        {
+            return await _context.Users
+                .Include(u => u.Medications)
+                .FirstOrDefaultAsync(u => u.ProfileUsername == username);
+        }
+
         public async Task<IEnumerable<User>> GetByRoleAsync(string role)
         {
             return await _context.Users.Where(u => u.Role == role).ToListAsync();

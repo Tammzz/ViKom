@@ -41,10 +41,23 @@ namespace backend.DAL.Repositories
         public async Task<IEnumerable<Visit>> GetByPatientIdAsync(string patientId)
         {
             return await _context.Visits
+                .Include(v => v.Patient)
                 .Include(v => v.Tasks)
                 .Include(v => v.Appointment)
                     .ThenInclude(a => a.Availability)
                 .Where(v => v.PatientId == patientId)
+                .OrderByDescending(v => v.StartedAt)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Visit>> GetByResponsibleUserIdAsync(string nurseId)
+        {
+            return await _context.Visits
+                .Include(v => v.Patient)
+                .Include(v => v.Tasks)
+                .Include(v => v.Appointment)
+                    .ThenInclude(a => a.Availability)
+                .Where(v => v.ResponsibleUserId == nurseId)
                 .OrderByDescending(v => v.StartedAt)
                 .ToListAsync();
         }

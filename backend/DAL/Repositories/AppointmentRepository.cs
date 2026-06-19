@@ -80,7 +80,8 @@ namespace backend.DAL.Repositories
                 .Include(a => a.Visit)
                 .Include(a => a.Availability)
                 .ThenInclude(av => av.Personnel)
-                .Where(a => a.PatientId == patientId && a.Availability.Date >= today && a.Status == "Booked")
+                .Where(a => a.PatientId == patientId && a.Availability.Date >= today
+                    && (a.Status == "Booked" || a.Status == "InProgress"))
                 .OrderBy(a => a.Availability.Date)
                 .ToListAsync();
             

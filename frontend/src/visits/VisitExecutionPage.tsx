@@ -307,7 +307,7 @@ const VisitExecutionPage: React.FC = () => {
       <Breadcrumb
         items={[
           { label: 'Avtaler', to: '/appointments' },
-          { label: `Aktivt besøk · #v-${visit.id}` },
+          { label: `Aktivt besøk` },
         ]}
       />
 
