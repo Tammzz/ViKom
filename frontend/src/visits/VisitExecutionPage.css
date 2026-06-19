@@ -1,193 +1,68 @@
-/* ===== VISIT EXECUTION PAGE =====
-   Header uses PageHeader; the four panels use the shared SectionCard; the empty
-   checklist uses EmptyState and the status uses StatusBadge. Remaining styles
-   are scoped to the page root and tokenized. */
+/* Visit execution workspace. Layout uses Bootstrap utilities + shared
+   SectionCard/Breadcrumb; only the bits below need page-specific styling. */
 .visit-execution-page {
   padding: var(--space-6);
 }
 
-/* ===== TOP BAR ===== */
-.visit-execution-page .visit-topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-4);
-  margin-bottom: var(--space-5);
+/* Header contact chips use the shared Badge component. */
+
+/* Fremgang (progress) card */
+.visit-execution-page .vk-progress-card {
+  background-color: var(--bs-light);
+  border: 1px solid var(--bs-dark);
+  border-radius: var(--radius-card);
 }
 
-.visit-execution-page .visit-breadcrumb {
-  margin: 0;
-  font-size: var(--fs-md);
-  font-weight: 500;
-  color: var(--bs-dark);
-}
-
-.visit-execution-page .visit-top-actions {
-  display: flex;
-  gap: var(--space-3);
-}
-
-/* ===== MAIN GRID ===== */
-.visit-execution-page .visit-grid-layout {
-  display: grid;
-  grid-template-columns: 1fr 2.4fr;
-  gap: var(--space-5);
-  align-items: stretch;
-}
-
-.visit-execution-page .visit-grid-left,
-.visit-execution-page .visit-grid-right {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-5);
-}
-
-/* Card sizing — border + header styling come from SectionCard */
-.visit-execution-page .patient-info-card {
-  min-height: 420px;
-}
-
-.visit-execution-page .patient-map-card {
-  min-height: 180px;
-}
-
-.visit-execution-page .task-checklist-card {
-  min-height: 460px;
-}
-
-.visit-execution-page .task-checklist-card .card-body {
-  max-height: 420px;
-  overflow: auto;
-}
-
-.visit-execution-page .visit-notes-card {
-  min-height: 280px;
-  flex: 1;
-}
-
-/* ===== PATIENT DETAILS ===== */
-.visit-execution-page .patient-details {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-}
-
-.visit-execution-page .detail-row {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-}
-
-.visit-execution-page .detail-row strong {
-  font-weight: 600;
-  color: var(--bs-dark);
-}
-
-.visit-execution-page .tasks-badges {
-  margin-top: var(--space-2);
-}
-
-/* ===== MAP PLACEHOLDER ===== */
-.visit-execution-page .patient-map-placeholder {
-  min-height: 140px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, var(--gray-100) 0%, var(--gray-200) 100%);
-  color: var(--bs-secondary);
-  font-size: 2rem;
-}
-
-/* ===== TASK CHECKLIST ===== */
-.visit-execution-page .task-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-}
-
-.visit-execution-page .task-item {
-  border: 1px solid var(--bs-light);
-  border-radius: var(--radius-default);
-  padding: var(--space-4);
+.visit-execution-page .vk-progress-card .progress {
+  height: 0.625rem;
   background-color: var(--bs-white);
-  transition: all 0.2s ease;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-pill);
 }
 
-.visit-execution-page .task-item.completed {
-  background-color: rgba(var(--bs-success-rgb), 0.1);
-  border-color: var(--bs-success);
+.visit-execution-page .vk-progress-card .progress-bar {
+  border-radius: var(--radius-pill);
 }
 
-.visit-execution-page .task-content {
+/* Task list rows */
+.visit-execution-page .vk-task-list {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
+}
+
+.visit-execution-page .vk-task-row {
+  display: flex;
   align-items: center;
-  gap: var(--space-4);
+  gap: 0.75rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--gray-200);
 }
 
-.visit-execution-page .task-description {
-  flex: 1;
-  font-size: var(--fs-base);
-  color: var(--bs-dark);
-  margin-bottom: 0;
+.visit-execution-page .vk-task-row:last-child {
+  border-bottom: none;
 }
 
-.visit-execution-page .task-toggle-btn {
-  white-space: nowrap;
-  min-width: 120px;
+/* Circular checkbox button */
+.visit-execution-page .vk-task-check {
+  border: none;
+  background: transparent;
+  padding: 0;
+  line-height: 1;
+  font-size: 1.25rem;
+  color: var(--gray-500);
+  display: inline-flex;
 }
 
-/* ===== NOTES ===== */
-.visit-execution-page .visit-notes-input {
-  width: 100%;
-  min-height: 200px;
-  border: 1px solid var(--gray-400);
-  border-radius: var(--radius-default);
-  padding: var(--space-3);
-  font-size: var(--fs-base);
-  resize: vertical;
+.visit-execution-page .vk-task-check:not(:disabled):hover {
+  color: var(--bs-success);
 }
 
-.visit-execution-page .visit-notes-input:focus {
-  outline: none;
-  border-color: var(--bs-primary);
-  box-shadow: var(--focus-ring);
+.visit-execution-page .vk-task-check:disabled {
+  cursor: default;
 }
 
-/* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
   .visit-execution-page {
     padding: var(--space-4);
-  }
-
-  .visit-execution-page .visit-topbar {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .visit-execution-page .visit-top-actions {
-    width: 100%;
-  }
-
-  .visit-execution-page .visit-top-actions .btn {
-    flex: 1;
-  }
-
-  .visit-execution-page .visit-grid-layout {
-    grid-template-columns: 1fr;
-  }
-
-  .visit-execution-page .task-content {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .visit-execution-page .task-toggle-btn {
-    align-self: flex-end;
-  }
-
-  .visit-execution-page .task-checklist-card .card-body {
-    max-height: none;
-    overflow: visible;
   }
 }

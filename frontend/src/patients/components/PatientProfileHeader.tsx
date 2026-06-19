@@ -4,6 +4,7 @@ import type { PatientDetailsDto } from '../types/patient';
 import Avatar from '../../components/common/Avatar';
 import StatTile from '../../components/common/StatTile';
 import IconButton from '../../components/common/IconButton';
+import Badge from '../../components/common/Badge';
 import './PatientProfileHeader.css';
 
 interface PatientProfileHeaderProps {
@@ -32,12 +33,11 @@ const PatientProfileHeader: React.FC<PatientProfileHeaderProps> = ({ patient, on
             <p className="vk-profile-eyebrow">Profil</p>
             <h1 className="vk-profile-name">{patient.fullName}</h1>
             <div className="vk-profile-chips">
-              <span className="vk-profile-chip vk-profile-chip-role">Pasient</span>
+              <Badge bg="secondary">Pasient</Badge>
               {contactChips.map((chip) => (
-                <span key={chip.icon} className="vk-profile-chip">
-                  <i className={`bi bi-${chip.icon}`} aria-hidden="true"></i>
+                <Badge key={chip.icon} icon={chip.icon} bg="light" bordered>
                   {chip.value}
-                </span>
+                </Badge>
               ))}
             </div>
           </div>

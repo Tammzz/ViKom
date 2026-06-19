@@ -139,8 +139,8 @@ const AvailabilityCalendarPage: React.FC = () => {
     try {
       await deleteAvailabilityWindow(windowId);
       await loadData();
-    } catch (err: any) {
-      setError(err.message || 'Kunne ikke slette tilgjengelighetsvinduet');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Kunne ikke slette tilgjengelighetsvinduet');
     }
   };
 
@@ -183,7 +183,7 @@ const AvailabilityCalendarPage: React.FC = () => {
       )}
 
       <PageHeader
-        title="Min kalender"
+        title="Kalender"
         subtitle="Administrer din ukentlige og daglige tilgjengelighetsplan."
       />
 

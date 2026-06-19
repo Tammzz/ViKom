@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Alert, Badge, Button, Col, Row, Spinner } from 'react-bootstrap';
+import { Alert, Button, Col, Row, Spinner } from 'react-bootstrap';
 import PatientService from '../services/PatientService';
+import Badge, { type BadgeColor } from '../../components/common/Badge';
 import type { PatientDetailsDto } from '../types/patient';
 import SectionCard from '../../components/common/SectionCard';
 import IconButton from '../../components/common/IconButton';
@@ -9,10 +10,18 @@ import InfoRow from '../../components/common/InfoRow';
 import EmptyState from '../../components/common/EmptyState';
 import Timeline from '../../components/common/Timeline';
 import CallModal from '../../components/common/CallModal';
+import VisitDetailsModal from '../../visits/components/VisitDetailsModal';
+import PlannedVisitModal, { type PlannedVisitData } from '../../visits/components/PlannedVisitModal';
 import AppointmentCard from '../../appointments/components/AppointmentCard';
+import type { AppointmentSummary } from '../../appointments/types/appointment';
+import Breadcrumb from '../../components/common/Breadcrumb';
 import PatientProfileHeader from '../components/PatientProfileHeader';
 import PatientNotesCard from '../components/PatientNotesCard';
 import EditPatientModal from '../components/EditPatientModal';
+import ClinicalOverviewCard from '../components/ClinicalOverviewCard';
+import DiagnosesCard from '../components/DiagnosesCard';
+import MedicationsCard from '../components/MedicationsCard';
+import TreatmentPlanCard from '../components/TreatmentPlanCard';
 import { buildPatientActivity } from '../utils/patientActivity';
 import './PatientDetailsPage.css';
 
@@ -20,7 +29,7 @@ const PAST_PREVIEW_COUNT = 3;
 
 type RightTab = 'upcoming' | 'past' | 'activity' | 'calls';
 
-const callStatusMeta = (status: string): { label: string; variant: string } => {
+const callStatusMeta = (status: string): { label: string; variant: BadgeColor } => {
   switch (status.toLowerCase()) {
     case 'answered':
       return { label: 'Besvart', variant: 'success' };
@@ -29,7 +38,7 @@ const callStatusMeta = (status: string): { label: string; variant: string } => {
     case 'missed':
       return { label: 'Tapt', variant: 'warning' };
     case 'ended':
-      return { label: 'Avsluttet', variant: 'secondary' };
+      return { label: 'Avsluttet', variant: 'neutral' };
     default:
       return { label: 'Ringte', variant: 'info' };
   }
@@ -57,6 +66,8 @@ const PatientDetailsPage: React.FC = () => {
   const [showEditModal, setShowEditModal] = useState<boolean>(false);
   const [showAllPast, setShowAllPast] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<RightTab>('upcoming');
+  const [detailsVisitId, setDetailsVisitId] = useState<number | null>(null);
+  const [plannedVisit, setPlannedVisit] = useState<PlannedVisitData | null>(null);
 
   const loadPatient = useCallback(async () => {
     if (!id) {
@@ -95,16 +106,16 @@ const PatientDetailsPage: React.FC = () => {
     }
   }, [id]);
 
-  const deviceStatus = useMemo(() => {
+  const deviceStatus = useMemo((): { label: string; color: BadgeColor; bordered: boolean } => {
     if (!patient) {
-      return { label: 'Ukjent', variant: 'secondary' as const };
+      return { label: 'Ukjent', color: 'neutral', bordered: false };
     }
 
     if (patient.supabaseProfileId) {
-      return { label: 'Koblet til TV-profil', variant: 'success' as const };
+      return { label: 'Koblet til TV-profil', color: 'connected', bordered: true };
     }
 
-    return { label: 'Ikke koblet til TV-profil', variant: 'warning' as const };
+    return { label: 'Ikke koblet til TV-profil', color: 'warning', bordered: false };
   }, [patient]);
 
   const handleCallClick = () => {
@@ -142,6 +153,52 @@ const PatientDetailsPage: React.FC = () => {
   const visiblePast = showAllPast ? pastAppointments : pastAppointments.slice(0, PAST_PREVIEW_COUNT);
   const recentCalls = patient.recentCalls ?? [];
 
+  // One document icon per appointment card: the post-visit "Besøksdetaljer"
+  // once the visit has ended, otherwise the read-only "Planlagt besøk".
+  const renderVisitDoc = (appt: AppointmentSummary) => {
+    const visitDone =
+      !!appt.visitId &&
+      (appt.visitStatus === 'Completed' ||
+        appt.visitStatus === 'Incomplete' ||
+        appt.visitStatus === 'Cancelled');
+
+    // Finished visit → the post-visit record.
+    if (visitDone) {
+      return (
+        <IconButton
+          icon="journal-text"
+          title="Besøksdetaljer"
+          onClick={() => setDetailsVisitId(appt.visitId ?? null)}
+        />
+      );
+    }
+
+    // Finished appointment without a visit record → nothing to show.
+    const isTerminal =
+      appt.status === 'Completed' || appt.status === 'NotCompleted' || appt.status === 'Cancelled';
+    if (isTerminal) return undefined;
+
+    // Planned appointment → the read-only pre-visit plan.
+    return (
+      <IconButton
+        icon="clipboard-check"
+        title="Planlagt besøk"
+        onClick={() =>
+          setPlannedVisit({
+            patientName: appt.patientName,
+            patientAddress: patient.address ?? null,
+            date: appt.date,
+            startTime: appt.startTime,
+            endTime: appt.endTime,
+            tasks: appt.tasks,
+            visitType: appt.visitType,
+            availabilityNotes: appt.availabilityNotes,
+          })
+        }
+      />
+    );
+  };
+
   const tabs: { key: RightTab; label: string; icon: string; count?: number }[] = [
     { key: 'upcoming', label: 'Kommende avtaler', icon: 'calendar-event', count: patient.upcomingAppointments.length },
     { key: 'past', label: 'Tidligere avtaler', icon: 'clock-history', count: pastAppointments.length },
@@ -151,14 +208,7 @@ const PatientDetailsPage: React.FC = () => {
 
   return (
     <div className="patient-details-page">
-      <nav className="vk-breadcrumb" aria-label="Brødsmulesti">
-        <Link to="/patients" className="vk-breadcrumb-back">
-          <i className="bi bi-arrow-left" aria-hidden="true"></i>
-          Pasienter
-        </Link>
-        <span className="vk-breadcrumb-sep">/</span>
-        <span className="vk-breadcrumb-current">{patient.fullName}</span>
-      </nav>
+      <Breadcrumb items={[{ label: 'Pasienter', to: '/patients' }, { label: patient.fullName }]} />
 
       {error && (
         <Alert variant="danger" dismissible onClose={() => setError('')}>
@@ -197,10 +247,7 @@ const PatientDetailsPage: React.FC = () => {
               <InfoRow
                 label="Status"
                 value={
-                  <Badge
-                    bg={deviceStatus.variant === 'success' ? '' : deviceStatus.variant}
-                    className={deviceStatus.variant === 'success' ? 'vk-tv-status-connected' : ''}
-                  >
+                  <Badge bg={deviceStatus.color} bordered={deviceStatus.bordered}>
                     {deviceStatus.label}
                   </Badge>
                 }
@@ -211,6 +258,14 @@ const PatientDetailsPage: React.FC = () => {
                 emptyText="Ikke koblet"
               />
             </SectionCard>
+
+            <ClinicalOverviewCard clinical={patient.clinical} />
+            <DiagnosesCard diagnoses={patient.clinical.diagnoses} />
+            <MedicationsCard medications={patient.clinical.medications} />
+            <TreatmentPlanCard
+              treatmentPlan={patient.clinical.treatmentPlan}
+              conditionFlags={patient.clinical.conditionFlags}
+            />
 
             <PatientNotesCard
               patientId={patient.id}
@@ -252,7 +307,11 @@ const PatientDetailsPage: React.FC = () => {
                 ) : (
                   <div className="d-grid gap-3">
                     {patient.upcomingAppointments.map((appointment) => (
-                      <AppointmentCard key={appointment.id} appointment={appointment} />
+                      <AppointmentCard
+                        key={appointment.id}
+                        appointment={appointment}
+                        actions={renderVisitDoc(appointment)}
+                      />
                     ))}
                   </div>
                 ))}
@@ -264,7 +323,11 @@ const PatientDetailsPage: React.FC = () => {
                   <>
                     <div className="d-grid gap-3">
                       {visiblePast.map((appointment) => (
-                        <AppointmentCard key={appointment.id} appointment={appointment} />
+                        <AppointmentCard
+                          key={appointment.id}
+                          appointment={appointment}
+                          actions={renderVisitDoc(appointment)}
+                        />
                       ))}
                     </div>
                     {pastAppointments.length > PAST_PREVIEW_COUNT && (
@@ -324,6 +387,18 @@ const PatientDetailsPage: React.FC = () => {
         targetSupabaseProfileId={patient.supabaseProfileId}
         patientId={patient.id}
         patientName={patient.fullName}
+      />
+
+      <VisitDetailsModal
+        show={detailsVisitId !== null}
+        onClose={() => setDetailsVisitId(null)}
+        visitId={detailsVisitId}
+      />
+
+      <PlannedVisitModal
+        show={plannedVisit !== null}
+        onClose={() => setPlannedVisit(null)}
+        appointment={plannedVisit}
       />
     </div>
   );

@@ -13,7 +13,7 @@
 
 /* Personnel portal — denser */
 body.role-personnel .vk-page-title {
-  font-size: var(--fs-xl); /* 24px */
+  font-size: var(--fs-2xl); /* 32px */
 }
 
 body.role-personnel .vk-page-subtitle {

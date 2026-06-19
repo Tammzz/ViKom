@@ -23,6 +23,13 @@ namespace backend.DAL.Repositories
             return await _context.Users.FindAsync(id);
         }
 
+        public async Task<User?> GetByIdWithMedicationsAsync(string id)
+        {
+            return await _context.Users
+                .Include(u => u.Medications)
+                .FirstOrDefaultAsync(u => u.Id == id);
+        }
+
         public async Task<IEnumerable<User>> GetByRoleAsync(string role)
         {
             return await _context.Users.Where(u => u.Role == role).ToListAsync();

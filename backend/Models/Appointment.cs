@@ -29,7 +29,11 @@ namespace backend.Models
         [DataType(DataType.Time)]
         public TimeSpan EndTime { get; set; }
 
-        [RegularExpression(@"^(Booked|InProgress|Completed|Cancelled)$", ErrorMessage = "Invalid status value.")]
+        [RegularExpression(@"^(Booked|InProgress|Completed|NotCompleted|Cancelled)$", ErrorMessage = "Invalid status value.")]
         public string Status { get; set; } = "Booked";
+
+        // The actual execution of this appointment (one-to-one). Null until a
+        // nurse starts the visit.
+        public Visit? Visit { get; set; }
     }
 }

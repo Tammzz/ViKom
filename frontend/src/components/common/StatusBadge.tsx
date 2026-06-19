@@ -1,6 +1,5 @@
 import React from 'react';
-import { Badge } from 'react-bootstrap';
-import './StatusBadge.css';
+import Badge, { type BadgeColor } from './Badge';
 
 interface StatusBadgeProps {
   status: string;
@@ -8,54 +7,57 @@ interface StatusBadgeProps {
 }
 
 /**
- * Renders a status badge with appropriate Bootstrap styling based on the status value.
- * Supports: Booked, Completed, Cancelled, Available, and default statuses.
+ * Maps a domain status to the shared Badge: a coloured pill with a Norwegian
+ * label. Supports appointment + visit statuses.
  */
 const StatusBadge: React.FC<StatusBadgeProps> = ({ status, className = '' }) => {
-  const getVariant = (status: string): string => {
-    const normalizedStatus = status.toLowerCase();
-    switch (normalizedStatus) {
+  const normalized = status.toLowerCase();
+
+  const color = ((): BadgeColor => {
+    switch (normalized) {
       case 'booked':
         return 'info';
       case 'inprogress':
+      case 'active':
         return 'warning';
       case 'completed':
+      case 'available':
         return 'success';
       case 'cancelled':
         return 'danger';
-      case 'available':
-        return 'success';
+      case 'notcompleted':
+      case 'incomplete':
+        return 'neutral';
       default:
-        return 'secondary';
+        return 'neutral';
     }
-  };
+  })();
 
-  const getDisplayText = (status: string): string => {
-    const normalized = status.toLowerCase();
+  const label = ((): string => {
     switch (normalized) {
       case 'booked':
         return 'Planlagt';
       case 'inprogress':
+      case 'active':
         return 'Pågår';
       case 'completed':
         return 'Fullført';
       case 'cancelled':
         return 'Avlyst';
+      case 'notcompleted':
+        return 'Ikke gjennomført';
+      case 'incomplete':
+        return 'Ikke fullført';
       case 'available':
         return 'Tilgjengelig';
       default:
         return status;
     }
-  };
-
-  const isPlanned = status.toLowerCase() === 'booked';
+  })();
 
   return (
-    <Badge
-      bg={isPlanned ? '' : getVariant(status)}
-      className={`${isPlanned ? 'vk-status-planned' : ''} ${className}`.trim()}
-    >
-      {getDisplayText(status)}
+    <Badge bg={color} className={className}>
+      {label}
     </Badge>
   );
 };

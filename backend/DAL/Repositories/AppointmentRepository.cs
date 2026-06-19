@@ -16,6 +16,7 @@ namespace backend.DAL.Repositories
         {
             return await _context.Appointments
                 .Include(a => a.Patient)
+                .Include(a => a.Visit)
                 .Include(a => a.Availability)
                 .ThenInclude(av => av.Personnel)
                 .ToListAsync();
@@ -25,6 +26,7 @@ namespace backend.DAL.Repositories
         {
             return await _context.Appointments
                 .Include(a => a.Patient)
+                .Include(a => a.Visit)
                 .Include(a => a.Availability)
                 .ThenInclude(av => av.Personnel)
                 .FirstOrDefaultAsync(a => a.Id == id);
@@ -34,6 +36,7 @@ namespace backend.DAL.Repositories
         {
             return await _context.Appointments
                 .Include(a => a.Patient)
+                .Include(a => a.Visit)
                 .Include(a => a.Availability)
                 .ThenInclude(av => av.Personnel)
                 .Where(a => a.PatientId == patientId)
@@ -44,6 +47,7 @@ namespace backend.DAL.Repositories
         {
             var appointments = await _context.Appointments
                 .Include(a => a.Patient)
+                .Include(a => a.Visit)
                 .Include(a => a.Availability)
                 .ThenInclude(av => av.Personnel)
                 .Where(a => a.Availability.PersonnelId == personnelId)
@@ -56,6 +60,7 @@ namespace backend.DAL.Repositories
         {
             var appointments = await _context.Appointments
                 .Include(a => a.Patient)
+                .Include(a => a.Visit)
                 .Include(a => a.Availability)
                 .ThenInclude(av => av.Personnel)
                 .Where(a => a.Availability.PersonnelId == personnelId 
@@ -72,6 +77,7 @@ namespace backend.DAL.Repositories
             var today = DateTime.Today;
             var appointments = await _context.Appointments
                 .Include(a => a.Patient)
+                .Include(a => a.Visit)
                 .Include(a => a.Availability)
                 .ThenInclude(av => av.Personnel)
                 .Where(a => a.PatientId == patientId && a.Availability.Date >= today && a.Status == "Booked")
@@ -90,6 +96,7 @@ namespace backend.DAL.Repositories
             var today = DateTime.Today;
             var appointments = await _context.Appointments
                 .Include(a => a.Patient)
+                .Include(a => a.Visit)
                 .Include(a => a.Availability)
                 .ThenInclude(av => av.Personnel)
                 .Where(a => a.Availability.PersonnelId == personnelId && a.Availability.Date >= today && a.Status == "Booked")
@@ -138,6 +145,7 @@ namespace backend.DAL.Repositories
             var today = DateTime.Today;
             var appointments = await _context.Appointments
                 .Include(a => a.Patient)
+                .Include(a => a.Visit)
                 .Include(a => a.Availability)
                 .ThenInclude(av => av.Personnel)
                 .Where(a => a.Availability.PersonnelId == personnelId && a.Availability.Date < today)
@@ -156,6 +164,7 @@ namespace backend.DAL.Repositories
             var today = DateTime.Today;
             var appointments = await _context.Appointments
                 .Include(a => a.Patient)
+                .Include(a => a.Visit)
                 .Include(a => a.Availability)
                 .ThenInclude(av => av.Personnel)
                 .Where(a => a.PatientId == patientId && a.Availability.Date < today)

@@ -116,11 +116,6 @@
   align-items: flex-end;
 }
 
-.planning-overview-page .task-type-badge,
-.planning-overview-page .area-badge {
-  font-size: var(--fs-xs);
-}
-
 .planning-overview-page .visit-details {
   display: flex;
   justify-content: space-between;

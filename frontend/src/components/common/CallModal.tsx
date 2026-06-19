@@ -3,8 +3,12 @@ import { Modal, Button, Spinner, Alert } from 'react-bootstrap';
 import { signalingService } from '../../services/SupabaseSignalingService';
 import { getUserInfo } from '../../auth/AuthService';
 import PatientService from '../../patients/services/PatientService';
+import VisitService from '../../visits/services/VisitService';
 
 export type CallState = 'Idle' | 'Calling' | 'Ringing' | 'Accepted' | 'Declined' | 'Ended' | 'Failed';
+
+/** Coarse result of a call, reported to the visit workspace via onOutcome. */
+export type CallOutcome = 'Answered' | 'Declined' | 'Missed' | 'Failed';
 
 interface CallModalProps {
   show: boolean;
@@ -12,11 +16,18 @@ interface CallModalProps {
   targetSupabaseProfileId?: string | null;
   patientId?: string;
   patientName: string;
+  /** When set, the call is logged as an attempt of this visit. */
+  visitId?: number;
+  /** Reports the final outcome after the modal closes (used by the visit page). */
+  onOutcome?: (outcome: CallOutcome) => void;
 }
 
-const CallModal: React.FC<CallModalProps> = ({ show, onHide, targetSupabaseProfileId, patientId, patientName }) => {
+const CallModal: React.FC<CallModalProps> = ({ show, onHide, targetSupabaseProfileId, patientId, patientName, visitId, onOutcome }) => {
   const [callState, setCallState] = useState<CallState>('Idle');
   const [errorMessage, setErrorMessage] = useState<string>('');
+
+  // Best-known final outcome of this call, reported on close.
+  const outcomeRef = useRef<CallOutcome | null>(null);
 
   // Mirror callState in a ref so the signaling listeners (registered once per
   // open) always read the latest value without relying on a stale closure.
@@ -56,6 +67,7 @@ const CallModal: React.FC<CallModalProps> = ({ show, onHide, targetSupabaseProfi
     // Listen for call answers
     const onCallAnswer = (payload: any) => {
       console.log('Call answered:', payload);
+      outcomeRef.current = 'Answered';
       setCallState('Accepted');
       updateCallStatus('Answered');
     };
@@ -63,6 +75,7 @@ const CallModal: React.FC<CallModalProps> = ({ show, onHide, targetSupabaseProfi
     // Listen for call rejections
     const onCallRejected = (payload: any) => {
       console.log('Call rejected:', payload);
+      if (outcomeRef.current !== 'Answered') outcomeRef.current = 'Declined';
       setCallState('Declined');
       setErrorMessage(payload?.reason || 'Pasienten avviste anropet.');
       updateCallStatus('Declined');
@@ -92,6 +105,7 @@ const CallModal: React.FC<CallModalProps> = ({ show, onHide, targetSupabaseProfi
     // Reset state when modal opens, then place the call.
     callLogIdRef.current = null;
     callLogCreateRef.current = null;
+    outcomeRef.current = null;
     setCallState('Calling');
     setErrorMessage('');
     initiateCall();
@@ -106,12 +120,14 @@ const CallModal: React.FC<CallModalProps> = ({ show, onHide, targetSupabaseProfi
 
   const initiateCall = async () => {
     if (!targetSupabaseProfileId) {
+      outcomeRef.current = 'Failed';
       setCallState('Failed');
       setErrorMessage('Pasienten har ikke en gyldig TV-profil (Supabase ID) koblet til seg.');
       return;
     }
 
     if (!userInfo || !userInfo.userId) {
+      outcomeRef.current = 'Failed';
       setCallState('Failed');
       setErrorMessage('Kunne ikke hente din brukerinformasjon.');
       return;
@@ -129,8 +145,19 @@ const CallModal: React.FC<CallModalProps> = ({ show, onHide, targetSupabaseProfi
       );
 
       // Record the call attempt (best-effort; never block the call flow). We
-      // keep the promise so a fast outcome can await it before updating.
-      if (patientId) {
+      // keep the promise so a fast outcome can await it before updating. A
+      // visit-scoped call is logged against the visit (carrying the attempt
+      // number); a plain patient call uses the patient call log.
+      if (visitId) {
+        callLogCreateRef.current = (async () => {
+          try {
+            const attempt = await VisitService.logCallAttempt(visitId, { status: 'Initiated' });
+            callLogIdRef.current = attempt.id;
+          } catch (e) {
+            console.warn('Failed to log visit call attempt', e);
+          }
+        })();
+      } else if (patientId) {
         callLogCreateRef.current = (async () => {
           try {
             const logged = await PatientService.createCall(patientId);
@@ -148,6 +175,7 @@ const CallModal: React.FC<CallModalProps> = ({ show, onHide, targetSupabaseProfi
 
     } catch (e) {
       console.error('Anrop feilet:', e);
+      outcomeRef.current = 'Failed';
       setCallState('Failed');
       setErrorMessage('En systemfeil oppstod ved forsøk på å ringe pasienten.');
     }
@@ -167,11 +195,15 @@ const CallModal: React.FC<CallModalProps> = ({ show, onHide, targetSupabaseProfi
       }
       // Record the final outcome: a hung-up accepted call vs. an unanswered one.
       await updateCallStatus(callState === 'Accepted' ? 'Ended' : 'Missed');
+      // An accepted call that the nurse hangs up still counts as "reached".
+      if (callState === 'Accepted') outcomeRef.current = 'Answered';
     }
     // Tear down the realtime subscription so it doesn't linger after the modal
     // closes; it is re-initialized on the next call.
     signalingService.disconnect();
     setCallState('Idle');
+    // Report the outcome so a visit workspace can decide what to show next.
+    onOutcome?.(outcomeRef.current ?? 'Missed');
     onHide();
   };
 

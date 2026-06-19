@@ -22,6 +22,26 @@ export interface CallLogDto {
   status: string; // "Initiated" | "Answered" | "Declined" | "Ended" | "Missed"
 }
 
+// A single current medication (name + dosage + schedule)
+export interface Medication {
+  name: string;
+  dosage?: string | null;
+  schedule?: string | null;
+}
+
+// Read-only clinical profile shown on the visit workspace and patient page
+export interface PatientClinical {
+  dateOfBirth?: string | null;
+  nextOfKinName?: string | null;
+  nextOfKinRelation?: string | null;
+  generalPractitioner?: string | null;
+  allergies?: string | null;
+  diagnoses: string[];
+  medications: Medication[];
+  conditionFlags: string[];
+  treatmentPlan?: string | null;
+}
+
 // Patient details with appointments
 export interface PatientDetailsDto {
   id: string;
@@ -37,6 +57,7 @@ export interface PatientDetailsDto {
   upcomingAppointments: AppointmentSummary[];
   pastAppointments: AppointmentSummary[];
   recentCalls: CallLogDto[];
+  clinical: PatientClinical;
 }
 
 // Payload for updating a patient's contact details

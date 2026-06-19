@@ -25,8 +25,28 @@ namespace backend.Models
 
         public DateTime StartedAt { get; set; }
 
-        // "Initiated", "Answered", "Declined", "Ended", "Missed"
-        [RegularExpression(@"^(Initiated|Answered|Declined|Ended|Missed)$", ErrorMessage = "Invalid call status value.")]
+        // "Initiated", "Answered", "Declined", "Ended", "Missed", "Failed"
+        [RegularExpression(@"^(Initiated|Answered|Declined|Ended|Missed|Failed)$", ErrorMessage = "Invalid call status value.")]
         public string Status { get; set; } = "Initiated";
+
+        // Optional link to the visit this call attempt belongs to. A plain
+        // "Ring pasient" from the patient page leaves these null; a call placed
+        // during a digital visit carries the visit/appointment + attempt number.
+        public int? VisitId { get; set; }
+
+        [ForeignKey("VisitId")]
+        public Visit? Visit { get; set; }
+
+        public int? AppointmentId { get; set; }
+
+        // 1-based position of this attempt within its visit (null for non-visit calls).
+        public int? AttemptNumber { get; set; }
+
+        public DateTime? EndedAt { get; set; }
+
+        public int? DurationSeconds { get; set; }
+
+        // Reason a call attempt failed/ended without success (e.g. technical issue).
+        public string? FailureReason { get; set; }
     }
 }

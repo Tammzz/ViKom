@@ -173,6 +173,7 @@ namespace backend.Services
                 PatientId = appointment.PatientId,
                 PatientName = appointment.Patient?.FullName ?? string.Empty,
                 PatientAddress = appointment.Patient?.Address ?? string.Empty,
+                PatientSupabaseProfileId = appointment.Patient?.SupabaseProfileId,
                 AvailabilityId = appointment.AvailabilityId,
                 PersonnelId = appointment.Availability?.PersonnelId ?? string.Empty,
                 PersonnelName = appointment.Availability?.Personnel?.FullName ?? string.Empty,
@@ -181,7 +182,10 @@ namespace backend.Services
                 AvailabilityNotes = appointment.Availability?.Notes ?? string.Empty,
                 StartTime = appointment.StartTime.ToString(@"hh\:mm"),
                 EndTime = appointment.EndTime.ToString(@"hh\:mm"),
-                Status = status
+                Status = status,
+                VisitId = appointment.Visit?.Id,
+                VisitStatus = appointment.Visit?.Status,
+                VisitType = appointment.Visit?.VisitType
             };
         }
     }

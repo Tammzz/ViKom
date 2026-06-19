@@ -88,7 +88,7 @@ const Sidebar: React.FC = () => {
               className={isActive('/appointments') ? 'active' : ''}
             >
               <i className="bi bi-briefcase" aria-hidden="true"></i>
-              Pasientavtaler
+              Avtaler
             </Nav.Link>
             <Nav.Link 
               as={Link} 
@@ -96,15 +96,7 @@ const Sidebar: React.FC = () => {
               className={isActive('/patients') ? 'active' : ''}
             >
               <i className="bi bi-people" aria-hidden="true"></i>
-              Mine pasienter
-            </Nav.Link>
-            <Nav.Link 
-              as={Link} 
-              to="/visit-execution" 
-              className={isActive('/visit-execution') ? 'active' : ''}
-            >
-              <i className="bi bi-clipboard" aria-hidden="true"></i>
-              Besøk
+              Pasienter
             </Nav.Link>
             <Nav.Link 
               as={Link} 

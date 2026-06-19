@@ -1,14 +1,15 @@
-/* ===== AVATAR ===== */
+/* ===== AVATAR =====
+   Rounded-square (squircle) tile with a light surface and bold initials. */
 .vk-avatar {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  border-radius: 50%;
-  background-color: var(--bs-secondary);
-  color: var(--bs-white);
+  border-radius: 28%;
+  background-color: var(--gray-100);
+  color: var(--bs-dark);
   font-family: var(--font-heading);
-  font-weight: 700;
+  font-weight: 800;
   line-height: 1;
   overflow: hidden;
   border: 1px solid var(--bs-dark);
@@ -16,6 +17,10 @@
 
 .vk-avatar-initials {
   text-transform: uppercase;
+  background: var(--bs-dark);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .vk-avatar-img {

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import * as AuthService from '../../auth/AuthService';
 import AppointmentService from '../services/AppointmentService';
 import AppointmentModal from '../components/AppointmentModal';
@@ -8,6 +8,9 @@ import AppointmentCard from '../components/AppointmentCard';
 import PageHeader from '../../components/common/PageHeader';
 import Tabs from '../../components/common/Tabs';
 import EmptyState from '../../components/common/EmptyState';
+import IconButton from '../../components/common/IconButton';
+import VisitDetailsModal from '../../visits/components/VisitDetailsModal';
+import PlannedVisitModal from '../../visits/components/PlannedVisitModal';
 import type { Appointment } from '../types/appointment';
 import './AppointmentListPage.css';
 
@@ -35,6 +38,7 @@ const formatDateTime = (appointment: Appointment) => {
 
 const AppointmentListPage: React.FC = () => {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const tabParam = searchParams.get('tab');
   const userInfo = AuthService.getUserInfo();
   const role = userInfo?.role;
@@ -49,6 +53,8 @@ const AppointmentListPage: React.FC = () => {
   const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | undefined>();
   const [appointmentToDelete, setAppointmentToDelete] = useState<{ id: number; description: string } | null>(null);
+  const [detailsVisitId, setDetailsVisitId] = useState<number | null>(null);
+  const [plannedAppointment, setPlannedAppointment] = useState<Appointment | null>(null);
 
   // Active tab state (depends on user role)
   const [activeTab, setActiveTab] = useState<PersonnelTab | PatientTab>(() => {
@@ -86,15 +92,61 @@ const AppointmentListPage: React.FC = () => {
     loadAppointments();
   }, []);
 
-  // handle updates to appointment status (start/complete)
-  const handleStatusUpdate = async (appointment: Appointment, newStatus: 'InProgress' | 'Completed') => {
-    if (!appointment.id) return;
-    try {
-      await AppointmentService.update(appointment.id, { ...appointment, status: newStatus });
-      await loadAppointments();
-    } catch {
-      setError('Kunne ikke oppdatere avtalen.');
+  // Personnel row actions. Each row gets one document icon: a read-only
+  // "Planlagt besøk" (pre-visit plan) before/while it's planned, or the
+  // post-visit "Besøksdetaljer" once the visit has ended. While a visit is
+  // Active the nurse documents inside the workspace, so no document icon shows.
+  const renderPersonnelActions = (appointment: Appointment) => {
+    if (!appointment.id) return null;
+    const id = appointment.id;
+
+    const visitDone =
+      !!appointment.visitId &&
+      (appointment.visitStatus === 'Completed' ||
+        appointment.visitStatus === 'Incomplete' ||
+        appointment.visitStatus === 'Cancelled');
+
+    // Active visit: the nurse documents inside the workspace — no document icon.
+    if (appointment.visitStatus === 'Active') {
+      return (
+        <button className="btn btn-warning btn-sm" onClick={() => navigate(`/besok/${id}`)}>
+          <i className="bi bi-arrow-right-circle me-1" aria-hidden="true"></i>Fortsett besøk
+        </button>
+      );
     }
+
+    // Planned appointment: start actions + the read-only pre-visit plan.
+    if (appointment.status === 'Booked' || appointment.status === 'InProgress') {
+      return (
+        <>
+          <button className="btn btn-primary btn-sm" onClick={() => navigate(`/besok/${id}`)}>
+            <i className="bi bi-play-circle me-1" aria-hidden="true"></i>Start besøk
+          </button>
+          {appointment.patientSupabaseProfileId && (
+            <button
+              className="btn btn-outline-primary btn-sm"
+              onClick={() => navigate(`/besok/${id}?type=Digital`)}
+            >
+              <i className="bi bi-camera-video me-1" aria-hidden="true"></i>Start digitalt besøk
+            </button>
+          )}
+          <IconButton
+            icon="clipboard-check"
+            title="Planlagt besøk"
+            onClick={() => setPlannedAppointment(appointment)}
+          />
+        </>
+      );
+    }
+
+    // Finished appointment: only the post-visit record, and only if one exists.
+    return visitDone ? (
+      <IconButton
+        icon="journal-text"
+        title="Besøksdetaljer"
+        onClick={() => setDetailsVisitId(appointment.visitId ?? null)}
+      />
+    ) : null;
   };
 
   // filters for patient view
@@ -130,7 +182,9 @@ const AppointmentListPage: React.FC = () => {
   // filters for personnel view
   const scheduledAppointments = appointments.filter((a) => a.status === 'Booked');
   const inProgressAppointments = appointments.filter((a) => a.status === 'InProgress');
-  const completedAppointments = appointments.filter((a) => a.status === 'Completed');
+  const completedAppointments = appointments.filter(
+    (a) => a.status === 'Completed' || a.status === 'NotCompleted',
+  );
   const allActiveAppointments = [...scheduledAppointments, ...inProgressAppointments].sort((a, b) => {
     const dateA = new Date(a.date || '');
     const dateB = new Date(b.date || '');
@@ -261,26 +315,7 @@ const AppointmentListPage: React.FC = () => {
               appointment={appointment}
               dateTimeText={formatDateTime(appointment)}
               subject={appointment.patientName ? `Pasient: ${appointment.patientName}` : null}
-              actions={
-                <>
-                  {appointment.status === 'Booked' && (
-                    <button
-                      className="btn btn-primary btn-sm"
-                      onClick={() => handleStatusUpdate(appointment, 'InProgress')}
-                    >
-                      Start
-                    </button>
-                  )}
-                  {appointment.status === 'InProgress' && (
-                    <button
-                      className="btn btn-success btn-sm"
-                      onClick={() => handleStatusUpdate(appointment, 'Completed')}
-                    >
-                      Fullfør
-                    </button>
-                  )}
-                </>
-              }
+              actions={renderPersonnelActions(appointment)}
             />
           ))}
         </div>
@@ -309,6 +344,18 @@ const AppointmentListPage: React.FC = () => {
         >
           {showList(activeTab as PersonnelTab)}
         </Tabs>
+
+        <VisitDetailsModal
+          show={detailsVisitId !== null}
+          onClose={() => setDetailsVisitId(null)}
+          visitId={detailsVisitId}
+        />
+
+        <PlannedVisitModal
+          show={plannedAppointment !== null}
+          onClose={() => setPlannedAppointment(null)}
+          appointment={plannedAppointment}
+        />
       </div>
     );
   }
@@ -324,7 +371,7 @@ const AppointmentListPage: React.FC = () => {
       {errorBanner}
 
       <PageHeader
-        title="Mine avtaler"
+        title="Avtaler"
         subtitle="Se og administrer alle dine avtaler på ett sted."
         actions={
           <button className="btn btn-primary" onClick={handleCreate}>

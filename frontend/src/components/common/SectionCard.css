@@ -19,7 +19,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  color: var(--bs-secondary);
+  color: var(--bs-dark);
 }
 
 .vk-section-card-icon {

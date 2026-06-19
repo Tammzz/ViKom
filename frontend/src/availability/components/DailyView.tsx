@@ -1,9 +1,10 @@
 import React from 'react';
-import { Table, Badge, Button } from 'react-bootstrap';
+import { Table, Button } from 'react-bootstrap';
 import type { DayAvailability, AvailabilityWindow } from '../types/availability';
 import { formatTime12Hour } from '../../utils/dateUtils';
 import TaskBadges from '../../components/common/TaskBadges';
 import StatusBadge from '../../components/common/StatusBadge';
+import Badge from '../../components/common/Badge';
 import EmptyState from '../../components/common/EmptyState';
 
 interface DailyViewProps {
@@ -40,7 +41,7 @@ const DailyView: React.FC<DailyViewProps> = ({ dayData, onEdit, onDelete, onCrea
                           {formatTime12Hour(window.startTime)} - {formatTime12Hour(window.endTime)}
                         </td>
                         <td className="py-3 px-4 text-dark">
-                          <Badge className={window.isAvailable ? 'bg-success' : 'bg-danger'}>
+                          <Badge bg={window.isAvailable ? 'success' : 'danger'}>
                             {window.isAvailable ? 'Available' : 'Unavailable'}
                           </Badge>
                         </td>

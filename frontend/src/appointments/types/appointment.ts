@@ -13,7 +13,12 @@ export interface Appointment {
   tasks: string;
   startTime: string; // TimeSpan represented as string "HH:mm:ss" or "HH:mm"
   endTime: string;
-  status: 'Booked' | 'InProgress' | 'Completed' | 'Cancelled';
+  status: 'Booked' | 'InProgress' | 'Completed' | 'NotCompleted' | 'Cancelled';
+  patientSupabaseProfileId?: string | null;
+  // Summary of the actual visit for this appointment, if one was started.
+  visitId?: number | null;
+  visitStatus?: 'Active' | 'Completed' | 'Incomplete' | 'Cancelled' | null;
+  visitType?: 'Physical' | 'Digital' | null;
 }
 
 // Appointment create DTO
@@ -40,4 +45,7 @@ export interface AppointmentSummary {
   status: string;
   formattedDateTime?: string;
   availabilityNotes?: string;
+  visitId?: number | null;
+  visitStatus?: string | null;
+  visitType?: string | null;
 }

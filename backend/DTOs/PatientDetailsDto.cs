@@ -15,5 +15,8 @@ namespace backend.DTOs
         public List<AppointmentSummaryDto> UpcomingAppointments { get; set; } = new();
         public List<AppointmentSummaryDto> PastAppointments { get; set; } = new();
         public List<CallLogDto> RecentCalls { get; set; } = new();
+
+        // Read-only clinical profile (overview, diagnoses, medications, plan).
+        public PatientClinicalDto Clinical { get; set; } = new();
     }
 }

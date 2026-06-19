@@ -38,7 +38,7 @@ const App: React.FC = () => {
           <Route path="/availability" element={<PersonnelOnlyRoute><AvailabilityCalendarPage /></PersonnelOnlyRoute>} />
 
           {/* New visit-related routes */}
-          <Route path="/visit-execution" element={<PrivateRoute><VisitExecutionPage /></PrivateRoute>} />
+          <Route path="/besok/:appointmentId" element={<PersonnelOnlyRoute><VisitExecutionPage /></PersonnelOnlyRoute>} />
           <Route path="/task-selection" element={<PrivateRoute><TaskSelectionPage /></PrivateRoute>} />
           <Route path="/preferred-time" element={<PrivateRoute><PreferredTimePage /></PrivateRoute>} />
           <Route path="/planning" element={<PrivateRoute><PlanningOverviewPage /></PrivateRoute>} />

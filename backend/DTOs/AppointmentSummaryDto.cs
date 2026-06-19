@@ -13,5 +13,10 @@ namespace backend.DTOs
         public string Status { get; set; } = string.Empty;
         public string FormattedDateTime { get; set; } = string.Empty;
         public string AvailabilityNotes { get; set; } = string.Empty;
+
+        // Visit summary so history rows can show a notebook icon / real outcome.
+        public int? VisitId { get; set; }
+        public string? VisitStatus { get; set; }
+        public string? VisitType { get; set; }
     }
 }

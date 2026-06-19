@@ -1,9 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Button, Form, Badge, Alert } from 'react-bootstrap';
+import { Button, Form, Alert } from 'react-bootstrap';
 import * as AuthService from '../auth/AuthService';
 import AppointmentService from '../appointments/services/AppointmentService';
 import type { Appointment } from '../appointments/types/appointment';
 import TaskBadges from '../components/common/TaskBadges';
+import Badge from '../components/common/Badge';
 import PageHeader from '../components/common/PageHeader';
 import SectionCard from '../components/common/SectionCard';
 import EmptyState from '../components/common/EmptyState';
@@ -223,10 +224,10 @@ const PlanningOverviewPage: React.FC = () => {
                           <p className="visit-address"><i className="bi bi-geo-alt-fill"></i> {visit.address}</p>
                         </div>
                         <div className="visit-meta">
-                          <Badge bg={visit.taskType === 'Digital' ? 'info' : 'secondary'} className="task-type-badge">
+                          <Badge bg={visit.taskType === 'Digital' ? 'info' : 'neutral'}>
                             {visit.taskType}
                           </Badge>
-                          <Badge bg="light" text="dark" className="area-badge">
+                          <Badge bg="light" bordered>
                             {visit.area}
                           </Badge>
                         </div>

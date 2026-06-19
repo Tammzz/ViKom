@@ -2,6 +2,7 @@ import React from 'react';
 import { Card } from 'react-bootstrap';
 import StatusBadge from '../../components/common/StatusBadge';
 import TaskBadges from '../../components/common/TaskBadges';
+import type { BadgeColor } from '../../components/common/Badge';
 
 /** Minimal shape the card needs — satisfied by both Appointment and AppointmentSummary. */
 interface AppointmentCardData {
@@ -14,7 +15,7 @@ interface AppointmentCardData {
 
 interface AppointmentCardProps {
   appointment: AppointmentCardData;
-  taskVariant?: string;
+  taskVariant?: BadgeColor;
   /** Overrides the date/time line (defaults to formattedDateTime || date). */
   dateTimeText?: React.ReactNode;
   /** Overrides the subject line (defaults to "Ansvarlig: <personnel>"). */
@@ -34,7 +35,7 @@ interface AppointmentCardProps {
  */
 const AppointmentCard: React.FC<AppointmentCardProps> = ({
   appointment,
-  taskVariant = 'secondary',
+  taskVariant = 'neutral',
   dateTimeText,
   subject,
   footerNote,

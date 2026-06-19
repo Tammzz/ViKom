@@ -49,6 +49,15 @@ Stack: React + TypeScript + Vite · Bootstrap 5.3 · react-bootstrap · bootstra
 > swept all ad-hoc raw-rem **text** sizes onto `--fs-*` tokens (PersonnelDashboard
 > ~30 values, PatientProfileHeader, StatTile, Timeline, DataTable, Tabs, Sidebar,
 > TaskBadges). Icons, buttons, Avatar, and the Home hero left as-is.
+> **Increment 9 (done):** badge + button standardization. **One button** app-wide
+> (size tiers collapsed: `.btn-sm`/`.btn-lg` render at the base size); a bordered
+> button is the **IconButton look** — transparent + a single `--bs-dark` border +
+> dark text (all `btn-outline-*` collapse to it) — so colour only ever comes from
+> a solid variant's background. **One badge** via a new shared `Badge` component
+> (`bg` + `bordered` only); `StatusBadge` and `TaskBadges` now wrap it, the
+> header `InfoChip` was merged into it (deleted), and every ad-hoc `<Badge>` /
+> bespoke badge class (TV `vk-tv-status-connected`, `task-type-badge`,
+> `area-badge`, `status-badge`, `vk-status-planned`) was migrated/removed.
 
 ---
 
@@ -139,9 +148,12 @@ focus ring — use everywhere instead of ad-hoc focus shadows).
   - `body.role-personnel` → 14px (`--fs-sm`), denser portal. Form controls
     (`.form-control`/`.form-select`) don't inherit the body size, so a role-aware
     rule in `index.css` drops them to 14px on personnel too.
-- **Buttons:** the base `.btn` is the standard size (matches the Patient Details
-  button). Use `size="sm"` for compact row/card actions and `size="lg"` for
-  prominent submit buttons — both work via `.btn-sm`/`.btn-lg` in `index.css`.
+- **Buttons:** there is **one button size** app-wide (matches `IconButton` / the
+  "Ring pasient" button). `size="sm"`/`"lg"` are intentionally collapsed to the
+  base size in `index.css`, so don't rely on them for density. A button is either
+  **solid** (colour from a `variant` background) or **bordered** (`outline-*` →
+  transparent + one `--bs-dark` border + dark text, the IconButton look). Only the
+  background colour and border presence vary.
 - **Heading scale** (`index.css`, sized from the type tokens — not Bootstrap's
   defaults): `h1 → --fs-2xl (32) · h2 → --fs-xl (24) · h3 → --fs-lg (20) ·
   h4 → --fs-md (18) · h5 → --fs-base (16) · h6 → --fs-sm (14)`. Don't restyle bare
@@ -166,8 +178,9 @@ pattern each one replaces.
 | `DataTable<T>`                           | Config-driven table card                                         | `columns`, `data`, `rowKey`, `onRowClick`, `emptyText`, `emptyIcon`, `hover` | Hand-built `<table>` / Bootstrap `Table` per page   |
 | `SectionCard`                            | Standard card (bordered, light header w/ icon + optional action) | `title`, `icon`, `action`, `bodyClassName`                                   | `.card`/`.appointments-card` + manual header markup |
 | `EmptyState`                             | Centered empty placeholder                                       | `icon`, `text`, `action`                                                     | `text-center py-4` empty blocks / custom `.empty-*` |
-| `StatusBadge`                            | Status → coloured pill + Norwegian label                         | `status`                                                                     | Inline `<Badge>` with manual variant/label mapping  |
-| `TaskBadges`                             | Comma-separated tasks → badges                                   | `tasks`, `variant`                                                           | Splitting + mapping badges inline                   |
+| `Badge`                                  | **The** badge — fixed size/shape; only `bg` + border vary        | `bg` (BadgeColor), `bordered`, `icon`                                        | react-bootstrap `<Badge>`, `InfoChip`, bespoke badge CSS |
+| `StatusBadge`                            | Status → coloured `Badge` + Norwegian label                      | `status`                                                                     | Inline `<Badge>` with manual variant/label mapping  |
+| `TaskBadges`                             | Comma-separated tasks → `Badge`s                                 | `tasks`, `variant`                                                           | Splitting + mapping badges inline                   |
 | `InfoRow`                                | Label/value row (icon, empty fallback)                           | `label`, `value`, `icon`, `emptyText`                                        | `ListGroup.Item d-flex justify-content-between`     |
 | `StatTile`                               | Compact KPI tile (icon + value + label)                          | `label`, `value`, `icon`                                                     | Custom stat-card markup                             |
 | `IconButton`                             | Square outlined icon-only button                                 | `icon`, `onClick`, `title`, `loading`, `disabled`                            | Bare `<button>` with an icon                        |
@@ -206,7 +219,14 @@ toolbars by hand — prefer the shared versions in new work.
 ## 6. Bootstrap conventions
 
 - **Do** use utilities for layout/spacing/flex/typography sizing.
-- **Do** use react-bootstrap `Alert`, `Badge`, `Button`, `Card`, `Modal`, `Nav`.
+- **Do** use react-bootstrap `Alert`, `Button`, `Card`, `Modal`, `Nav`.
+- **Badges:** use the shared **`Badge`** component (never react-bootstrap `<Badge>`
+  or a bespoke badge class). The only knobs are `bg` (a `BadgeColor`) and
+  `bordered`; font-size/padding/radius/border-colour are fixed. Badges are
+  smaller than buttons (they live inside modules).
+- **Buttons:** one size everywhere; colour via a solid `variant`, or `outline-*`
+  for the single dark-bordered style. Don't reintroduce `btn-sm`/`btn-lg` density
+  or semantic-coloured outlines.
 - **Don't** override Bootstrap component classes globally beyond the intentional
   theming already in `index.css` (`.btn`, `.card`, `.badge`).
 - **Don't** fight a Bootstrap `bg-*`/utility with `!important`; omit the

@@ -7,7 +7,8 @@ Web administration portal.
 Tech:
 
 - React
-- Next.js
+- Vite
+- React Router
 - TypeScript
 
 Focus:

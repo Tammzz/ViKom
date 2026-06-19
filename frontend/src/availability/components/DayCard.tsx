@@ -1,5 +1,5 @@
 import React from 'react';
-import { Badge } from 'react-bootstrap';
+import Badge, { type BadgeColor } from '../../components/common/Badge';
 import type { DayAvailability, AvailabilityWindow } from '../types/availability';
 import { formatTime12Hour } from '../../utils/dateUtils';
 
@@ -18,15 +18,15 @@ const DayCard: React.FC<DayCardProps> = ({
   isToday, 
   onClick 
 }) => {
-  const getStatusBadgeClass = (status: string): string => {
+  const statusColor = (status: string): BadgeColor => {
     switch (status) {
       case 'Available':
-        return 'bg-success';
+        return 'success';
       case 'Unavailable':
-        return 'bg-danger';
+        return 'danger';
       case 'Free':
       default:
-        return 'bg-secondary';
+        return 'neutral';
     }
   };
 
@@ -54,7 +54,7 @@ const DayCard: React.FC<DayCardProps> = ({
       </div>
 
       <div className="day-card-body">
-        <Badge className={`status-badge ${getStatusBadgeClass(dayData.status)}`}>
+        <Badge bg={statusColor(dayData.status)} className="status-badge">
           {dayData.status}
         </Badge>
 

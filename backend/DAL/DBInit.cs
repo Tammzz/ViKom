@@ -84,6 +84,10 @@ namespace backend.DAL
             await EnsurePatientPersonnelLinkAsync(context, userManager, "patient@homecare.local", "nurse@homecare.local");
             await EnsurePatientPersonnelLinkAsync(context, userManager, "patient.ingrid@homecare.local", "nurse@homecare.local");
 
+            // Fill the read-only clinical profile (diagnoses, medications, etc.)
+            // for the demo patients so the Besøk workspace has real data.
+            await EnsurePatientClinicalDataAsync(context, userManager);
+
             // Seed availability windows if none exist (NEW SYSTEM)
             if (!context.AvailabilityWindows.Any())
             {
@@ -132,95 +136,255 @@ namespace backend.DAL
                     }
                     await context.SaveChangesAsync();
 
-                    // Seed test appointments
-                    var patient = context.Users.FirstOrDefault(u => u.Role == "Patient");
-                    if (patient != null)
-                    {
-                        // 1. Create window for 3 days ago with full day range (9:00-17:00)
-                        var pastWindow = new AvailabilityWindow
-                        {
-                            PersonnelId = personnel.Id,
-                            Date = DateTime.Today.AddDays(-3),
-                            StartTime = new TimeSpan(9, 0, 0),
-                            EndTime = new TimeSpan(17, 0, 0),
-                            IsAvailable = true,
-                            Notes = "Sone A, Enebakkveien 36, 0657 Oslo"
-                        };
-                        context.AvailabilityWindows.Add(pastWindow);
-                        await context.SaveChangesAsync();
-
-                        // Generate slots for past window
-                        var pastSlots = GenerateSlots(pastWindow);
-                        context.Availabilities.AddRange(pastSlots);
-                        await context.SaveChangesAsync();
-
-                        // Create completed appointment in first slot (9:00-10:00)
-                        var completedSlot = pastSlots.FirstOrDefault(s => s.StartTime == new TimeSpan(9, 0, 0));
-                        if (completedSlot != null)
-                        {
-                            var completedAppointment = new Appointment
-                            {
-                                PatientId = patient.Id,
-                                AvailabilityId = completedSlot.Id,
-                                Tasks = "Bathing, Dressing",
-                                StartTime = new TimeSpan(9, 0, 0),
-                                EndTime = new TimeSpan(10, 0, 0),
-                                Status = "Completed"
-                            };
-                            context.Appointments.Add(completedAppointment);
-                        }
-
-                        // Create cancelled appointment in second slot (10:00-11:00)
-                        var cancelledSlot = pastSlots.FirstOrDefault(s => s.StartTime == new TimeSpan(10, 30, 0));
-                        if (cancelledSlot != null)
-                        {
-                            var cancelledAppointment = new Appointment
-                            {
-                                PatientId = patient.Id,
-                                AvailabilityId = cancelledSlot.Id,
-                                Tasks = "Handletur",
-                                StartTime = new TimeSpan(10, 30, 0),
-                                EndTime = new TimeSpan(11, 30, 0),
-                                Status = "Cancelled"
-                            };
-                            context.Appointments.Add(cancelledAppointment);
-                        }
-                        await context.SaveChangesAsync();
-
-                        // 2. Create booked appointment for tomorrow (upcoming appointment)
-                        var tomorrowSlot = context.Availabilities
-                            .Where(a => a.PersonnelId == personnel.Id && a.Date == DateTime.Today.AddDays(1))
-                            .AsEnumerable()
-                            .OrderBy(a => a.StartTime)
-                            .Skip(1)
-                            .FirstOrDefault();
-
-                        if (tomorrowSlot != null)
-                        {
-                            var upcomingAppointment = new Appointment
-                            {
-                                PatientId = patient.Id,
-                                AvailabilityId = tomorrowSlot.Id,
-                                Tasks = "Medisinhåndtering, Rengjøring",
-                                StartTime = tomorrowSlot.StartTime,
-                                EndTime = tomorrowSlot.EndTime,
-                                Status = "Booked"
-                            };
-                            context.Appointments.Add(upcomingAppointment);
-                            await context.SaveChangesAsync();
-                        }
-                    }
+                    // Appointments themselves are seeded by the canonical demo
+                    // set below (SeedDemoAppointmentsAndVisitsAsync) so the data
+                    // stays small and consistent with the visit architecture.
                 }
             }
 
-            // Ensure timeline demo appointments always exist for today
-            await SeedTodayTimelineDemoAppointmentsAsync(context);
-
-            // Ensure two demo appointments always exist for tomorrow
-            await SeedTomorrowDemoAppointmentsAsync(context);
-
             // Enforce the upcoming 7-day availability pattern used by the dashboard module.
             await EnsureUpcomingWeekAvailabilityPatternAsync(context);
+
+            // Seed the canonical demo set: exactly 5 appointments (2 planned +
+            // 3 completed), where the completed ones carry real Visit records.
+            await SeedDemoAppointmentsAndVisitsAsync(context);
+        }
+
+        /// <summary>
+        /// Fills the read-only clinical profile for the demo patients (only when
+        /// not already set, so it never clobbers later edits). Ingrid matches the
+        /// visit-execution design; Erik gets plausible equivalents.
+        /// </summary>
+        private static async Task EnsurePatientClinicalDataAsync(ApplicationDbContext context, UserManager<User> userManager)
+        {
+            async Task SeedAsync(
+                string userName,
+                DateTime dob,
+                string kinName,
+                string kinRelation,
+                string gp,
+                string allergies,
+                string diagnoses,
+                string conditionFlags,
+                string treatmentPlan,
+                (string Name, string Dosage, string Schedule)[] medications)
+            {
+                var patient = await userManager.FindByNameAsync(userName);
+                if (patient == null) return;
+
+                // Treat a null DateOfBirth as "clinical data not seeded yet".
+                if (patient.DateOfBirth == null)
+                {
+                    patient.DateOfBirth = dob;
+                    patient.NextOfKinName = kinName;
+                    patient.NextOfKinRelation = kinRelation;
+                    patient.GeneralPractitioner = gp;
+                    patient.Allergies = allergies;
+                    patient.Diagnoses = diagnoses;
+                    patient.ConditionFlags = conditionFlags;
+                    patient.TreatmentPlan = treatmentPlan;
+                    await userManager.UpdateAsync(patient);
+                }
+
+                var hasMeds = await context.PatientMedications.AnyAsync(m => m.PatientId == patient.Id);
+                if (!hasMeds)
+                {
+                    var order = 0;
+                    foreach (var med in medications)
+                    {
+                        context.PatientMedications.Add(new PatientMedication
+                        {
+                            PatientId = patient.Id,
+                            Name = med.Name,
+                            Dosage = med.Dosage,
+                            Schedule = med.Schedule,
+                            SortOrder = order++
+                        });
+                    }
+                    await context.SaveChangesAsync();
+                }
+            }
+
+            await SeedAsync(
+                "patient.ingrid@homecare.local",
+                new DateTime(1948, 3, 14),
+                "Anne Berg",
+                "datter",
+                "Dr. Lars Holm",
+                "Penicillin",
+                "Hypertensjon, Diabetes type 2, Mild kognitiv svikt",
+                "Stabil tilstand, Mobil med rullator, Selvstendig måltid",
+                "Daglig oppfølging av blodtrykk og blodsukker. Støtte til morgenstell og medisinhåndtering. Observere generell tilstand og kognitiv funksjon. Rapporter avvik til fastlege.",
+                new[]
+                {
+                    ("Metformin", "500 mg", "2× daglig — morgen og kveld"),
+                    ("Lisinopril", "10 mg", "1× daglig — morgen"),
+                    ("Paracet", "500 mg", "Ved behov, maks 4× daglig"),
+                });
+
+            await SeedAsync(
+                "patient@homecare.local",
+                new DateTime(1952, 7, 22),
+                "Maria Johansen",
+                "kone",
+                "Dr. Sofie Lind",
+                "Ingen kjente",
+                "KOLS, Hjertesvikt",
+                "Stabil tilstand, Trenger noe tilsyn",
+                "Oppfølging av respirasjon og medisinering. Bistand til daglige gjøremål og sårstell. Rapporter forverring av pusten til fastlege.",
+                new[]
+                {
+                    ("Salbutamol inhalator", "100 mikrogram", "Ved behov"),
+                    ("Furosemid", "40 mg", "1× daglig — morgen"),
+                });
+        }
+
+        /// <summary>
+        /// Seeds the canonical demo data on a fresh database: exactly five
+        /// appointments — two planned (future, Booked) and three completed past
+        /// appointments, each with a real <see cref="Visit"/> record (a completed
+        /// physical visit, a completed digital visit with call attempts, and a
+        /// not-completed digital visit). Runs only when no appointments exist so
+        /// it never disturbs appointments created through the app.
+        /// </summary>
+        private static async Task SeedDemoAppointmentsAndVisitsAsync(ApplicationDbContext context)
+        {
+            if (await context.Appointments.AnyAsync()) return;
+
+            var nurse = await context.Users.FirstOrDefaultAsync(u => u.Role == "Personnel");
+            var erik = await context.Users.FirstOrDefaultAsync(u => u.UserName == "patient@homecare.local");
+            var ingrid = await context.Users.FirstOrDefaultAsync(u => u.UserName == "patient.ingrid@homecare.local");
+            if (nurse == null || erik == null || ingrid == null) return;
+
+            var today = DateTime.Today;
+
+            async Task<Availability> NewSlotAsync(DateTime date, TimeSpan start, TimeSpan end, string note)
+            {
+                var slot = new Availability
+                {
+                    PersonnelId = nurse.Id,
+                    Date = date,
+                    StartTime = start,
+                    EndTime = end,
+                    Notes = note
+                };
+                context.Availabilities.Add(slot);
+                await context.SaveChangesAsync();
+                return slot;
+            }
+
+            // --- 2 planned (future, Booked) ---
+            var planned = new[]
+            {
+                new { Patient = erik, Date = today.AddDays(1), Start = new TimeSpan(10, 0, 0), End = new TimeSpan(11, 0, 0), Tasks = "Medisinhåndtering, Blodtrykksmåling", Note = "Sone A, Hagegata 25, 0653 Oslo" },
+                new { Patient = ingrid, Date = today.AddDays(2), Start = new TimeSpan(12, 0, 0), End = new TimeSpan(13, 0, 0), Tasks = "Sårstell, Tilsyn", Note = "Sone A, Grensen 12, 0159 Oslo" },
+            };
+            foreach (var p in planned)
+            {
+                var slot = await NewSlotAsync(p.Date, p.Start, p.End, p.Note);
+                context.Appointments.Add(new Appointment
+                {
+                    PatientId = p.Patient.Id,
+                    AvailabilityId = slot.Id,
+                    Tasks = p.Tasks,
+                    StartTime = p.Start,
+                    EndTime = p.End,
+                    Status = "Booked"
+                });
+            }
+            await context.SaveChangesAsync();
+
+            // --- 3 completed (past), each with a Visit record ---
+            var completed = new[]
+            {
+                new { Patient = erik,   DayBack = 2, Start = new TimeSpan(9, 0, 0),  End = new TimeSpan(10, 0, 0), Tasks = "Bathing, Dressing", Type = "Physical", Outcome = "Completed", Note = "Sone A, Hagegata 25, 0653 Oslo" },
+                new { Patient = ingrid, DayBack = 3, Start = new TimeSpan(11, 0, 0), End = new TimeSpan(12, 0, 0), Tasks = "Medisinhåndtering, Tilsyn", Type = "Digital", Outcome = "Completed", Note = "Digitalt" },
+                new { Patient = ingrid, DayBack = 5, Start = new TimeSpan(13, 0, 0), End = new TimeSpan(14, 0, 0), Tasks = "Hjelp til måltid, Oppfølging av ernæring", Type = "Digital", Outcome = "Incomplete", Note = "Digitalt" },
+            };
+
+            foreach (var c in completed)
+            {
+                var date = today.AddDays(-c.DayBack);
+                var startedAt = date + c.Start;
+                var endedAt = date + c.End;
+                var incomplete = c.Outcome == "Incomplete";
+
+                var slot = await NewSlotAsync(date, c.Start, c.End, c.Note);
+                var appt = new Appointment
+                {
+                    PatientId = c.Patient.Id,
+                    AvailabilityId = slot.Id,
+                    Tasks = c.Tasks,
+                    StartTime = c.Start,
+                    EndTime = c.End,
+                    Status = incomplete ? "NotCompleted" : "Completed"
+                };
+                context.Appointments.Add(appt);
+                await context.SaveChangesAsync();
+
+                var visit = new Visit
+                {
+                    AppointmentId = appt.Id,
+                    PatientId = c.Patient.Id,
+                    ResponsibleUserId = nurse.Id,
+                    VisitType = c.Type,
+                    Status = c.Outcome,
+                    StartedAt = startedAt,
+                    EndedAt = endedAt,
+                    CompletedAt = incomplete ? (DateTime?)null : endedAt,
+                    FollowUpRequired = false,
+                    OutcomeReason = incomplete ? "Pasienten svarte ikke" : null,
+                    Notes = incomplete
+                        ? "Pasienten svarte ikke etter tre forsøk. Mulig hørsel/TV-volum-problem."
+                        : "Besøket ble gjennomført som planlagt. Pasienten var i god form.",
+                    Tasks = c.Tasks
+                        .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                        .Select(t => new VisitTask
+                        {
+                            Title = t,
+                            Status = incomplete ? "Pending" : "Completed",
+                            CompletedAt = incomplete ? (DateTime?)null : endedAt
+                        })
+                        .ToList()
+                };
+                context.Visits.Add(visit);
+                await context.SaveChangesAsync();
+
+                if (c.Type == "Digital")
+                {
+                    if (incomplete)
+                    {
+                        for (var i = 1; i <= 3; i++)
+                        {
+                            context.CallLogs.Add(MakeAttempt(visit, i, "Missed", startedAt.AddMinutes((i - 1) * 3), null, null));
+                        }
+                    }
+                    else
+                    {
+                        // No answer, then reached on the second attempt.
+                        var answeredAt = startedAt.AddMinutes(3);
+                        context.CallLogs.Add(MakeAttempt(visit, 1, "Missed", startedAt, null, null));
+                        context.CallLogs.Add(MakeAttempt(visit, 2, "Answered", answeredAt, endedAt, (int)(endedAt - answeredAt).TotalSeconds));
+                    }
+                    await context.SaveChangesAsync();
+                }
+            }
+        }
+
+        private static CallLog MakeAttempt(Visit visit, int number, string status, DateTime startedAt, DateTime? endedAt, int? durationSeconds)
+        {
+            return new CallLog
+            {
+                PatientId = visit.PatientId,
+                PersonnelId = visit.ResponsibleUserId,
+                StartedAt = startedAt,
+                Status = status,
+                VisitId = visit.Id,
+                AppointmentId = visit.AppointmentId,
+                AttemptNumber = number,
+                EndedAt = endedAt,
+                DurationSeconds = durationSeconds
+            };
         }
 
         private static async Task ReplaceLegacyAvailabilityNotesAsync(ApplicationDbContext context)
@@ -560,334 +724,6 @@ namespace backend.DAL
                 "Cancelled" => 1,
                 _ => 0
             };
-        }
-
-        private static async Task SeedTodayTimelineDemoAppointmentsAsync(ApplicationDbContext context)
-        {
-            var personnel = await context.Users.FirstOrDefaultAsync(u => u.Role == "Personnel");
-            var patients = await context.Users
-                .Where(u => u.Role == "Patient")
-                .OrderBy(u => u.UserName)
-                .ToListAsync();
-
-            if (personnel == null || patients.Count == 0)
-            {
-                return;
-            }
-
-            var demoPatientIds = patients.Select(p => p.Id).ToHashSet();
-
-            var today = DateTime.Today;
-
-            var timelineEntries = new[]
-            {
-                new
-                {
-                    Start = new TimeSpan(9, 0, 0),
-                    End = new TimeSpan(10, 0, 0),
-                    Tasks = "Medisinhåndtering, Blodtrykksmåling",
-                    VisitType = "Fysisk",
-                    Note = "Sone A, Hagegata 25, 0653 Oslo"
-                },
-                new
-                {
-                    Start = new TimeSpan(10, 30, 0),
-                    End = new TimeSpan(11, 30, 0),
-                    Tasks = "Sårstell, Tilsyn",
-                    VisitType = "Fysisk",
-                    Note = "Sone A, Rolf Hofmos gate 18, 0655 Oslo"
-                },
-                new
-                {
-                    Start = new TimeSpan(12, 0, 0),
-                    End = new TimeSpan(13, 0, 0),
-                    Tasks = "Hjelp til måltid, Oppfølging av ernæring",
-                    VisitType = "Digitalt",
-                    Note = "Digitalt"
-                }
-            };
-
-            var obsoleteTimelineSlots = new[]
-            {
-                new { Start = new TimeSpan(9, 30, 0), End = new TimeSpan(10, 0, 0) },
-                new { Start = new TimeSpan(11, 15, 0), End = new TimeSpan(11, 45, 0) }
-            };
-
-            foreach (var obsoleteSlot in obsoleteTimelineSlots)
-            {
-                var obsoleteAvailability = await context.Availabilities
-                    .Include(a => a.Appointment)
-                    .FirstOrDefaultAsync(a =>
-                        a.PersonnelId == personnel.Id &&
-                        a.Date == today &&
-                        a.StartTime == obsoleteSlot.Start &&
-                        a.EndTime == obsoleteSlot.End);
-
-                if (obsoleteAvailability?.Appointment != null && demoPatientIds.Contains(obsoleteAvailability.Appointment.PatientId))
-                {
-                    context.Appointments.Remove(obsoleteAvailability.Appointment);
-                    context.Availabilities.Remove(obsoleteAvailability);
-                    await context.SaveChangesAsync();
-                }
-            }
-
-            // Remove accidental duplicate appointments that share identical time slots for today.
-            var duplicateTodayAppointments = await context.Appointments
-                .Include(a => a.Availability)
-                .Where(a =>
-                    a.Availability.PersonnelId == personnel.Id &&
-                    a.Availability.Date == today)
-                .OrderBy(a => a.Id)
-                .ToListAsync();
-
-            var duplicateAppointmentsToRemove = duplicateTodayAppointments
-                .GroupBy(a => a.StartTime)
-                .SelectMany(group => group.Skip(1))
-                .ToList();
-
-            if (duplicateAppointmentsToRemove.Count > 0)
-            {
-                context.Appointments.RemoveRange(duplicateAppointmentsToRemove);
-                await context.SaveChangesAsync();
-            }
-
-            // Remove previous seeded demo appointments that no longer match the transport-gap schedule.
-            var validTimelineStarts = timelineEntries.Select(entry => entry.Start).ToHashSet();
-            var outdatedTodayAppointments = await context.Appointments
-                .Include(appointment => appointment.Availability)
-                .Where(appointment =>
-                    appointment.Availability.PersonnelId == personnel.Id
-                    && appointment.Availability.Date == today
-                    && demoPatientIds.Contains(appointment.PatientId)
-                    && !validTimelineStarts.Contains(appointment.StartTime))
-                .ToListAsync();
-
-            if (outdatedTodayAppointments.Count > 0)
-            {
-                context.Appointments.RemoveRange(outdatedTodayAppointments);
-                await context.SaveChangesAsync();
-            }
-
-            for (var index = 0; index < timelineEntries.Length; index++)
-            {
-                var entry = timelineEntries[index];
-                var selectedPatient = patients[index % patients.Count];
-
-                var availability = await context.Availabilities
-                    .Include(a => a.Appointment)
-                    .FirstOrDefaultAsync(a =>
-                        a.PersonnelId == personnel.Id &&
-                        a.Date == today &&
-                        a.StartTime == entry.Start);
-
-                if (availability == null)
-                {
-                    availability = new Availability
-                    {
-                        PersonnelId = personnel.Id,
-                        Date = today,
-                        StartTime = entry.Start,
-                        EndTime = entry.End,
-                        Notes = entry.Note
-                    };
-
-                    context.Availabilities.Add(availability);
-                    await context.SaveChangesAsync();
-                }
-
-                if (availability.Notes != entry.Note)
-                {
-                    availability.Notes = entry.Note;
-                    await context.SaveChangesAsync();
-                }
-
-                if (availability.Appointment != null)
-                {
-                    var existingAppointment = availability.Appointment;
-                    var shouldUpdateAppointment =
-                        existingAppointment.PatientId != selectedPatient.Id ||
-                        existingAppointment.Tasks != entry.Tasks ||
-                        existingAppointment.StartTime != entry.Start ||
-                        existingAppointment.EndTime != entry.End ||
-                        existingAppointment.Status != "Booked";
-
-                    if (shouldUpdateAppointment)
-                    {
-                        existingAppointment.PatientId = selectedPatient.Id;
-                        existingAppointment.Tasks = entry.Tasks;
-                        existingAppointment.StartTime = entry.Start;
-                        existingAppointment.EndTime = entry.End;
-                        existingAppointment.Status = "Booked";
-                        await context.SaveChangesAsync();
-                    }
-
-                    continue;
-                }
-
-                var appointment = new Appointment
-                {
-                    PatientId = selectedPatient.Id,
-                    AvailabilityId = availability.Id,
-                    Tasks = entry.Tasks,
-                    StartTime = entry.Start,
-                    EndTime = entry.End,
-                    Status = "Booked"
-                };
-
-                context.Appointments.Add(appointment);
-                await context.SaveChangesAsync();
-            }
-        }
-
-        private static async Task SeedTomorrowDemoAppointmentsAsync(ApplicationDbContext context)
-        {
-            var personnel = await context.Users.FirstOrDefaultAsync(u => u.Role == "Personnel");
-            var patients = await context.Users
-                .Where(u => u.Role == "Patient")
-                .OrderBy(u => u.UserName)
-                .ToListAsync();
-
-            if (personnel == null || patients.Count == 0)
-            {
-                return;
-            }
-
-            var demoPatientIds = patients.Select(p => p.Id).ToHashSet();
-
-            var tomorrow = DateTime.Today.AddDays(1);
-
-            var tomorrowEntries = new[]
-            {
-                new
-                {
-                    Start = new TimeSpan(11, 0, 0),
-                    End = new TimeSpan(12, 0, 0),
-                    Tasks = "Måltidsstøtte, Oppfølging av ernæring",
-                    VisitType = "Fysisk",
-                    Note = "Sone B, Slettaveien 12, 0595 Oslo"
-                },
-                new
-                {
-                    Start = new TimeSpan(12, 30, 0),
-                    End = new TimeSpan(13, 30, 0),
-                    Tasks = "Sårstell, Medisinhåndtering",
-                    VisitType = "Digitalt",
-                    Note = "Digitalt"
-                }
-            };
-
-            if (!TryGetScheduledWindowForDay(tomorrow.DayOfWeek, out _, out _))
-            {
-                foreach (var entry in tomorrowEntries)
-                {
-                    var availability = await context.Availabilities
-                        .Include(a => a.Appointment)
-                        .FirstOrDefaultAsync(a =>
-                            a.PersonnelId == personnel.Id &&
-                            a.Date == tomorrow &&
-                            a.StartTime == entry.Start);
-
-                    if (availability?.Appointment != null && demoPatientIds.Contains(availability.Appointment.PatientId))
-                    {
-                        context.Appointments.Remove(availability.Appointment);
-                    }
-
-                    if (availability != null)
-                    {
-                        context.Availabilities.Remove(availability);
-                    }
-                }
-
-                await context.SaveChangesAsync();
-                return;
-            }
-
-            // Remove previous seeded demo appointments that no longer match the transport-gap schedule.
-            var validTomorrowStarts = tomorrowEntries.Select(entry => entry.Start).ToHashSet();
-            var outdatedTomorrowAppointments = await context.Appointments
-                .Include(appointment => appointment.Availability)
-                .Where(appointment =>
-                    appointment.Availability.PersonnelId == personnel.Id
-                    && appointment.Availability.Date == tomorrow
-                    && demoPatientIds.Contains(appointment.PatientId)
-                    && !validTomorrowStarts.Contains(appointment.StartTime))
-                .ToListAsync();
-
-            if (outdatedTomorrowAppointments.Count > 0)
-            {
-                context.Appointments.RemoveRange(outdatedTomorrowAppointments);
-                await context.SaveChangesAsync();
-            }
-
-            for (var index = 0; index < tomorrowEntries.Length; index++)
-            {
-                var entry = tomorrowEntries[index];
-                var selectedPatient = patients[index % patients.Count];
-
-                var availability = await context.Availabilities
-                    .Include(a => a.Appointment)
-                    .FirstOrDefaultAsync(a =>
-                        a.PersonnelId == personnel.Id &&
-                        a.Date == tomorrow &&
-                        a.StartTime == entry.Start);
-
-                if (availability == null)
-                {
-                    availability = new Availability
-                    {
-                        PersonnelId = personnel.Id,
-                        Date = tomorrow,
-                        StartTime = entry.Start,
-                        EndTime = entry.End,
-                        Notes = entry.Note
-                    };
-
-                    context.Availabilities.Add(availability);
-                    await context.SaveChangesAsync();
-                }
-
-                if (availability.Notes != entry.Note)
-                {
-                    availability.Notes = entry.Note;
-                    await context.SaveChangesAsync();
-                }
-
-                if (availability.Appointment != null)
-                {
-                    var existingAppointment = availability.Appointment;
-                    var shouldUpdateAppointment =
-                        existingAppointment.PatientId != selectedPatient.Id ||
-                        existingAppointment.Tasks != entry.Tasks ||
-                        existingAppointment.StartTime != entry.Start ||
-                        existingAppointment.EndTime != entry.End ||
-                        existingAppointment.Status != "Booked";
-
-                    if (shouldUpdateAppointment)
-                    {
-                        existingAppointment.PatientId = selectedPatient.Id;
-                        existingAppointment.Tasks = entry.Tasks;
-                        existingAppointment.StartTime = entry.Start;
-                        existingAppointment.EndTime = entry.End;
-                        existingAppointment.Status = "Booked";
-                        await context.SaveChangesAsync();
-                    }
-
-                    continue;
-                }
-
-                var appointment = new Appointment
-                {
-                    PatientId = selectedPatient.Id,
-                    AvailabilityId = availability.Id,
-                    Tasks = entry.Tasks,
-                    StartTime = entry.Start,
-                    EndTime = entry.End,
-                    Status = "Booked"
-                };
-
-                context.Appointments.Add(appointment);
-                await context.SaveChangesAsync();
-            }
         }
 
         private static async Task EnsureUpcomingWeekAvailabilityPatternAsync(ApplicationDbContext context)

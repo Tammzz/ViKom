@@ -83,7 +83,7 @@ const PatientListPage: React.FC = () => {
       )}
 
       <PageHeader
-        title="Mine pasienter"
+        title="Pasienter"
         subtitle="Se og administrer alle pasientene dine."
       />
 

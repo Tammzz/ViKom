@@ -17,36 +17,7 @@
   }
 }
 
-/* Breadcrumb */
-.patient-details-page .vk-breadcrumb {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-  font-size: var(--fs-base);
-}
-
-.patient-details-page .vk-breadcrumb-back {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  color: var(--bs-dark);
-  text-decoration: none;
-  font-weight: 600;
-}
-
-.patient-details-page .vk-breadcrumb-back:hover {
-  text-decoration: underline;
-}
-
-.patient-details-page .vk-breadcrumb-sep {
-  color: var(--gray-500);
-  font-size: var(--fs-sm);
-}
-
-.patient-details-page .vk-breadcrumb-current {
-  color: var(--text-muted);
-}
+/* Breadcrumb styling now lives in the shared Breadcrumb component. */
 
 /* Vertical stack of cards within a column — fills its column height so the
    left and right columns stay equal height (no gap at the bottom). */
@@ -103,16 +74,7 @@
   word-break: break-word;
 }
 
-/* "Koblet til TV-profil" status. No Bootstrap bg-* utility is applied for
-   this case, so the custom colours win without !important. */
-.patient-details-page .badge.vk-tv-status-connected {
-  background-color: #5dc36e;
-  border: 1px solid var(--bs-dark);
-  color: var(--bs-dark);
-  font-weight: 400;
-  padding: 0.45rem 1rem;
-  font-size: var(--fs-xs);
-}
+/* "Koblet til TV-profil" now uses the shared Badge (bg="connected" bordered). */
 
 /* The .vk-tabs-card base styling is shared (components/common/Tabs.css).
    Here it only needs to fill its column height so the right column stays level

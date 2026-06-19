@@ -29,6 +29,15 @@ namespace backend.DAL.Repositories
                 .ToListAsync();
         }
 
+        public async Task<IEnumerable<CallLog>> GetByVisitIdAsync(int visitId)
+        {
+            return await _context.CallLogs
+                .Include(c => c.Personnel)
+                .Where(c => c.VisitId == visitId)
+                .OrderBy(c => c.StartedAt)
+                .ToListAsync();
+        }
+
         public async Task<CallLog> CreateAsync(CallLog callLog)
         {
             _context.CallLogs.Add(callLog);

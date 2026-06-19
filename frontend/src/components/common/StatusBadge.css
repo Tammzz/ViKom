@@ -1,9 +1,0 @@
-/* StatusBadge styles */
-
-/* "Planlagt" (booked) status renders as a neutral light-gray pill.
-   No Bootstrap bg-* utility is applied for this case, so no !important
-   is needed to own the colours here. */
-.badge.vk-status-planned {
-  background-color: var(--gray-200);
-  color: var(--bs-dark);
-}

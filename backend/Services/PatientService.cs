@@ -96,7 +96,7 @@ namespace backend.Services
 
         public async Task<PatientDetailsDto?> GetPatientByIdAsync(string patientId)
         {
-            var patient = await _userRepository.GetByIdAsync(patientId);
+            var patient = await _userRepository.GetByIdWithMedicationsAsync(patientId);
             if (patient == null || !string.Equals(patient.Role, "Patient", StringComparison.OrdinalIgnoreCase))
             {
                 return null;
@@ -124,7 +124,8 @@ namespace backend.Services
                 NotesUpdatedAt = patient.NotesUpdatedAt,
                 UpcomingAppointments = upcomingAppointments.Select(MapToAppointmentSummary).ToList(),
                 PastAppointments = pastAppointments.Select(MapToAppointmentSummary).ToList(),
-                RecentCalls = recentCalls
+                RecentCalls = recentCalls,
+                Clinical = PatientClinicalMapper.ToDto(patient)
             };
         }
 
@@ -201,7 +202,10 @@ namespace backend.Services
                 EndTime = appointment.EndTime.ToString(@"hh\:mm"),
                 Status = appointment.Status,
                 FormattedDateTime = $"{appointment.Availability?.Date:yyyy-MM-dd} {appointment.StartTime:hh\\:mm}-{appointment.EndTime:hh\\:mm}",
-                AvailabilityNotes = appointment.Availability?.Notes ?? string.Empty
+                AvailabilityNotes = appointment.Availability?.Notes ?? string.Empty,
+                VisitId = appointment.Visit?.Id,
+                VisitStatus = appointment.Visit?.Status,
+                VisitType = appointment.Visit?.VisitType
             };
         }
     }

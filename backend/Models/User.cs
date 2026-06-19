@@ -37,5 +37,35 @@ namespace backend.Models
         /// Timestamp (UTC) of the last time <see cref="Notes"/> was updated.
         /// </summary>
         public DateTime? NotesUpdatedAt { get; set; }
+
+        // --- Patient clinical profile (read-only in the app for now) ---
+        // These describe a patient's ongoing care record and are surfaced on the
+        // Besøk workspace and the patient details page. Null/empty for personnel.
+
+        public DateTime? DateOfBirth { get; set; }
+
+        /// <summary>Next of kin / pårørende name (e.g. "Anne Berg").</summary>
+        public string? NextOfKinName { get; set; }
+
+        /// <summary>Relation of the next of kin (e.g. "datter").</summary>
+        public string? NextOfKinRelation { get; set; }
+
+        /// <summary>General practitioner / fastlege (e.g. "Dr. Lars Holm").</summary>
+        public string? GeneralPractitioner { get; set; }
+
+        /// <summary>Known allergies (free text, e.g. "Penicillin").</summary>
+        public string? Allergies { get; set; }
+
+        /// <summary>Comma-separated diagnoses (e.g. "Hypertensjon, Diabetes type 2").</summary>
+        public string? Diagnoses { get; set; }
+
+        /// <summary>Comma-separated condition flags (e.g. "Stabil tilstand, Mobil med rullator").</summary>
+        public string? ConditionFlags { get; set; }
+
+        /// <summary>Free-text treatment/care plan (Behandlingsplan).</summary>
+        public string? TreatmentPlan { get; set; }
+
+        /// <summary>Current medications for this patient.</summary>
+        public ICollection<PatientMedication> Medications { get; set; } = new List<PatientMedication>();
     }
 }
