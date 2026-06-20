@@ -1,13 +1,23 @@
 import React, { useState, useEffect } from 'react';
+import { Dropdown } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { fetchPersonnelDashboard } from '../services/DashboardService';
 import TaskBadges from '../../components/common/TaskBadges';
 import PageHeader from '../../components/common/PageHeader';
+import SectionCard from '../../components/common/SectionCard';
+import StatTile from '../../components/common/StatTile';
 import AppointmentCard from '../../appointments/components/AppointmentCard';
 import EmptyState from '../../components/common/EmptyState';
 import type { PersonnelViewModel } from '../types/dashboard';
 import type { AppointmentSummary } from '../../appointments/types/appointment';
 import './PersonnelDashboard.css';
+
+// Visible labels for the timeline visit-type filter dropdown.
+const TIMELINE_FILTER_LABELS: Record<'alle' | 'fysisk' | 'digitalt', string> = {
+  alle: 'Alle',
+  fysisk: 'Fysisk',
+  digitalt: 'Digitalt',
+};
 
 // "<weekday> <month> <day> • <start> - <end>" line for the recent appointments list.
 const formatRecentDateTime = (appointment: AppointmentSummary) => {
@@ -319,63 +329,16 @@ const PersonnelDashboard: React.FC = () => {
 
       {/* displays quick stats overview with key metrics */}
       <div className="stats-grid">
-        <div className="stat-card">
-          <div className="stat-content">
-            <div className="stat-info">
-              <div className="stat-number">{dashboard.totalPatients}</div>
-              <p className="stat-label">Pasienter</p>
-            </div>
-            <div className="stat-icon">
-              <i className="bi bi-people-fill"></i>
-            </div>
-          </div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-content">
-            <div className="stat-info">
-              <div className="stat-number">{dashboard.appointmentsThisWeek}</div>
-              <p className="stat-label">Denne uken</p>
-            </div>
-            <div className="stat-icon">
-              <i className="bi bi-calendar-check-fill"></i>
-            </div>
-          </div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-content">
-            <div className="stat-info">
-              <div className="stat-number">{dashboard.pendingAppointments}</div>
-              <p className="stat-label">Planlagte</p>
-            </div>
-            <div className="stat-icon">
-              <i className="bi bi-clock-fill"></i>
-            </div>
-          </div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-content">
-            <div className="stat-info">
-              <div className="stat-number">{dashboard.cancelledAppointments}</div>
-              <p className="stat-label">Avlyste</p>
-            </div>
-            <div className="stat-icon">
-              <i className="bi bi-x-circle-fill"></i>
-            </div>
-          </div>
-        </div>
+        <StatTile icon="people" label="Pasienter" value={dashboard.totalPatients} />
+        <StatTile icon="calendar-check" label="Denne uken" value={dashboard.appointmentsThisWeek} />
+        <StatTile icon="clock" label="Planlagte" value={dashboard.pendingAppointments} />
+        <StatTile icon="x-circle" label="Avlyste" value={dashboard.cancelledAppointments} />
       </div>
 
       <div className="top-content">
         <div className="mini-column">
           {/* Calendar overview section */}
-          <div className="card calendar-overview">
-          <div className="card-header">
-            <h2 className="card-title">Kalenderoversikt</h2>
-          </div>
-          <div className="card-body">
+          <SectionCard title="Kalenderoversikt" icon="calendar3" className="calendar-overview">
             <div className="calendar-header-row">
               <button
                 type="button"
@@ -426,27 +389,39 @@ const PersonnelDashboard: React.FC = () => {
                 );
               })}
             </div>
-          </div>
-          </div>
+          </SectionCard>
 
-          <div className="card timeline-overview">
-            <div className="card-header">
-              <h2 className="card-title">Dagens tidslinje</h2>
-              <label className="timeline-filter-wrap">
-                <span className="visually-hidden">Filtrer tidslinje</span>
-                <select
-                  className="timeline-filter-select"
-                  value={timelineFilter}
-                  onChange={(event) => setTimelineFilter(event.target.value as 'alle' | 'fysisk' | 'digitalt')}
+          <SectionCard
+            title="Dagens tidslinje"
+            icon="clock"
+            className="timeline-overview"
+            action={
+              <Dropdown
+                className="timeline-filter"
+                onSelect={(key) => setTimelineFilter((key as 'alle' | 'fysisk' | 'digitalt') ?? 'alle')}
+              >
+                <Dropdown.Toggle
+                  variant="secondary"
+                  className="timeline-filter-toggle"
                   aria-label="Filtrer tidslinje"
                 >
-                  <option value="alle">Alle</option>
-                  <option value="fysisk">Fysisk</option>
-                  <option value="digitalt">Digitalt</option>
-                </select>
-              </label>
-            </div>
-            <div className="card-body">
+                  {TIMELINE_FILTER_LABELS[timelineFilter]}
+                  <i className="bi bi-chevron-down" aria-hidden="true"></i>
+                </Dropdown.Toggle>
+                <Dropdown.Menu
+                  align="end"
+                  className="timeline-filter-menu"
+                  popperConfig={{ modifiers: [{ name: 'offset', options: { offset: [0, 6] } }] }}
+                >
+                  {(Object.keys(TIMELINE_FILTER_LABELS) as Array<'alle' | 'fysisk' | 'digitalt'>).map((key) => (
+                    <Dropdown.Item key={key} eventKey={key} active={timelineFilter === key}>
+                      {TIMELINE_FILTER_LABELS[key]}
+                    </Dropdown.Item>
+                  ))}
+                </Dropdown.Menu>
+              </Dropdown>
+            }
+          >
               <p className="timeline-date-label">{dayTimelineDateLabel}</p>
 
               {timelineItemsWithState.length > 0 ? (
@@ -491,8 +466,7 @@ const PersonnelDashboard: React.FC = () => {
               <Link to="/availability" className="btn btn-secondary btn-sm w-100 mt-3">
                 Vis mer
               </Link>
-            </div>
-          </div>
+          </SectionCard>
         </div>
 
         <div className="availability-column">
@@ -518,14 +492,16 @@ const PersonnelDashboard: React.FC = () => {
             </button>
           </div>
 
-          <div className="card availability-overview">
-            <div className="card-header">
-              <h2 className="card-title">Kommende tilgjengelighet</h2>
-              <Link to="/availability" className="btn btn-secondary btn-sm">
-                +
+          <SectionCard
+            title="Kommende tilgjengelighet"
+            icon="calendar-week"
+            className="availability-overview"
+            action={
+              <Link to="/availability" className="btn btn-secondary btn-sm" aria-label="Se tilgjengelighet">
+                <i className="bi bi-plus-lg"></i>
               </Link>
-            </div>
-            <div className="card-body">
+            }
+          >
               {orderedAvailabilityDateKeys.length > 0 ? (
                 <div className="availability-day-planner">
                   <div className="availability-days-nav">
@@ -575,14 +551,9 @@ const PersonnelDashboard: React.FC = () => {
               ) : (
                 <EmptyState icon="calendar-x" text="Ingen planlagt tilgjengelighet." />
               )}
-            </div>
-          </div>
+          </SectionCard>
 
-          <div className="card">
-            <div className="card-header">
-              <h2 className="card-title">Siste avtaler</h2>
-            </div>
-            <div className="card-body">
+          <SectionCard title="Siste avtaler" icon="clock-history">
               {dashboard.recentAppointments.length > 0 ? (
                 <div className="d-flex flex-column gap-3">
                   {dashboard.recentAppointments.map((appointment) => (
@@ -597,8 +568,7 @@ const PersonnelDashboard: React.FC = () => {
               ) : (
                 <EmptyState icon="calendar-x" text="Ingen nylige avtaler å vise." />
               )}
-            </div>
-          </div>
+          </SectionCard>
         </div>
       </div>
 

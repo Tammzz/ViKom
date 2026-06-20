@@ -124,6 +124,7 @@ const PatientDashboard: React.FC = () => {
           {/* Upcoming Appointments */}
           <SectionCard
             title="Kommende avtaler"
+            icon="calendar-check"
             action={
               <Link to="/appointments" className="btn btn-secondary btn-sm" aria-label="Se alle avtaler">
                 <i className="bi bi-plus-lg"></i>
@@ -156,6 +157,7 @@ const PatientDashboard: React.FC = () => {
           {/* Recent Appointments */}
           <SectionCard
             title="Siste avtaler"
+            icon="clock-history"
             action={
               <Link to="/appointments?tab=past" className="btn btn-secondary btn-sm" aria-label="Se tidligere avtaler">
                 <i className="bi bi-plus-lg"></i>

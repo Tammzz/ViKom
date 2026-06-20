@@ -36,7 +36,7 @@ const PatientProfileHeader: React.FC<PatientProfileHeaderProps> = ({ patient, on
             <p className="vk-profile-eyebrow">Profil</p>
             <h1 className="vk-profile-name">{patient.fullName}</h1>
             <div className="vk-profile-chips">
-              <Badge bg="secondary">Pasient</Badge>
+              {/* <Badge bg="secondary">Pasient</Badge> */}
               {contactChips.map((chip) => (
                 <Badge key={chip.icon} icon={chip.icon} bg="light" bordered>
                   {chip.value}

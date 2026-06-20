@@ -15,7 +15,11 @@ interface StatTileProps {
 const StatTile: React.FC<StatTileProps> = ({ label, value, icon, className = '' }) => {
   return (
     <div className={`vk-stat-tile ${className}`}>
-      {icon && <i className={`bi bi-${icon} vk-stat-tile-icon`} aria-hidden="true"></i>}
+      {icon && (
+        <span className="vk-stat-tile-icon" aria-hidden="true">
+          <i className={`bi bi-${icon}`}></i>
+        </span>
+      )}
       <div className="vk-stat-tile-text">
         <div className="vk-stat-tile-value">{value}</div>
         <div className="vk-stat-tile-label">{label}</div>
