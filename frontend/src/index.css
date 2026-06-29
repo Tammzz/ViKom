@@ -198,6 +198,34 @@ h6 { font-size: var(--fs-sm); }
   overflow: hidden;
 }
 
+/* Interactive lift — add `vk-hoverable` to any clickable card/row to give it a
+   hover affordance: a soft drop shadow and a small upward nudge. */
+.vk-hoverable {
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.vk-hoverable:hover {
+  transform: translateY(-3px);
+  box-shadow: 4px 4px 0 var(--bs-dark);
+}
+
+/* Keyboard focus affordance for clickable cards/rows. */
+.vk-card-clickable:focus-visible {
+  outline: 2px solid var(--bs-dark);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vk-hoverable {
+    transition: box-shadow 0.15s ease;
+  }
+
+  .vk-hoverable:hover {
+    transform: none;
+  }
+}
+
 /* Badge Styling — one consistent pill, smaller than buttons (badges live inside
    modules). The shared Badge component owns colours; this keeps any stray
    react-bootstrap <Badge> consistent too. */

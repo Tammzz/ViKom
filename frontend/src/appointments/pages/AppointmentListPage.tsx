@@ -337,6 +337,12 @@ const AppointmentListPage: React.FC = () => {
               dateTimeText={formatDateTime(appointment)}
               subject={appointment.patientName ? `Pasient: ${appointment.patientName}` : null}
               actions={renderPersonnelActions(appointment)}
+              onClick={
+                appointment.id &&
+                (appointment.status === 'InProgress' || appointment.visitStatus === 'Active')
+                  ? () => navigate(`/besok/${appointment.id}`)
+                  : undefined
+              }
             />
           ))}
         </div>

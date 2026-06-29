@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Alert, Button, Col, Row, Spinner } from 'react-bootstrap';
 import PatientService from '../services/PatientService';
 import Badge, { type BadgeColor } from '../../components/common/Badge';
@@ -58,6 +58,7 @@ const PatientDetailsPage: React.FC = () => {
   // Route key — the patient's username (falls back to the GUID id for patients
   // without one). Child API calls still use the resolved patient.id (GUID).
   const { username: patientKey } = useParams<{ username: string }>();
+  const navigate = useNavigate();
 
   const [patient, setPatient] = useState<PatientDetailsDto | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -163,6 +164,13 @@ const PatientDetailsPage: React.FC = () => {
   const ongoingVisitHref = ongoingVisit
     ? `/besok/${ongoingVisit.id}${ongoingVisit.visitType === 'Digital' ? '?type=Digital' : ''}`
     : undefined;
+
+  // For personnel, clicking a row whose visit is currently Active (pågår) opens
+  // the visit-execution workspace — the same destination as the header shortcut.
+  const visitRowOnClick = (appt: AppointmentSummary) =>
+    isPersonnel && appt.visitStatus === 'Active' && appt.id
+      ? () => navigate(`/besok/${appt.id}${appt.visitType === 'Digital' ? '?type=Digital' : ''}`)
+      : undefined;
 
   // One document icon per appointment card: the post-visit "Besøksdetaljer"
   // once the visit has ended, otherwise the read-only "Planlagt besøk".
@@ -311,6 +319,7 @@ const PatientDetailsPage: React.FC = () => {
                         key={appointment.id}
                         appointment={appointment}
                         actions={renderVisitDoc(appointment)}
+                        onClick={visitRowOnClick(appointment)}
                       />
                     ))}
                   </div>
@@ -327,6 +336,7 @@ const PatientDetailsPage: React.FC = () => {
                           key={appointment.id}
                           appointment={appointment}
                           actions={renderVisitDoc(appointment)}
+                          onClick={visitRowOnClick(appointment)}
                         />
                       ))}
                     </div>

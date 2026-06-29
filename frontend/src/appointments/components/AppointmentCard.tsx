@@ -24,6 +24,8 @@ interface AppointmentCardProps {
   footerNote?: React.ReactNode;
   /** Optional footer actions (buttons). */
   actions?: React.ReactNode;
+  /** When set, the whole card becomes clickable (e.g. to open the visit). */
+  onClick?: () => void;
 }
 
 /**
@@ -40,6 +42,7 @@ const AppointmentCard: React.FC<AppointmentCardProps> = ({
   subject,
   footerNote,
   actions,
+  onClick,
 }) => {
   const subjectNode =
     subject !== undefined
@@ -48,8 +51,25 @@ const AppointmentCard: React.FC<AppointmentCardProps> = ({
       ? `Ansvarlig: ${appointment.personnelName}`
       : 'Ansvarlig ikke oppgitt';
 
+  const clickable = !!onClick;
+
   return (
-    <Card className="border-dark">
+    <Card
+      className={`border-dark vk-hoverable${clickable ? ' vk-card-clickable' : ''}`}
+      onClick={onClick}
+      role={clickable ? 'button' : undefined}
+      tabIndex={clickable ? 0 : undefined}
+      onKeyDown={
+        clickable
+          ? (e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onClick?.();
+              }
+            }
+          : undefined
+      }
+    >
       <Card.Body>
         <div className="d-flex flex-column flex-md-row justify-content-between gap-2 mb-3">
           <div>
@@ -64,7 +84,12 @@ const AppointmentCard: React.FC<AppointmentCardProps> = ({
         <TaskBadges tasks={appointment.tasks} variant={taskVariant} />
 
         {footerNote && <div className="mt-3">{footerNote}</div>}
-        {actions && <div className="d-flex flex-wrap gap-2 mt-3">{actions}</div>}
+        {/* Stop action clicks from also triggering the row's onClick. */}
+        {actions && (
+          <div className="d-flex flex-wrap gap-2 mt-3" onClick={(e) => e.stopPropagation()}>
+            {actions}
+          </div>
+        )}
       </Card.Body>
     </Card>
   );

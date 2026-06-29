@@ -76,7 +76,7 @@ const PatientDashboard: React.FC = () => {
         <div className="dashboard-top-row">
           {/* Book Appointment Card */}
           <Link to="/appointments" className="cta-link">
-            <div className="cta-card">
+            <div className="cta-card vk-hoverable">
               <i className="cta-icon bi bi-calendar-check"></i>
               <h3 className="cta-title">Bestill avtale</h3>
             </div>
@@ -84,7 +84,7 @@ const PatientDashboard: React.FC = () => {
 
           {/* Contact Caregiver Card */}
           <a href="#" className="cta-link" onClick={(e) => e.preventDefault()}>
-            <div className="cta-card">
+            <div className="cta-card vk-hoverable">
               <i className="cta-icon bi bi-envelope"></i>
               <h3 className="cta-title">Kontakt helsehjelp</h3>
             </div>
