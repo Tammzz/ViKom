@@ -86,18 +86,21 @@ The built files will be in the `dist/` directory.
 ## Architecture Patterns
 
 ### 1. Feature-Folder Structure
+
 Components are organized by feature/module, not by technical role.
 
 ### 2. Service Layer Pattern
+
 All API calls are centralized in service files (`services/`). Components never call `fetch()` directly.
 
 **Example:**
-```typescript
-// ❌ Don't do this in components
-const response = await fetch('/api/appointments');
 
-// ✅ Do this instead
-import * as AppointmentService from '../services/AppointmentService';
+```typescript
+// Don't do this in components
+const response = await fetch("/api/appointments");
+
+// Do this instead
+import * as AppointmentService from "../services/AppointmentService";
 const appointments = await AppointmentService.fetchAppointments();
 ```
 
@@ -118,6 +121,7 @@ const appointments = await AppointmentService.fetchAppointments();
 ### 5. TypeScript Usage
 
 All models are strongly typed:
+
 - Props: `React.FC<Props>`
 - State: `useState<Type>()`
 - API responses: Return types defined in services
@@ -133,7 +137,7 @@ All models are strongly typed:
 Update the API URL in `src/shared/config.ts`:
 
 ```typescript
-export const API_URL = 'http://localhost:5043';
+export const API_URL = "http://localhost:5043";
 ```
 
 ## Authentication
@@ -141,6 +145,7 @@ export const API_URL = 'http://localhost:5043';
 JWT tokens are stored in `localStorage` and automatically attached to all authenticated requests via the service layer.
 
 ### Protected Routes
+
 All routes except `/login` require authentication. Unauthenticated users are redirected to the login page.
 
 ## Styling
@@ -153,23 +158,27 @@ All routes except `/login` require authentication. Unauthenticated users are red
 ## Components Overview
 
 ### NavBar
+
 - Fixed top navigation
 - Shows "HomeCare App" branding
 - Account dropdown with logout (when authenticated)
 - Login link (when not authenticated)
 
 ### Sidebar
+
 - Fixed left navigation panel
 - Links to all main sections
 - Active route highlighting
 - Responsive (collapses on mobile)
 
 ### Layout
+
 - Wraps all pages
 - Conditionally renders sidebar for authenticated users
 - Provides consistent structure
 
 ### PrivateRoute
+
 - Protects routes requiring authentication
 - Redirects to `/login` if no token found
 
@@ -184,6 +193,7 @@ Each service file contains CRUD operations for its domain:
 - `DashboardService.ts` - Dashboard data fetching
 
 All services:
+
 - Use shared headers
 - Include JWT tokens automatically
 - Handle errors consistently
@@ -222,12 +232,15 @@ Models mirror the C# backend models:
 ## Troubleshooting
 
 ### CORS Errors
+
 Ensure the backend API has CORS configured to allow requests from `http://localhost:5173`
 
 ### 401 Unauthorized
+
 Token may be expired or invalid. Log out and log back in.
 
 ### Type Errors
+
 Ensure TypeScript definitions match backend DTOs exactly.
 
 ## Resources

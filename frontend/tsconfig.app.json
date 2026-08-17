@@ -8,10 +8,12 @@
     "types": ["vite/client"],
     "skipLibCheck": true,
 
-    /* Path aliases */
-    "baseUrl": ".",
+    /* Path aliases. No "baseUrl": it is deprecated and stops working in
+       TypeScript 7, and since TypeScript 5 "paths" are resolved relative to this
+       file's own directory without it. Keep in sync with resolve.alias in
+       vite.config.ts. */
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["./src/*"]
     },
 
     /* Bundler mode */
