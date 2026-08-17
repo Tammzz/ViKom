@@ -23,8 +23,19 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:5173") // Vite default port
-              .AllowAnyHeader()
+        if (builder.Environment.IsDevelopment())
+        {
+            // Vite walks forward to 5174, 5175, ... when 5173 is taken, so accept any
+            // loopback origin in development rather than pinning a single port.
+            policy.SetIsOriginAllowed(origin =>
+                Uri.TryCreate(origin, UriKind.Absolute, out var uri) && uri.IsLoopback);
+        }
+        else
+        {
+            policy.WithOrigins("http://localhost:5173"); // Vite default port
+        }
+
+        policy.AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
     });
@@ -50,6 +61,15 @@ builder.Services.AddIdentity<User, IdentityRole>(options =>
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 var key = Encoding.UTF8.GetBytes(jwtSettings["Key"]!);
 
+// The TV app signs its patients in against Supabase, so device-facing endpoints
+// need to accept a Supabase-issued token. That is a SECOND scheme registered
+// alongside the default one below — the default is left untouched so the web
+// portal's own JWTs keep working exactly as before.
+var supabaseUrl = builder.Configuration["Supabase:Url"];
+var supabaseJwtSecret = builder.Configuration["Supabase:JwtSecret"];
+var supabaseTokenValidation = backend.Services.SupabaseAuthentication
+    .BuildTokenValidationParameters(supabaseUrl, supabaseJwtSecret, out var supabaseAuthConfigured);
+
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -67,6 +87,15 @@ builder.Services.AddAuthentication(options =>
         ValidAudience = jwtSettings["Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(key)
     };
+})
+.AddJwtBearer(backend.Services.SupabaseAuthentication.Scheme, options =>
+{
+    // Keep "sub" as "sub". By default the handler remaps it onto
+    // ClaimTypes.NameIdentifier, which would make that claim mean "our Identity
+    // GUID" on one scheme and "Supabase profile UUID" on the other — a trap for
+    // anyone reading NameIdentifier without checking which scheme authenticated.
+    options.MapInboundClaims = false;
+    options.TokenValidationParameters = supabaseTokenValidation;
 });
 
 builder.Services.AddAuthorization();
@@ -134,6 +163,14 @@ builder.Logging.AddDebug();
 
 var app = builder.Build();
 
+if (!supabaseAuthConfigured)
+{
+    app.Logger.LogWarning(
+        "Supabase:JwtSecret is not configured (or is shorter than 32 bytes), so " +
+        "/api/tv/* will reject every request with 401. Set it with: " +
+        "dotnet user-secrets set \"Supabase:JwtSecret\" \"<secret>\" --project backend");
+}
+
 // Seed database in development mode
 if (app.Environment.IsDevelopment())
 {
@@ -151,9 +188,17 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+    app.MapGet("/", () => Results.Redirect("/swagger"));
 }
 
-app.UseHttpsRedirection();
+// Skipped in development so a tablet on the LAN can reach the API over plain
+// HTTP. With the redirect on, an Android client following the 307 lands on the
+// self-signed ASP.NET dev certificate, which its TrustManager rejects — and the
+// failure surfaces as an opaque SSLHandshakeException on the device.
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 // Enable CORS
 app.UseCors("AllowFrontend");

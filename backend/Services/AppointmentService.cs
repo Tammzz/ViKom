@@ -271,7 +271,14 @@ namespace backend.Services
                             .Personnel?
                             .FullName
                         ?? string.Empty,
-                    status: appointment.Status,
+                    // Same derived value the REST responses use, so a client mixing
+                    // pushed events with a pulled list cannot see two different
+                    // statuses for one appointment.
+                    status: AppointmentStatusResolver.Resolve(
+                        appointment.Status,
+                        appointment.Availability?.Date ?? default,
+                        appointment.EndTime,
+                        DateTime.Now),
                     shortMessage:
                         string.IsNullOrWhiteSpace(appointment.Tasks)
                             ? "Appointment update"
@@ -368,19 +375,11 @@ namespace backend.Services
         private static AppointmentDto MapToDto(
             Appointment appointment)
         {
-            var status = appointment.Status;
-
-            if (status == "Booked")
-            {
-                var appointmentEndDateTime =
-                    appointment.Availability.Date.Date +
-                    appointment.EndTime;
-
-                if (appointmentEndDateTime < DateTime.Now)
-                {
-                    status = "Completed";
-                }
-            }
+            var status = AppointmentStatusResolver.Resolve(
+                appointment.Status,
+                appointment.Availability.Date,
+                appointment.EndTime,
+                DateTime.Now);
 
             return new AppointmentDto
             {

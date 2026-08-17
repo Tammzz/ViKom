@@ -37,6 +37,21 @@ namespace backend.DAL.Repositories
                 .FirstOrDefaultAsync(u => u.ProfileUsername == username);
         }
 
+        /// <summary>
+        /// Resolves the local user linked to a Supabase profile. Used by the TV
+        /// app's endpoint, which knows only its Supabase auth UUID.
+        ///
+        /// Backed by the unique index IX_AspNetUsers_SupabaseProfileId, so this is
+        /// a single index seek. Comparison is deliberately exact: SQLite '=' on
+        /// TEXT is case-sensitive, and both Supabase UUIDs and the seeded values
+        /// are lowercase. Using lower() here would defeat the index.
+        /// </summary>
+        public async Task<User?> GetBySupabaseProfileIdAsync(string supabaseProfileId)
+        {
+            return await _context.Users
+                .FirstOrDefaultAsync(u => u.SupabaseProfileId == supabaseProfileId);
+        }
+
         public async Task<IEnumerable<User>> GetByRoleAsync(string role)
         {
             return await _context.Users.Where(u => u.Role == role).ToListAsync();

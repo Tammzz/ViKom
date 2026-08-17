@@ -79,6 +79,22 @@ namespace backend.Controllers
         {
             try
             {
+                // A patient may only read their own appointments. Without this, any
+                // authenticated account could enumerate another patient's schedule
+                // by id. Personnel are unaffected, which is how the portal calls it.
+                var role = User.FindFirstValue(ClaimTypes.Role);
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+                if (role == "Patient" && patientId != userId)
+                {
+                    _logger.LogWarning(
+                        "Patient {UserId} attempted to read appointments for {PatientId}",
+                        userId,
+                        patientId);
+
+                    return Forbid();
+                }
+
                 var appointments = await _appointmentService.GetByPatientIdAsync(patientId);
                 return Ok(appointments);
             }

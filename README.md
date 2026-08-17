@@ -37,6 +37,32 @@ dotnet run
 The backend API will start at: **http://localhost:5084**
 Swagger documentation available at: **http://localhost:5084/swagger**
 
+#### Supabase secret (only needed for the TV app's endpoints)
+
+`/api/tv/*` authenticates tokens issued by Supabase Auth, so it needs the
+project's JWT secret. Unlike the anon key this is a real secret, so it is kept
+out of source control in .NET user secrets rather than in `appsettings*.json`:
+
+```bash
+dotnet user-secrets set "Supabase:JwtSecret" "<Supabase dashboard: Settings > API > JWT Secret>" --project backend
+```
+
+Without it the app still starts and the web portal works normally — only
+`/api/tv/*` returns 401, and a warning is logged at startup saying so.
+
+#### Serving the TV app / tablet over the LAN
+
+The default profiles bind to `localhost`, which a physical tablet cannot reach.
+Use the `http-lan` profile instead, which binds all interfaces:
+
+```bash
+dotnet run --project backend --launch-profile http-lan
+```
+
+You will also need an inbound firewall rule for TCP 5084 on your private
+network. HTTPS redirection is disabled in Development so the device can talk
+plain HTTP; production re-enables it automatically.
+
 ### 3. Frontend Setup
 
 Open a **new terminal** and navigate to the frontend directory:
