@@ -22,6 +22,27 @@ namespace backend.Controllers
             _logger = logger;
         }
 
+        /// <summary>
+        /// Whether the caller must be refused access to an appointment belonging to
+        /// <paramref name="appointmentPatientId"/>.
+        ///
+        /// A patient may only see and act on their own appointments. Personnel are
+        /// unrestricted, which is how the web portal uses these endpoints. Defined
+        /// once here so the read and write endpoints cannot drift apart.
+        /// </summary>
+        private bool IsForbiddenForCaller(string? appointmentPatientId)
+        {
+            var role = User.FindFirstValue(ClaimTypes.Role);
+
+            if (role != "Patient")
+                return false;
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            return string.IsNullOrEmpty(userId) ||
+                   !string.Equals(appointmentPatientId, userId, StringComparison.Ordinal);
+        }
+
         // GET: api/appointments
         [HttpGet]
         public async Task<ActionResult<IEnumerable<AppointmentDto>>> GetAppointments()
@@ -79,17 +100,11 @@ namespace backend.Controllers
         {
             try
             {
-                // A patient may only read their own appointments. Without this, any
-                // authenticated account could enumerate another patient's schedule
-                // by id. Personnel are unaffected, which is how the portal calls it.
-                var role = User.FindFirstValue(ClaimTypes.Role);
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-                if (role == "Patient" && patientId != userId)
+                if (IsForbiddenForCaller(patientId))
                 {
                     _logger.LogWarning(
                         "Patient {UserId} attempted to read appointments for {PatientId}",
-                        userId,
+                        User.FindFirstValue(ClaimTypes.NameIdentifier),
                         patientId);
 
                     return Forbid();
@@ -130,6 +145,18 @@ namespace backend.Controllers
                 if (!ModelState.IsValid)
                     return BadRequest(ModelState);
 
+                // patientId arrives in the request body, so without this any
+                // authenticated account could book on another patient's behalf.
+                if (IsForbiddenForCaller(appointmentDto.PatientId))
+                {
+                    _logger.LogWarning(
+                        "Patient {UserId} attempted to create an appointment for {PatientId}",
+                        User.FindFirstValue(ClaimTypes.NameIdentifier),
+                        appointmentDto.PatientId);
+
+                    return Forbid();
+                }
+
                 var created = await _appointmentService.CreateAsync(appointmentDto);
                 return CreatedAtAction(nameof(GetAppointment), new { id = created.Id }, created);
             }
@@ -157,16 +184,30 @@ namespace backend.Controllers
                 if (!ModelState.IsValid)
                     return BadRequest(ModelState);
 
-                // Only personnel are allowed to change appointment status (start/complete)
-                var role = User.FindFirstValue(ClaimTypes.Role);
-                if (!string.IsNullOrEmpty(appointmentDto.Status))
-                {
-                    var existing = await _appointmentService.GetByIdAsync(id);
-                    if (existing == null)
-                        return NotFound();
+                var existing = await _appointmentService.GetByIdAsync(id);
+                if (existing == null)
+                    return NotFound();
 
-                    if (!string.Equals(existing.Status, appointmentDto.Status, StringComparison.Ordinal) && role != "Personnel")
-                        return Forbid();
+                // Ownership is checked before anything else: previously only status
+                // changes were gated, so a patient could edit the tasks on any
+                // appointment just by knowing its id.
+                if (IsForbiddenForCaller(existing.PatientId))
+                {
+                    _logger.LogWarning(
+                        "Patient {UserId} attempted to modify appointment {Id} belonging to {PatientId}",
+                        User.FindFirstValue(ClaimTypes.NameIdentifier),
+                        id,
+                        existing.PatientId);
+
+                    return Forbid();
+                }
+
+                // Only personnel may change the status (start/complete a visit).
+                if (!string.IsNullOrEmpty(appointmentDto.Status) &&
+                    !string.Equals(existing.Status, appointmentDto.Status, StringComparison.Ordinal) &&
+                    User.FindFirstValue(ClaimTypes.Role) != "Personnel")
+                {
+                    return Forbid();
                 }
 
                 await _appointmentService.UpdateAsync(id, appointmentDto);
@@ -190,6 +231,21 @@ namespace backend.Controllers
         {
             try
             {
+                var existing = await _appointmentService.GetByIdAsync(id);
+                if (existing == null)
+                    return NotFound();
+
+                if (IsForbiddenForCaller(existing.PatientId))
+                {
+                    _logger.LogWarning(
+                        "Patient {UserId} attempted to cancel appointment {Id} belonging to {PatientId}",
+                        User.FindFirstValue(ClaimTypes.NameIdentifier),
+                        id,
+                        existing.PatientId);
+
+                    return Forbid();
+                }
+
                 var result = await _appointmentService.DeleteAsync(id);
                 if (!result)
                     return NotFound();
