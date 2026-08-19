@@ -2,22 +2,22 @@
 
 ViKom is a homecare system split across two applications:
 
-* **This repo** — the web portal used by healthcare personnel (React frontend + ASP.NET Core Web API), and the backend that both applications share.
-* **[vikom-tv-app](../vikom-tv-app)** — an Android app used by patients on a TV or tablet, for video calls with their caregiver and for viewing their appointments.
+- **This repo** — the web portal used by healthcare personnel (React frontend + ASP.NET Core Web API), and the backend that both applications share.
+- **[vikom-tv-app](https://github.com/Rahemb/vikom-tv-app)** — an Android app used by patients on a TV or tablet, for video calls with their caregiver and for viewing their appointments.
 
 The backend is the system of record for all clinical data. Supabase is used alongside it for patient identity on the TV app and as a realtime event bus between the two.
 
 ## Prerequisites
 
-* .NET 8.0 SDK
-* Node.js v22 or later
-* A Supabase project (only needed for the calling feature and the TV app endpoints)
+- .NET 8.0 SDK
+- Node.js v22 or later
+- A Supabase project (only needed for the calling feature and the TV app endpoints)
 
 ## Project Structure
 
-* **backend/** — ASP.NET Core Web API with SQLite database
-* **backend.Tests/** — xUnit test project
-* **frontend/** — React + TypeScript + Vite application
+- **backend/** — ASP.NET Core Web API with SQLite database
+- **backend.Tests/** — xUnit test project
+- **frontend/** — React + TypeScript + Vite application
 
 ## Installation & Setup
 
@@ -106,13 +106,13 @@ The frontend starts at **http://localhost:5173**. In Development the backend acc
 
 Seeded automatically in Development. All use the password **Pass123!**
 
-| Role | Username | Notes |
-|---|---|---|
-| Personnel | nurse@homecare.local | Nurse Nora — the main portal account |
-| Patient | patient@homecare.local | Erik Johansen |
-| Patient | patient.ingrid@homecare.local | Ingrid Berg — linked to a Supabase profile, so this is the one to use when testing the TV app |
+| Role      | Username                      | Notes                                                                                         |
+| --------- | ----------------------------- | --------------------------------------------------------------------------------------------- |
+| Personnel | nurse@homecare.local          | Nurse Nora — the main portal account                                                          |
+| Patient   | patient@homecare.local        | Erik Johansen                                                                                 |
+| Patient   | patient.ingrid@homecare.local | Ingrid Berg — linked to a Supabase profile, so this is the one to use when testing the TV app |
 
-The web portal is personnel-only: the patient accounts above are kept because a patient *is* a user row that appointments and visits point at, but they cannot log into the portal (login returns 403). Patients sign in on the TV app through Supabase instead.
+The web portal is personnel-only: the patient accounts above are kept because a patient _is_ a user row that appointments and visits point at, but they cannot log into the portal (login returns 403). Patients sign in on the TV app through Supabase instead.
 
 Only patients with a `SupabaseProfileId` receive realtime appointment events or can be called on a TV. That field is currently set only by the seeder.
 
@@ -125,25 +125,27 @@ dotnet test backend.Tests/backend.Tests.csproj
 ## Technology Stack
 
 ### Backend
-* ASP.NET Core 8.0 Web API
-* Entity Framework Core with SQLite
-* ASP.NET Core Identity
-* JWT bearer authentication — two schemes: the portal's own tokens, and Supabase-issued tokens for the TV app
+
+- ASP.NET Core 8.0 Web API
+- Entity Framework Core with SQLite
+- ASP.NET Core Identity
+- JWT bearer authentication — two schemes: the portal's own tokens, and Supabase-issued tokens for the TV app
 
 ### Frontend
-* React 19 + TypeScript
-* Vite
-* React Router
-* Bootstrap 5 + Bootstrap Icons + React Bootstrap
-* Supabase JS client (realtime signaling for calls)
+
+- React 19 + TypeScript
+- Vite
+- React Router
+- Bootstrap 5 + Bootstrap Icons + React Bootstrap
+- Supabase JS client (realtime signaling for calls)
 
 ## Features
 
-* Role-based authentication (Patient, Personnel)
-* Personnel availability management with weekly and daily calendar views
-* Appointment booking and scheduling
-* Visit ("Besøk") execution workspace with task tracking and visit records
-* Video/audio calls from the portal to a patient's TV app
-* Realtime appointment events pushed to the patient's TV app on create, update and cancel
-* User-specific dashboards
-* Responsive design for mobile and desktop
+- Role-based authentication (Patient, Personnel)
+- Personnel availability management with weekly and daily calendar views
+- Appointment booking and scheduling
+- Visit ("Besøk") execution workspace with task tracking and visit records
+- Video/audio calls from the portal to a patient's TV app
+- Realtime appointment events pushed to the patient's TV app on create, update and cancel
+- User-specific dashboards
+- Responsive design for mobile and desktop
