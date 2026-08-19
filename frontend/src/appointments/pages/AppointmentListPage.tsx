@@ -16,8 +16,6 @@ import './AppointmentListPage.css';
 
 type PersonnelTab = 'all' | 'scheduled' | 'inprogress' | 'completed';
 
-type PatientTab = 'upcoming' | 'past';
-
 const formatDateNorwegian = (dateString?: string) => {
   if (!dateString) return '';
   const date = new Date(dateString);
@@ -37,11 +35,10 @@ const formatDateTime = (appointment: Appointment) => {
 };
 
 const AppointmentListPage: React.FC = () => {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const tabParam = searchParams.get('tab');
   const userInfo = AuthService.getUserInfo();
-  const role = userInfo?.role;
 
   // State management
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -61,28 +58,20 @@ const AppointmentListPage: React.FC = () => {
   // visit archive (/appointments/archive).
   const [completedHidden, setCompletedHidden] = useState<boolean>(false);
 
-  // Active tab state (depends on user role)
-  const [activeTab, setActiveTab] = useState<PersonnelTab | PatientTab>(() => {
-    if (role === 'Personnel') {
-      return (tabParam as PersonnelTab) || 'all';
-    }
-    return (tabParam === 'past' ? 'past' : 'upcoming') as PatientTab;
-  });
+  // Active tab state
+  const [activeTab, setActiveTab] = useState<PersonnelTab>(
+    () => (tabParam as PersonnelTab) || 'all',
+  );
 
-  // loads appointments from the server based on role
+  // loads the logged-in nurse's appointments
   const loadAppointments = async () => {
     try {
       setLoading(true);
       setError('');
 
-      let data: Appointment[] = [];
-      if (role === 'Patient' && userInfo?.userId) {
-        data = await AppointmentService.getByPatientId(userInfo.userId);
-      } else if (role === 'Personnel' && userInfo?.userId) {
-        data = await AppointmentService.getByPersonnelId(userInfo.userId);
-      } else {
-        data = await AppointmentService.getAll();
-      }
+      const data = userInfo?.userId
+        ? await AppointmentService.getByPersonnelId(userInfo.userId)
+        : await AppointmentService.getAll();
 
       setAppointments(data);
     } catch {
@@ -95,6 +84,18 @@ const AppointmentListPage: React.FC = () => {
   // loads appointments on component mount
   useEffect(() => {
     loadAppointments();
+  }, []);
+
+  // The dashboard's "Legg til nytt besøk" lands here with ?ny=1 to open the
+  // create form straight away. The param is cleared so a refresh or back
+  // navigation doesn't reopen the modal.
+  useEffect(() => {
+    if (searchParams.get('ny')) {
+      setSelectedAppointment(undefined);
+      setShowModal(true);
+      setSearchParams({}, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Personnel row actions. Each row gets one document icon: a read-only
@@ -140,6 +141,32 @@ const AppointmentListPage: React.FC = () => {
             title="Planlagt besøk"
             onClick={() => setPlannedAppointment(appointment)}
           />
+          {/* Booking upkeep on the patient's behalf. The backend rejects changes
+              within 24 hours of the start time, so the buttons disable to match. */}
+          {appointment.status === 'Booked' && (
+            <>
+              <IconButton
+                icon="pencil"
+                title={
+                  canModify(appointment)
+                    ? 'Endre avtale'
+                    : 'Kan ikke endres innen 24 timer før avtalen'
+                }
+                disabled={!canModify(appointment)}
+                onClick={() => handleEdit(appointment)}
+              />
+              <IconButton
+                icon="trash"
+                title={
+                  canModify(appointment)
+                    ? 'Avbryt avtale'
+                    : 'Kan ikke avbestilles innen 24 timer før avtalen'
+                }
+                disabled={!canModify(appointment)}
+                onClick={() => handleDelete(appointment)}
+              />
+            </>
+          )}
         </>
       );
     }
@@ -154,36 +181,6 @@ const AppointmentListPage: React.FC = () => {
     ) : null;
   };
 
-  // filters for patient view
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const upcomingAppointments = appointments
-    .filter((apt) => {
-      if (!apt.date) return false;
-      const aptDate = new Date(apt.date);
-      aptDate.setHours(0, 0, 0, 0);
-      return aptDate >= today;
-    })
-    .sort((a, b) => {
-      const dateA = new Date(a.date || '');
-      const dateB = new Date(b.date || '');
-      return dateA.getTime() - dateB.getTime();
-    });
-
-  const pastAppointments = appointments
-    .filter((apt) => {
-      if (!apt.date) return false;
-      const aptDate = new Date(apt.date);
-      aptDate.setHours(0, 0, 0, 0);
-      return aptDate < today;
-    })
-    .sort((a, b) => {
-      const dateA = new Date(a.date || '');
-      const dateB = new Date(b.date || '');
-      return dateB.getTime() - dateA.getTime();
-    });
-
   // filters for personnel view
   const scheduledAppointments = appointments.filter((a) => a.status === 'Booked');
   const inProgressAppointments = appointments.filter((a) => a.status === 'InProgress');
@@ -197,7 +194,7 @@ const AppointmentListPage: React.FC = () => {
     return a.startTime.localeCompare(b.startTime);
   });
 
-  // checks if appointment is within 24 hours (for patient modifications)
+  // checks if appointment is within 24 hours (the backend rejects changes inside that window)
   const isWithin24Hours = (appointment: Appointment): boolean => {
     if (!appointment.date || !appointment.startTime) return false;
 
@@ -208,7 +205,7 @@ const AppointmentListPage: React.FC = () => {
     return hoursUntil < 24;
   };
 
-  // checks if patient appointment can be modified
+  // checks if an appointment can still be changed or cancelled
   const canModify = (appointment: Appointment): boolean => {
     return !isWithin24Hours(appointment) && appointment.status === 'Booked';
   };
@@ -285,224 +282,131 @@ const AppointmentListPage: React.FC = () => {
   }
 
   // Render UI for personnel (nurse) view
-  if (role === 'Personnel') {
-    const personnelTabs = [
-      { key: 'all', label: 'Alle', count: allActiveAppointments.length },
-      { key: 'scheduled', label: 'Planlagt', count: scheduledAppointments.length },
-      { key: 'inprogress', label: 'Pågår', count: inProgressAppointments.length },
-      { key: 'completed', label: 'Fullført', count: completedHidden ? 0 : completedAppointments.length },
-    ];
-
-    const showList = (tab: PersonnelTab) => {
-      // Completed appointments are tidied away on demand; the permanent record
-      // stays available in the visit archive.
-      if (tab === 'completed' && completedHidden) {
-        return (
-          <EmptyState
-            icon="archive"
-            text="Fullførte avtaler er ryddet bort. Se besøksarkivet for historikk."
-            action={
-              <button className="btn btn-outline-primary" onClick={() => navigate('/appointments/archive')}>
-                <i className="bi bi-journals me-2" aria-hidden="true"></i>Åpne besøksarkiv
-              </button>
-            }
-          />
-        );
-      }
-
-      const list =
-        tab === 'all'
-          ? allActiveAppointments
-          : tab === 'scheduled'
-          ? scheduledAppointments
-          : tab === 'inprogress'
-          ? inProgressAppointments
-          : completedAppointments;
-
-      if (list.length === 0) {
-        return (
-          <EmptyState
-            icon="calendar-x"
-            text="Det finnes ingen avtaler som matcher dette filteret."
-          />
-        );
-      }
-
-      return (
-        <div className="d-flex flex-column gap-3">
-          {list.map((appointment) => (
-            <AppointmentCard
-              key={appointment.id}
-              appointment={appointment}
-              dateTimeText={formatDateTime(appointment)}
-              subject={appointment.patientName ? `Pasient: ${appointment.patientName}` : null}
-              actions={renderPersonnelActions(appointment)}
-              onClick={
-                appointment.id &&
-                (appointment.status === 'InProgress' || appointment.visitStatus === 'Active')
-                  ? () => navigate(`/besok/${appointment.id}`)
-                  : undefined
-              }
-            />
-          ))}
-        </div>
-      );
-    };
-
-    return (
-      <div className="appointment-list-page personnel-page">
-        {errorBanner}
-
-        <PageHeader
-          title="Mine pasientavtaler"
-          subtitle="Start og fullfør oppgaver for pasientene dine direkte her."
-          actions={
-            <div className="d-flex align-items-center gap-2">
-              <button
-                className="btn btn-secondary"
-                type="button"
-                disabled={completedHidden || completedAppointments.length === 0}
-                onClick={() => {
-                  setActiveTab('completed');
-                  setCompletedHidden(true);
-                }}
-              >
-                Rydd opp fullførte
-              </button>
-              <IconButton
-                icon="journals"
-                title="Besøksarkiv"
-                onClick={() => navigate('/appointments/archive')}
-              />
-            </div>
-          }
-        />
-
-        <Tabs
-          tabs={personnelTabs}
-          activeKey={activeTab}
-          onChange={(key) => setActiveTab(key as PersonnelTab)}
-          card
-        >
-          {showList(activeTab as PersonnelTab)}
-        </Tabs>
-
-        <VisitDetailsModal
-          show={detailsVisitId !== null}
-          onClose={() => setDetailsVisitId(null)}
-          visitId={detailsVisitId}
-        />
-
-        <PlannedVisitModal
-          show={plannedAppointment !== null}
-          onClose={() => setPlannedAppointment(null)}
-          appointment={plannedAppointment}
-        />
-      </div>
-    );
-  }
-
-  // Render UI for patient view
-  const patientTabs = [
-    { key: 'upcoming', label: 'Kommende', count: upcomingAppointments.length },
-    { key: 'past', label: 'Tidligere', count: pastAppointments.length },
+  const personnelTabs = [
+    { key: 'all', label: 'Alle', count: allActiveAppointments.length },
+    { key: 'scheduled', label: 'Planlagt', count: scheduledAppointments.length },
+    { key: 'inprogress', label: 'Pågår', count: inProgressAppointments.length },
+    { key: 'completed', label: 'Fullført', count: completedHidden ? 0 : completedAppointments.length },
   ];
 
+  const showList = (tab: PersonnelTab) => {
+    // Completed appointments are tidied away on demand; the permanent record
+    // stays available in the visit archive.
+    if (tab === 'completed' && completedHidden) {
+      return (
+        <EmptyState
+          icon="archive"
+          text="Fullførte avtaler er ryddet bort. Se besøksarkivet for historikk."
+          action={
+            <button className="btn btn-outline-primary" onClick={() => navigate('/appointments/archive')}>
+              <i className="bi bi-journals me-2" aria-hidden="true"></i>Åpne besøksarkiv
+            </button>
+          }
+        />
+      );
+    }
+
+    const list =
+      tab === 'all'
+        ? allActiveAppointments
+        : tab === 'scheduled'
+        ? scheduledAppointments
+        : tab === 'inprogress'
+        ? inProgressAppointments
+        : completedAppointments;
+
+    if (list.length === 0) {
+      return (
+        <EmptyState
+          icon="calendar-x"
+          text="Det finnes ingen avtaler som matcher dette filteret."
+        />
+      );
+    }
+
+    return (
+      <div className="d-flex flex-column gap-3">
+        {list.map((appointment) => (
+          <AppointmentCard
+            key={appointment.id}
+            appointment={appointment}
+            dateTimeText={formatDateTime(appointment)}
+            subject={appointment.patientName ? `Pasient: ${appointment.patientName}` : null}
+            footerNote={
+              appointment.status === 'Booked' && isWithin24Hours(appointment) ? (
+                <span className="d-inline-flex align-items-center gap-2 text-danger small">
+                  <i className="bi bi-exclamation-triangle" aria-hidden="true"></i>
+                  Endring og avbestilling må skje minst 24 timer før
+                </span>
+              ) : undefined
+            }
+            actions={renderPersonnelActions(appointment)}
+            onClick={
+              appointment.id &&
+              (appointment.status === 'InProgress' || appointment.visitStatus === 'Active')
+                ? () => navigate(`/besok/${appointment.id}`)
+                : undefined
+            }
+          />
+        ))}
+      </div>
+    );
+  };
+
   return (
-    <div className="appointment-list-page">
+    <div className="appointment-list-page personnel-page">
       {errorBanner}
 
       <PageHeader
-        title="Avtaler"
-        subtitle="Se og administrer alle dine avtaler på ett sted."
+        title="Mine pasientavtaler"
+        subtitle="Start og fullfør oppgaver for pasientene dine direkte her."
         actions={
-          <button className="btn btn-primary" onClick={handleCreate}>
-            <i className="bi bi-calendar-plus me-2"></i>Ny avtale
-          </button>
+          <div className="d-flex align-items-center gap-2">
+            <button className="btn btn-primary" type="button" onClick={handleCreate}>
+              <i className="bi bi-calendar-plus me-2" aria-hidden="true"></i>Ny avtale
+            </button>
+            <button
+              className="btn btn-secondary"
+              type="button"
+              disabled={completedHidden || completedAppointments.length === 0}
+              onClick={() => {
+                setActiveTab('completed');
+                setCompletedHidden(true);
+              }}
+            >
+              Rydd opp fullførte
+            </button>
+            <IconButton
+              icon="journals"
+              title="Besøksarkiv"
+              onClick={() => navigate('/appointments/archive')}
+            />
+          </div>
         }
       />
 
       <Tabs
-        tabs={patientTabs}
+        tabs={personnelTabs}
         activeKey={activeTab}
-        onChange={(key) => setActiveTab(key as PatientTab)}
+        onChange={(key) => setActiveTab(key as PersonnelTab)}
         card
       >
-        {/* Upcoming Appointments Tab */}
-        {activeTab === 'upcoming' &&
-        (upcomingAppointments.length > 0 ? (
-          <div className="d-flex flex-column gap-3">
-            {upcomingAppointments.map((appointment) => {
-              const within24Hours = isWithin24Hours(appointment);
-              const modifiable = canModify(appointment);
-
-              return (
-                <AppointmentCard
-                  key={appointment.id}
-                  appointment={appointment}
-                  dateTimeText={formatDateTime(appointment)}
-                  footerNote={
-                    within24Hours && appointment.status === 'Booked' ? (
-                      <span className="d-inline-flex align-items-center gap-2 text-danger small">
-                        <i className="bi bi-exclamation-triangle" aria-hidden="true"></i>
-                        Avbestilling må skje minst 24 timer før
-                      </span>
-                    ) : undefined
-                  }
-                  actions={
-                    <>
-                      <button
-                        className="btn btn-secondary"
-                        onClick={() => handleEdit(appointment)}
-                        disabled={!modifiable}
-                        title={!modifiable ? 'Kan ikke endres innen 24 timer eller hvis ikke planlagt' : 'Endre avtale'}
-                      >
-                        <i className="bi bi-pencil me-2"></i>Endre
-                      </button>
-                      <button
-                        className="btn btn-danger"
-                        onClick={() => handleDelete(appointment)}
-                        disabled={!modifiable}
-                        title={!modifiable ? 'Kan ikke avbestilles innen 24 timer eller hvis ikke planlagt' : 'Avbryt avtale'}
-                      >
-                        <i className="bi bi-trash me-2"></i>Avbryt
-                      </button>
-                    </>
-                  }
-                />
-              );
-            })}
-          </div>
-        ) : (
-          <EmptyState
-            icon="calendar-x"
-            text="Du har ingen planlagte avtaler."
-            action={
-              <button className="btn btn-primary" onClick={handleCreate}>
-                <i className="bi bi-calendar-plus me-2"></i>Book første avtale
-              </button>
-            }
-          />
-        ))}
-
-      {/* Past Appointments Tab */}
-      {activeTab === 'past' &&
-        (pastAppointments.length > 0 ? (
-          <div className="d-flex flex-column gap-3">
-            {pastAppointments.map((appointment) => (
-              <AppointmentCard
-                key={appointment.id}
-                appointment={appointment}
-                dateTimeText={formatDateTime(appointment)}
-              />
-            ))}
-          </div>
-        ) : (
-          <EmptyState icon="calendar-x" text="Historikken vises her." />
-        ))}
+        {showList(activeTab as PersonnelTab)}
       </Tabs>
 
-      {/* appointment modals */}
+      <VisitDetailsModal
+        show={detailsVisitId !== null}
+        onClose={() => setDetailsVisitId(null)}
+        visitId={detailsVisitId}
+      />
+
+      <PlannedVisitModal
+        show={plannedAppointment !== null}
+        onClose={() => setPlannedAppointment(null)}
+        appointment={plannedAppointment}
+      />
+
+      {/* booking modals - personnel create and amend appointments for patients */}
       <AppointmentModal
         show={showModal}
         onClose={() => setShowModal(false)}

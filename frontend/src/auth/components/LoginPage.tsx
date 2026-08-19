@@ -48,7 +48,7 @@ const LoginPage: React.FC = () => {
     // centers login form on page with max width constraint
     <Container className="auth-container">
 
-      {/* Carely Logo */}
+      {/* ViKom Logo */}
       <div className="login-logo">
         <Link to="/">
           <img src="/logo-placeholder-transparent-2.png" alt="ViKom Logo" />
@@ -60,7 +60,7 @@ const LoginPage: React.FC = () => {
           {/* Header */}
         <div className="auth-header">
           <h2 className="auth-title">Velkommen tilbake</h2>
-          <p className="auth-subtitle">Logg inn for å fortsette til Carely</p>
+          <p className="auth-subtitle">Logg inn for å fortsette til ViKom</p>
         </div>
           
           {/* conditionally displays error alert if error exists */}

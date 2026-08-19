@@ -1,28 +1,6 @@
 import type { AppointmentSummary } from '../../appointments/types/appointment';
 import type { AvailabilitySummary } from '../../availability/types/availability';
 
-// Patient dashboard view model
-export interface PatientViewModel {
-  patientId: string;
-  patientName: string;
-  upcomingAppointments: AppointmentSummary[];
-  appointmentHistory: AppointmentSummary[];
-  availableCaregivers: CaregiverSummary[];
-  totalAppointments: number;
-  completedAppointments: number;
-  upcomingCount: number;
-}
-
-// Caregiver summary
-export interface CaregiverSummary {
-  personnelId: string;
-  personnelName: string;
-  email: string;
-  availableSlots: number;
-  nextAvailableDate: string;
-  formattedNextAvailable?: string;
-}
-
 // Personnel dashboard view model
 export interface PersonnelViewModel {
   personnelId: string;

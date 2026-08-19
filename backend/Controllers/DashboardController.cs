@@ -6,7 +6,9 @@ using System.Security.Claims;
 
 namespace backend.Controllers
 {
-    [Authorize]
+    // The portal is personnel-only; patients reach their data through the TV app's
+    // Supabase-authenticated endpoints instead.
+    [Authorize(Roles = "Personnel")]
     [ApiController]
     [Route("api/[controller]")]
     public class DashboardController : ControllerBase
@@ -61,7 +63,6 @@ namespace backend.Controllers
         }
 
         // GET: api/dashboard/patient/{patientId}
-        [Authorize(Roles = "Patient,Personnel")]
         [HttpGet("patient/{patientId}")]
         public async Task<ActionResult<PatientDashboardDto>> GetPatientDashboard(string patientId)
         {
@@ -73,27 +74,6 @@ namespace backend.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting patient dashboard for {PatientId}", patientId);
-                return StatusCode(500, "An error occurred while retrieving the dashboard");
-            }
-        }
-
-        // GET: api/dashboard/patient (uses logged-in user ID)
-        [Authorize(Roles = "Patient")]
-        [HttpGet("patient")]
-        public async Task<ActionResult<PatientDashboardDto>> GetMyPatientDashboard()
-        {
-            try
-            {
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (string.IsNullOrEmpty(userId))
-                    return Unauthorized();
-
-                var dashboard = await _dashboardService.GetPatientDashboardAsync(userId);
-                return Ok(dashboard);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting patient dashboard");
                 return StatusCode(500, "An error occurred while retrieving the dashboard");
             }
         }

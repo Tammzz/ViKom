@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Button, Spinner, Alert } from 'react-bootstrap';
-import { getUserInfo, getAuthHeader } from '../../auth/AuthService';
+import { getAuthHeader } from '../../auth/AuthService';
 import { API_URL } from '../../config/config';
 import PatientService from '../../patients/services/PatientService';
 import { fetchWeekAvailability } from '../../availability/services/AvailabilityService';
@@ -30,8 +30,6 @@ interface AppointmentFormProps {
 }
 
 const AppointmentForm: React.FC<AppointmentFormProps> = ({ initialData, onSubmit, onCancel }) => {
-  const userInfo = getUserInfo();
-  const isPersonnel = userInfo?.role === 'Personnel';
 
   // Mock tasks available for booking, localized to Norwegian
   const allTasks = [
@@ -58,7 +56,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ initialData, onSubmit
   // Form state
   const [formData, setFormData] = useState<Appointment>({
     id: initialData?.id,
-    patientId: initialData?.patientId || userInfo?.userId || '',
+    patientId: initialData?.patientId || '',
     availabilityId: initialData?.availabilityId || 0,
     tasks: initialData?.tasks || '',
     startTime: '',
@@ -101,11 +99,9 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ initialData, onSubmit
       try {
         setLoading(true);
         
-        // Loads patients if personnel
-        if (isPersonnel) {
-          const patientList = await PatientService.getAll();
-          setPatients(patientList);
-        }
+        // Personnel book on the patient's behalf, so the picker is always needed
+        const patientList = await PatientService.getAll();
+        setPatients(patientList);
 
         // Loads all personnel for selection
         const personnelList = await fetchPersonnel();
@@ -118,7 +114,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ initialData, onSubmit
     };
 
     loadData();
-  }, [isPersonnel]);
+  }, []);
 
   // Loads available dates when personnel is selected
   useEffect(() => {
@@ -272,7 +268,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ initialData, onSubmit
   const validate = (): boolean => {
     const newErrors: { [key: string]: string } = {};
 
-    if (isPersonnel && !formData.patientId) {
+    if (!formData.patientId) {
       newErrors.patientId = 'Vennligst velg en pasient';
     }
 
@@ -328,25 +324,23 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ initialData, onSubmit
 
   return (
     <Form onSubmit={handleSubmit}>
-      {/* Patient selection (Personnel only) */}
-      {isPersonnel && (
-        <Form.Group className="mb-3">
-          <Form.Label>Klient <span className="text-danger">*</span></Form.Label>
-          {errors.patientId && <div className="text-danger small mb-1">{errors.patientId}</div>}
-          <Form.Select
-            value={formData.patientId}
-            onChange={handlePatientChange}
-            isInvalid={!!errors.patientId}
-          >
-            <option value="">-- Velg pasient --</option>
-            {patients.map((patient) => (
-              <option key={patient.id} value={patient.id}>
-                {patient.fullName}
-              </option>
-            ))}
-          </Form.Select>
-        </Form.Group>
-      )}
+      {/* Patient selection */}
+      <Form.Group className="mb-3">
+        <Form.Label>Klient <span className="text-danger">*</span></Form.Label>
+        {errors.patientId && <div className="text-danger small mb-1">{errors.patientId}</div>}
+        <Form.Select
+          value={formData.patientId}
+          onChange={handlePatientChange}
+          isInvalid={!!errors.patientId}
+        >
+          <option value="">-- Velg pasient --</option>
+          {patients.map((patient) => (
+            <option key={patient.id} value={patient.id}>
+              {patient.fullName}
+            </option>
+          ))}
+        </Form.Select>
+      </Form.Group>
 
       {/* Personnel selection */}
       <Form.Group className="mb-3">

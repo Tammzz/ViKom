@@ -13,6 +13,10 @@ namespace backend.Controllers
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
     {
+        // Patients authenticate through Supabase on the TV app; the web portal only
+        // serves personnel, so this is the sole role the portal ever issues or accepts.
+        private const string PersonnelRole = "Personnel";
+
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
         private readonly IConfiguration _configuration;
@@ -44,7 +48,8 @@ namespace backend.Controllers
                 UserName = registerDto.UserName,
                 Email = registerDto.Email,
                 FullName = registerDto.FullName,
-                Role = registerDto.Role,
+                // The portal is personnel-only, so the role is never taken from the request.
+                Role = PersonnelRole,
                 PhoneNumber = registerDto.PhoneNumber,
                 Address = registerDto.Address
             };
@@ -57,7 +62,7 @@ namespace backend.Controllers
             }
 
             // Assign role to user
-            await _userManager.AddToRoleAsync(user, registerDto.Role);
+            await _userManager.AddToRoleAsync(user, PersonnelRole);
 
             _logger.LogInformation($"User {registerDto.UserName} registered successfully");
 
@@ -85,6 +90,14 @@ namespace backend.Controllers
             if (!result.Succeeded)
             {
                 return Unauthorized(new { message = "Invalid username or password" });
+            }
+
+            // The credentials are valid, but only personnel may use the portal. Patients
+            // sign in through Supabase on the TV app instead.
+            if (user.Role != PersonnelRole)
+            {
+                _logger.LogWarning("Blocked portal login for non-personnel user {UserName}", loginDto.UserName);
+                return StatusCode(StatusCodes.Status403Forbidden, new { message = "Portalen er kun for helsepersonell." });
             }
 
             // Generate JWT token

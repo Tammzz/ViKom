@@ -17,10 +17,6 @@ namespace backend.DTOs
         [Required]
         public string FullName { get; set; } = string.Empty;
         
-        [Required]
-        [RegularExpression(@"^(Personnel|Patient)$", ErrorMessage = "Role must be either 'Personnel' or 'Patient'.")]
-        public string Role { get; set; } = string.Empty;
-        
         public string? PhoneNumber { get; set; }
 
         public string? Address { get; set; }

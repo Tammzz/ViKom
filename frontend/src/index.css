@@ -104,17 +104,11 @@
 
 body {
   font-family: var(--font-primary);
-  font-size: var(--fs-md);
+  font-size: var(--fs-sm);
   font-weight: 400;
   line-height: 1.6;
   color: var(--bs-dark);
   background-color: var(--bs-white);
-}
-
-/* Personnel-facing portal uses a denser 14px base; the patient-facing
-   experience keeps the larger 18px default for elderly users. */
-body.role-personnel {
-  font-size: var(--fs-sm);
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -284,10 +278,9 @@ h6 { font-size: var(--fs-sm); }
   opacity: 1;
 }
 
-/* Personnel portal: form controls match the denser 14px base (Bootstrap inputs
-   don't inherit the body size, so they need an explicit role-aware rule). */
-body.role-personnel .form-control,
-body.role-personnel .form-select {
+/* Bootstrap inputs don't inherit the body size, so they need an explicit rule. */
+.form-control,
+.form-select {
   font-size: var(--fs-sm);
 }
 

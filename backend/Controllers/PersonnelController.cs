@@ -5,7 +5,9 @@ using backend.DAL.Repositories;
 
 namespace backend.Controllers
 {
-    [Authorize]
+    // The portal is personnel-only; patients reach their data through the TV app's
+    // Supabase-authenticated endpoints instead.
+    [Authorize(Roles = "Personnel")]
     [ApiController]
     [Route("api/[controller]")]
     public class PersonnelController : ControllerBase

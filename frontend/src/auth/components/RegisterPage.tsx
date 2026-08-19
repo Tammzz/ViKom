@@ -6,7 +6,8 @@ import '../../css/Forms.css';
 
 /**
  * Registration page component that allows new users to create an account.
- * Includes form validation, role selection, and error handling.
+ * Includes form validation and error handling. Accounts are always created as
+ * personnel; patients use the TV app and authenticate through Supabase.
  * Integrates with AuthService for API communication.
  */
 const RegisterPage: React.FC = () => {
@@ -17,7 +18,6 @@ const RegisterPage: React.FC = () => {
     phoneNumber: '',
     address: '',
     userName: '',
-    role: 'Patient' as 'Personnel' | 'Patient',
     password: '',
     confirmPassword: ''
   });
@@ -87,7 +87,6 @@ const RegisterPage: React.FC = () => {
         email: formData.email,
         password: formData.password,
         fullName: formData.fullName,
-        role: formData.role,
         phoneNumber: formData.phoneNumber || undefined,
         address: formData.address || undefined
       };
@@ -120,7 +119,7 @@ const RegisterPage: React.FC = () => {
           {/* Header */}
           <div className="auth-header">
             <h2 className="auth-title">Opprett konto</h2>
-            <p className="auth-subtitle">Opprett konto for å bruke Carely</p>
+            <p className="auth-subtitle">Opprett konto for helsepersonell</p>
           </div>
           
           {/* conditionally displays error alert if error exists */}
@@ -191,21 +190,6 @@ const RegisterPage: React.FC = () => {
                 required
                 disabled={isLoading}
               />
-            </Form.Group>
-
-            {/* role selection dropdown */}
-            <Form.Group className="mb-3">
-              <Form.Label>Jeg registrerer meg som</Form.Label>
-              <Form.Select
-                name="role"
-                value={formData.role}
-                onChange={handleChange}
-                required
-                disabled={isLoading}
-              >
-                <option value="Patient">Pasient</option>
-                <option value="Personnel">Sykepleier</option>
-              </Form.Select>
             </Form.Group>
 
             {/* password input field */}

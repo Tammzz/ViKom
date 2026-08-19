@@ -62,7 +62,6 @@ const parseAreaAndAddress = (
 
 const PlanningOverviewPage: React.FC = () => {
   const userInfo = AuthService.getUserInfo();
-  const role = userInfo?.role;
 
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -77,14 +76,9 @@ const PlanningOverviewPage: React.FC = () => {
       setLoading(true);
       setError('');
 
-      let data: Appointment[] = [];
-      if (role === 'Patient' && userInfo?.userId) {
-        data = await AppointmentService.getByPatientId(userInfo.userId);
-      } else if (role === 'Personnel' && userInfo?.userId) {
-        data = await AppointmentService.getByPersonnelId(userInfo.userId);
-      } else {
-        data = await AppointmentService.getAll();
-      }
+      const data = userInfo?.userId
+        ? await AppointmentService.getByPersonnelId(userInfo.userId)
+        : await AppointmentService.getAll();
 
       setAppointments(data);
     } catch {

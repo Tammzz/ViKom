@@ -12,7 +12,7 @@ const HomePage: React.FC = () => {
       <div className="hero-content">
         <h1 className="hero-title">Den enkleste måten å administrere hjemmetjeneste på</h1>
         <p className="hero-text">
-          Hjelper deg å håndtere hjemmebesøk, timeplaner og oppfølging — alt på ett sted for både pasienter og helsepersonell.
+          Hjelper deg å håndtere hjemmebesøk, timeplaner og oppfølging — alt på ett sted for helsepersonell i hjemmetjenesten.
         </p>
 
         {/* Services features */}
@@ -50,8 +50,8 @@ const HomePage: React.FC = () => {
 
         {/* Call-to-action buttons */}
         <div className="hero-buttons">
-          <Link className="cta" to={isAuthenticated ? "/dashboard" : "/register"}>
-            Kom i gang <i className="bi bi-arrow-right"></i>
+          <Link className="cta" to={isAuthenticated ? "/dashboard" : "/login"}>
+            Logg inn <i className="bi bi-arrow-right"></i>
           </Link>
         </div>
       </div>

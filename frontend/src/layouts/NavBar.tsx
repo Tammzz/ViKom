@@ -69,17 +69,6 @@ const NavBar: React.FC = () => {
                     Oversikt
                   </Nav.Link>
 
-                  {role === 'Patient' && (
-                    <Nav.Link 
-                      as={Link} 
-                      to="/appointments" 
-                      onClick={closeMobileMenu}
-                      className={isActive('/appointments') ? 'active' : ''}
-                    >
-                      Mine avtaler
-                    </Nav.Link>
-                  )}
-
                   {role === 'Personnel' && (
                     <>
                       <Nav.Link 

@@ -37,40 +37,6 @@ const Sidebar: React.FC = () => {
           Oversikt
         </Nav.Link>
 
-        {/* Patient navigation */}
-        {role === 'Patient' && (
-          <Nav.Link 
-            as={Link} 
-            to="/appointments" 
-            className={isActive('/appointments') ? 'active' : ''}
-          >
-            <i className="bi bi-calendar" aria-hidden="true"></i>
-            Mine avtaler
-          </Nav.Link>
-        )}
-
-        {/* Patient navigation - additional */}
-        {role === 'Patient' && (
-          <>
-            <Nav.Link 
-              as={Link} 
-              to="/task-selection" 
-              className={isActive('/task-selection') ? 'active' : ''}
-            >
-              <i className="bi bi-chat-dots" aria-hidden="true"></i>
-              Be om tjenester
-            </Nav.Link>
-            <Nav.Link 
-              as={Link} 
-              to="/preferred-time" 
-              className={isActive('/preferred-time') ? 'active' : ''}
-            >
-              <i className="bi bi-calendar-plus" aria-hidden="true"></i>
-              Planlegg besøk
-            </Nav.Link>
-          </>
-        )}
-
         {/* Personnel navigation */}
         {role === 'Personnel' && (
           <>

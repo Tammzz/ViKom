@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Dropdown } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { fetchPersonnelDashboard } from '../services/DashboardService';
 import TaskBadges from '../../components/common/TaskBadges';
 import PageHeader from '../../components/common/PageHeader';
@@ -29,6 +29,7 @@ const formatRecentDateTime = (appointment: AppointmentSummary) => {
 
 // personnel dashboard component
 const PersonnelDashboard: React.FC = () => {
+  const navigate = useNavigate();
   const [dashboard, setDashboard] = useState<PersonnelViewModel | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -471,22 +472,29 @@ const PersonnelDashboard: React.FC = () => {
 
         <div className="availability-column">
           <div className="availability-quick-actions" role="group" aria-label="Hurtighandlinger">
-            <button type="button" className="quick-action-btn">
+            <button
+              type="button"
+              className="quick-action-btn"
+              onClick={() => navigate('/appointments?ny=1')}
+            >
               <i className="bi bi-calendar-plus"></i>
               <span>Legg til nytt besøk</span>
             </button>
 
-            <button type="button" className="quick-action-btn">
+            <button
+              type="button"
+              className="quick-action-btn"
+              onClick={() => navigate('/availability')}
+            >
               <i className="bi bi-arrow-repeat"></i>
               <span>Oppdater tilgjengelighet</span>
             </button>
 
-            <button type="button" className="quick-action-btn">
-              <i className="bi bi-camera-video"></i>
-              <span>Start videosamtale</span>
-            </button>
-
-            <button type="button" className="quick-action-btn">
+            <button
+              type="button"
+              className="quick-action-btn"
+              onClick={() => navigate('/planning')}
+            >
               <i className="bi bi-geo-alt"></i>
               <span>Vis kart</span>
             </button>

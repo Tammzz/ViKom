@@ -58,10 +58,13 @@ export async function login(
     });
 
     if (!response.ok) {
-      // 401 from AuthController => bad credentials; anything else is a server-side issue
+      // 401 => bad credentials; 403 => valid credentials but the account is not personnel
+      // (patients sign in through Supabase on the TV app); anything else is a server-side issue
       const message =
         response.status === 401
           ? 'Feil brukernavn eller passord'
+          : response.status === 403
+          ? 'Denne portalen er kun for helsepersonell.'
           : 'Noe gikk galt på serveren. Prøv igjen senere.';
       return { success: false, message };
     }
@@ -94,7 +97,8 @@ export async function login(
  * Registers a new user account.
  * Sends user information to backend and returns result with error details if applicable.
  * 
- * @param registerDto - User registration data including username, email, password, role, etc.
+ * @param registerDto - User registration data including username, email, password, etc.
+ * The backend always assigns the Personnel role; the portal has no patient accounts.
  * @returns Promise with success status and optional error message
  */
 export async function register(registerDto: RegisterDto): Promise<{ success: boolean; message?: string }> {

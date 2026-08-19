@@ -45,7 +45,7 @@ Stack: React + TypeScript + Vite · Bootstrap 5.3 · react-bootstrap · bootstra
 > (Start/Fullfør) marked `btn-sm`.
 > **Increment 8 (done):** typography coherence. Headings now sized from the type
 > tokens (`h1–h6` in `index.css`) instead of Bootstrap's oversized defaults;
-> `PageHeader` titles/subtitles are role-aware (personnel 24/16, patient 32/18);
+> `PageHeader` titles/subtitles sized from the tokens (32/16);
 > swept all ad-hoc raw-rem **text** sizes onto `--fs-*` tokens (PersonnelDashboard
 > ~30 values, PatientProfileHeader, StatTile, Timeline, DataTable, Tabs, Sidebar,
 > TaskBadges). Icons, buttons, Avatar, and the Home hero left as-is.
@@ -143,11 +143,10 @@ focus ring — use everywhere instead of ad-hoc focus shadows).
 ## 3. Typography
 
 - **Body:** Poppins (`--font-primary`). **Headings:** Nunito (`--font-heading`).
-- **Role-based base size** (set on `<body>` by the layout):
-  - Patient-facing → 18px (`--fs-md`) default, larger for elderly users.
-  - `body.role-personnel` → 14px (`--fs-sm`), denser portal. Form controls
-    (`.form-control`/`.form-select`) don't inherit the body size, so a role-aware
-    rule in `index.css` drops them to 14px on personnel too.
+- **Base size:** 14px (`--fs-sm`) on `body`. The portal is personnel-only;
+  patients use the TV app, which sets its own larger scale for elderly users.
+  Form controls (`.form-control`/`.form-select`) don't inherit the body size, so
+  `index.css` sizes them explicitly.
 - **Buttons:** there is **one button size** app-wide (matches `IconButton` / the
   "Ring pasient" button). `size="sm"`/`"lg"` are intentionally collapsed to the
   base size in `index.css`, so don't rely on them for density. A button is either

@@ -1,6 +1,5 @@
 // Components
 export { default as PersonnelDashboard } from './components/PersonnelDashboard';
-export { default as PatientDashboard } from './components/PatientDashboard';
 
 // Page
 export { default as DashboardPage } from './pages/DashboardPage';

@@ -112,6 +112,8 @@ Seeded automatically in Development. All use the password **Pass123!**
 | Patient | patient@homecare.local | Erik Johansen |
 | Patient | patient.ingrid@homecare.local | Ingrid Berg — linked to a Supabase profile, so this is the one to use when testing the TV app |
 
+The web portal is personnel-only: the patient accounts above are kept because a patient *is* a user row that appointments and visits point at, but they cannot log into the portal (login returns 403). Patients sign in on the TV app through Supabase instead.
+
 Only patients with a `SupabaseProfileId` receive realtime appointment events or can be called on a TV. That field is currently set only by the seeder.
 
 ## Testing

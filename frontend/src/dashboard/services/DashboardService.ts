@@ -1,6 +1,6 @@
 import { API_URL } from "../../config/config";
 import { getAuthHeader } from '../../auth/AuthService';
-import type { PatientViewModel, PersonnelViewModel } from '../types/dashboard';
+import type { PersonnelViewModel } from '../types/dashboard';
 
 const headers = {
   'Content-Type': 'application/json',
@@ -12,14 +12,6 @@ async function handleResponse(response: Response) {
     throw new Error('Network response was not ok');
   }
   return response.json();
-}
-
-// fetches patient dashboard data
-export async function fetchPatientDashboard(): Promise<PatientViewModel> {
-  const response = await fetch(`${API_URL}/api/dashboard/patient`, {
-    headers: { ...headers, ...getAuthHeader() },
-  });
-  return handleResponse(response);
 }
 
 // fetches personnel dashboard data
