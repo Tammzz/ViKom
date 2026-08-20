@@ -1,11 +1,13 @@
-# ViKom — Homecare Management
+# ViKom - Homecare Management
 
 ViKom is a homecare system split across two applications:
 
-- **This repo** — the web portal used by healthcare personnel (React frontend + ASP.NET Core Web API), and the backend that both applications share.
-- **[vikom-tv-app](https://github.com/Rahemb/vikom-tv-app)** — an Android app used by patients on a TV or tablet, for video calls with their caregiver and for viewing their appointments.
+- **This repo** - the web portal used by healthcare personnel (React frontend + ASP.NET Core Web API), and the backend that both applications share.
+- **[vikom-tv-app](https://github.com/Rahemb/vikom-tv-app)** - an Android app used by patients on a TV or tablet, for receiving calls from their caregiver and for viewing their appointments and care team.
 
 The backend is the system of record for all clinical data. Supabase is used alongside it for patient identity on the TV app and as a realtime event bus between the two.
+
+New to the project? Start with **[HANDOFF.md](HANDOFF.md)**. It covers the architecture, both codebases, setup, and the status of every feature.
 
 ## Prerequisites
 
@@ -15,9 +17,9 @@ The backend is the system of record for all clinical data. Supabase is used alon
 
 ## Project Structure
 
-- **backend/** — ASP.NET Core Web API with SQLite database
-- **backend.Tests/** — xUnit test project
-- **frontend/** — React + TypeScript + Vite application
+- **backend/** - ASP.NET Core Web API with SQLite database
+- **backend.Tests/** - xUnit test project
+- **frontend/** - React + TypeScript + Vite application
 
 ## Installation & Setup
 
@@ -47,13 +49,13 @@ The SQLite database is created and seeded automatically on first run in Developm
 dotnet user-secrets set "Supabase:JwtSecret" "<Supabase dashboard: Settings > JWT Keys > Legacy JWT Secret>" --project backend
 ```
 
-Run this in a **normal** terminal, not an elevated one — user secrets are stored per Windows user, so an admin shell writes them somewhere the app will not look.
+Run this in a **normal** terminal, not an elevated one: user secrets are stored per Windows user, so an admin shell writes them somewhere the app will not look.
 
 Without the secret the app still starts and the web portal works normally. Only `/api/tv/*` returns 401, and a warning is logged at startup saying so.
 
 #### Letting the TV app reach the backend
 
-The simplest option for a tablet connected by USB needs nothing here at all — forward the port down the cable instead:
+The simplest option for a tablet connected by USB needs nothing here at all. Forward the port down the cable instead:
 
 ```bash
 adb reverse tcp:5084 tcp:5084
@@ -108,13 +110,13 @@ Seeded automatically in Development. All use the password **Pass123!**
 
 | Role      | Username                      | Notes                                                                                         |
 | --------- | ----------------------------- | --------------------------------------------------------------------------------------------- |
-| Personnel | nurse@homecare.local          | Nurse Nora — the main portal account                                                          |
-| Patient   | patient@homecare.local        | Erik Johansen                                                                                 |
-| Patient   | patient.ingrid@homecare.local | Ingrid Berg — linked to a Supabase profile, so this is the one to use when testing the TV app |
+| Personnel | nurse@homecare.local          | Nurse Nora - the main portal account                                                          |
+| Patient   | patient@homecare.local        | Erik Johansen - linked to a Supabase profile, but has no working Supabase password             |
+| Patient   | patient.ingrid@homecare.local | Ingrid Berg - linked AND has a working TV login, so this is the one to use when testing the TV app |
 
 The web portal is personnel-only: the patient accounts above are kept because a patient _is_ a user row that appointments and visits point at, but they cannot log into the portal (login returns 403). Patients sign in on the TV app through Supabase instead.
 
-Only patients with a `SupabaseProfileId` receive realtime appointment events or can be called on a TV. That field is currently set only by the seeder.
+Only patients with a `SupabaseProfileId` can be targeted with calls or realtime appointment events on a TV. That field is currently set only by the seeder. Both seeded patients have one. Ingrid is also the only one who can sign in on the TV app (`ingrid.berg@example.com` / `Pass123!` in Supabase).
 
 ## Testing
 
@@ -129,7 +131,7 @@ dotnet test backend.Tests/backend.Tests.csproj
 - ASP.NET Core 8.0 Web API
 - Entity Framework Core with SQLite
 - ASP.NET Core Identity
-- JWT bearer authentication — two schemes: the portal's own tokens, and Supabase-issued tokens for the TV app
+- JWT bearer authentication with two schemes: the portal's own tokens, and Supabase-issued tokens for the TV app
 
 ### Frontend
 
@@ -145,7 +147,7 @@ dotnet test backend.Tests/backend.Tests.csproj
 - Personnel availability management with weekly and daily calendar views
 - Appointment booking and scheduling
 - Visit ("Besøk") execution workspace with task tracking and visit records
-- Video/audio calls from the portal to a patient's TV app
-- Realtime appointment events pushed to the patient's TV app on create, update and cancel
+- Call signaling from the portal to a patient's TV app (ring → incoming-call screen → answer/reject; verified end-to-end, though real audio/video media is not implemented yet)
+- Realtime appointment events emitted toward the patient's TV app on create, update and cancel (both ends are wired, but delivery is not yet verified; see the hand-off guide)
 - User-specific dashboards
 - Responsive design for mobile and desktop
