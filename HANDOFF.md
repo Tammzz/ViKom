@@ -186,7 +186,8 @@ ViKom/
 │   │
 │   ├── DAL/
 │   │   ├── ApplicationDbContext.cs        # EF Core DbContext
-│   │   ├── DBInit.cs                      # Migrations + demo data seeding (Development only)
+│   │   ├── DBInit.cs                      # Demo data seeding (Development only); idempotent,
+│   │   │                                  # describes desired state. One-time fixes go in Migrations/
 │   │   └── Repositories/                  # 7 repository pairs (interface + implementation):
 │   │                                      # Appointment, Availability, AvailabilityWindow,
 │   │                                      # CallLog, PatientUserLink, User, Visit
@@ -228,7 +229,8 @@ ViKom/
         ├── components/common/             # 16 reusable components: CallModal, DataTable,
         │                                  # PageHeader, SectionCard, StatTile, StatusBadge,
         │                                  # Tabs, Timeline, Avatar, Badge, Breadcrumb, ...
-        ├── services/                      # SupabaseSignalingService.ts (realtime channel)
+        ├── services/                      # supabaseClient.ts (lazy client, call signaling),
+        │                                  # SupabaseSignalingService.ts (realtime channel)
         ├── layouts/                       # Layout.tsx, NavBar.tsx, Sidebar.tsx
         ├── home/                          # HomePage.tsx (public landing)
         ├── config/config.ts               # API_URL (hardcoded http://localhost:5084)
@@ -383,7 +385,11 @@ When a patient exists in the backend:
 2. The shared base class [backend/Controllers/TvControllerBase.cs](backend/Controllers/TvControllerBase.cs) resolves the caller: it reads `sub`, then calls `UserRepository.GetBySupabaseProfileIdAsync()`
 3. Outcomes: 401 if the token has no `sub`; 404 ("No patient is linked to this Supabase profile") if no backend user has that UUID; 403 if the matched user isn't a `Patient`. Otherwise the request proceeds with the resolved backend user.
 
-That 404 is the single most common cause of "why doesn't the TV show anything": the Supabase account exists, but no backend patient row carries its UUID. Currently only the seeder ([backend/DAL/DBInit.cs](backend/DAL/DBInit.cs)) sets `SupabaseProfileId`. There is no admin UI for linking yet.
+That 404 is the single most common cause of "why doesn't the TV show anything": the Supabase account exists, but no backend patient row carries its UUID.
+
+Personnel set that link from the portal: **Pasienter → Ny pasient** registers a patient (`POST /api/patients`) and its Supabase field searches the `profiles` table by username through `GET /api/patients/supabase-profiles`, so the account is confirmed to exist before it is saved. Only `SupabaseProfileId` is written — the patient's URL handle is never changed by linking. The same field is in the edit dialog, so an existing patient can be linked, relinked or unlinked. The seeder ([backend/DAL/DBInit.cs](backend/DAL/DBInit.cs)) still sets it for the demo patients, but it is no longer the only way.
+
+Two things the portal deliberately does **not** do: it never creates Supabase auth accounts (that needs a `service_role` key, so patient TV logins are still made in the TV app or the Supabase dashboard), and patients it creates get no portal password — they authenticate through Supabase, and the portal login is personnel-only.
 
 **Files:**
 - Model: [backend/Models/User.cs](backend/Models/User.cs) (`SupabaseProfileId`), [backend/Models/PatientUserLink.cs](backend/Models/PatientUserLink.cs)
@@ -395,10 +401,10 @@ That 404 is the single most common cause of "why doesn't the TV show anything": 
 | Backend account | Full name | Role | SupabaseProfileId |
 |---|---|---|---|
 | `nurse@homecare.local` | Nurse Nora | Personnel | (none) |
-| `patient@homecare.local` | Erik Johansen | Patient | `5a262e4e-e2d3-4179-a30a-5a003a652817` |
 | `patient.ingrid@homecare.local` | Ingrid Berg | Patient | `c9f53a55-1375-48e6-95ce-25917f55be2d` |
+| `patient.wayki@homecare.local` | Bong Wayki | Patient | `4fb30313-b8e6-4381-896c-d345b5d3bd72` |
 
-Both patients are linked to Nurse Nora via seeded `PatientUserLink` rows (type `Personnel`). The seeder also creates availability windows, clinical profiles with medications, and 5 demo appointments (2 planned + 3 completed with visit records). Only Ingrid has a working TV login (`ingrid.berg@example.com` / `Pass123!` in Supabase). Erik is mapped to a Supabase UUID and can be targeted with calls, but he has no usable Supabase password, so he can't sign in on a TV.
+Both patients are linked to Nurse Nora via seeded `PatientUserLink` rows (type `Personnel`). The seeder also creates availability windows, clinical profiles with medications, and 5 demo appointments (2 planned + 3 completed with visit records) that all belong to Ingrid. Only Ingrid has a working TV login (`ingrid.berg@example.com` / `Pass123!` in Supabase). Bong Wayki maps to the Supabase profile `wayki` (device type `tv`) and is the account used for testing on a real TV; he starts with no appointments on purpose, so book one for him in the portal to see the TV appointment view fill in.
 
 ## 5. Appointment Functionality
 
@@ -610,9 +616,12 @@ Two authentication schemes exist (Section 4). "Personnel" below means the defaul
 | Endpoint | Method | Purpose |
 |----------|--------|---------|
 | `/api/patients` | GET | Patients linked to the signed-in nurse |
+| `/api/patients` | POST | Register a patient (links them to the caller, optional Supabase link) |
 | `/api/patients/all` | GET | All patients |
+| `/api/patients/supabase-profiles` | GET | Search Supabase `profiles` for the TV-link picker (service-role key, server-side) |
+| `/api/patients/supabase-profiles/{profileId}` | GET | Resolve one Supabase profile so an existing link shows a name |
 | `/api/patients/{id}` | GET | Profile + clinical data |
-| `/api/patients/{id}` | PUT | Update profile |
+| `/api/patients/{id}` | PUT | Update profile and Supabase (TV) link |
 | `/api/patients/{id}/notes` | PUT | Update patient notes |
 | `/api/patients/{id}/calls` | POST | Log a call (outside a visit) |
 | `/api/patients/{id}/calls/{callId}` | PUT | Update a call log's status |
@@ -746,7 +755,7 @@ Heads-up: the Supabase `profiles` table also has an `fcm_token` column that `FCM
 - **Dashboard**: [frontend/src/dashboard/components/PersonnelDashboard.tsx](frontend/src/dashboard/components/PersonnelDashboard.tsx), fed by `GET /api/dashboard/personnel`. Welcome header, four stat tiles (patients / this week / planned / cancelled), a month calendar, today's timeline, upcoming availability, and recent appointments. This page exists and works; older docs listed the dashboard as planned.
 - **Appointments**: [frontend/src/appointments/pages/AppointmentListPage.tsx](frontend/src/appointments/pages/AppointmentListPage.tsx) with form/modal components for create, edit, and delete.
 - **Visits**: [frontend/src/visits/VisitExecutionPage.tsx](frontend/src/visits/VisitExecutionPage.tsx) (Section 5), plus `VisitArchivePage` (filter tabs) and modals for planned-visit preview and post-visit details.
-- **Patients**: roster and clinical profile assembled from cards (`ClinicalOverviewCard`, `DiagnosesCard`, `MedicationsCard`, `TreatmentPlanCard`, `PatientNotesCard`, `EditPatientModal`). The profile header hosts the "Ring pasient" button, and the page shows the patient's `supabaseProfileId` so you can see whether they're TV-linked.
+- **Patients**: roster and clinical profile assembled from cards (`ClinicalOverviewCard`, `DiagnosesCard`, `MedicationsCard`, `TreatmentPlanCard`, `PatientNotesCard`, `EditPatientModal`). The profile header hosts the "Ring pasient" button and a badge showing whether the patient is TV-linked. `CreatePatientModal` (from "Ny pasient" on the roster) registers a patient, and both modals embed `SupabaseProfileField`, which searches Supabase `profiles` via `GET /api/patients/supabase-profiles` so the TV link is picked from real accounts. That search goes through the backend on purpose — portal users hold a backend JWT and have no Supabase session, so a browser-side query would run as `anon` and force `profiles` to allow anonymous SELECT. Linking writes **only** `SupabaseProfileId`; the patient's `ProfileUsername` (their `/patients/{username}` URL handle) is a separate local value that the portal never touches.
 - **Calling**: [frontend/src/components/common/CallModal.tsx](frontend/src/components/common/CallModal.tsx) + [frontend/src/services/SupabaseSignalingService.ts](frontend/src/services/SupabaseSignalingService.ts) (Section 6).
 - **Shared UI**: 16 components in [frontend/src/components/common/](frontend/src/components/common/): `PageHeader`, `SectionCard`, `StatTile`, `StatusBadge`, `DataTable`, `Tabs`, `Timeline`, `EmptyState`, `Avatar`, `Badge`, `Breadcrumb`, `IconButton`, `InfoRow`, `TaskBadges`, `CallModal`. Reuse these before building new ones.
 
@@ -810,7 +819,17 @@ dotnet user-secrets set "Supabase:JwtSecret" "<your-jwt-secret>" --project backe
 
 Get it from Supabase Dashboard → Settings → JWT → Legacy JWT Secret. Run this in a normal (non-admin) terminal, since user-secrets are stored per user. Without it the backend starts fine and the portal works, but `/api/tv/*` returns 401 and a startup warning tells you what's missing.
 
-**3. Run:**
+**3. Supabase service-role key** (required for the portal's TV-link picker):
+
+```bash
+dotnet user-secrets set "Supabase:ServiceRoleKey" "<your-service-role-key>" --project backend
+```
+
+Get it from Supabase Dashboard → Settings → API → `service_role`. This is what `GET /api/patients/supabase-profiles` uses to search the `profiles` table on behalf of a signed-in nurse. It is deliberately server-side only and has **no anon-key fallback**: falling back would only work while `profiles` allowed anonymous SELECT, which is exactly the exposure the endpoint exists to remove. Treat it like a password — it bypasses RLS, so it must never reach the frontend or a committed file.
+
+Without it the portal still works: the Supabase field in **Ny pasient** / the edit dialog degrades to manual UUID entry and says so.
+
+**4. Run:**
 
 ```bash
 dotnet run --project backend
@@ -873,7 +892,8 @@ backend.base.url=http://127.0.0.1:5084/   # USB device + adb reverse (recommende
 - [ ] (Optional, for FCM) create Edge Function `send-call-notification`
 - [ ] Put URL + anon key into: backend `appsettings.Development.json`, frontend `.env.local`, TV `local.properties`
 - [ ] Set the backend user-secret `Supabase:JwtSecret`
-- [ ] Create patient auth users, then set each backend patient's `SupabaseProfileId` to the matching Supabase UUID (currently done via the seeder or a manual DB edit; there is no admin UI)
+- [ ] Set the backend user-secret `Supabase:ServiceRoleKey` (powers the portal's TV-link picker; without it the field falls back to manual UUID entry)
+- [ ] Create patient auth users in Supabase, then link each one to a backend patient from the portal (**Pasienter → Ny pasient**, or the Supabase field in the edit dialog). The seeder covers the demo patients.
 
 ```sql
 CREATE TABLE profiles (
@@ -882,8 +902,27 @@ CREATE TABLE profiles (
   username TEXT UNIQUE,
   avatar_url TEXT,
   contact_id INTEGER,
-  fcm_token TEXT
+  fcm_token TEXT,
+  -- Presence columns. PresenceRepository and SignalingManager in the TV app read
+  -- and write these, and the portal's TV-link picker shows device_type/is_online.
+  device_type TEXT,
+  is_online BOOLEAN DEFAULT false,
+  webrtc_status TEXT,
+  last_seen TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
 );
+
+-- RLS on profiles does NOT need to allow anonymous SELECT. The portal reads this
+-- table only through the backend (GET /api/patients/supabase-profiles), which is
+-- Personnel-only and uses the service-role key server-side; the service role
+-- bypasses RLS entirely. Every TV-app profile read runs after sign-in
+-- (AuthRepository.ensureProfileExists is called from signIn, and everything in
+-- PresenceRepository/ContactRepository/ProfileRepository is a post-login
+-- feature), so an authenticated-only policy is enough:
+--
+--   CREATE POLICY "profiles readable by authenticated"
+--     ON profiles FOR SELECT TO authenticated USING (true);
 
 CREATE TABLE contacts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -994,6 +1033,7 @@ Statuses below were verified against the code. See the intro for what 🟢 🟡 
 5. **Hardcoded frontend `API_URL`** and no global 401 handling (Section 9).
 6. **Release-readiness gaps in the TV app:** application id is still `com.example.tv_caller_app`, minification is disabled for release, and the encrypted-storage library is an alpha version.
 7. **Availability week/day endpoints return exception stack traces in 500 responses.** Don't let those leak beyond dev.
+8. **Duplicate availability slots are swept up at startup instead of prevented.** `AvailabilityService.CreateAsync` inserts a slot without checking whether one already exists at that personnel/date/start time, and `UpdateWindowAsync` only compares new slots against *booked* ones, so re-saving a window can add a second free slot. `DBInit.RemoveDuplicateSlotDataAsync` cleans up on every boot — and it can delete an appointment while doing so. The fix is a uniqueness rule on (`PersonnelId`, `Date`, `StartTime`) plus a service that respects it; then the startup sweep can go.
 
 ### Debugging tips
 
@@ -1102,6 +1142,7 @@ Only the backend has automated tests, and only for four focused areas. Everythin
 |------|-------|------|
 | Backend Supabase project | `backend/appsettings.Development.json` | `Supabase:Url`, `Supabase:AnonKey` |
 | Backend Supabase JWT secret | .NET user-secrets | `Supabase:JwtSecret` |
+| Backend Supabase service-role key | .NET user-secrets | `Supabase:ServiceRoleKey` |
 | Backend portal JWT | `backend/appsettings.json` | `Jwt:Key`, `Jwt:Issuer`, `Jwt:Audience` |
 | Frontend Supabase | `frontend/.env.local` | `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` |
 | Frontend backend URL | `frontend/src/config/config.ts` | `API_URL` (hardcoded) |
@@ -1120,7 +1161,7 @@ Only the backend has automated tests, and only for four focused areas. Everythin
 | Where | Account |
 |-------|---------|
 | Portal (nurse) | `nurse@homecare.local` |
-| Backend patients | `patient@homecare.local` (Erik), `patient.ingrid@homecare.local` (Ingrid) |
+| Backend patients | `patient.ingrid@homecare.local` (Ingrid, has the seeded appointments), `patient.wayki@homecare.local` (Wayki, no appointments by design) |
 | TV login (Supabase) | `ingrid.berg@example.com` (the only patient with a working TV login) |
 
 ### Key Endpoints

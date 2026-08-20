@@ -1,6 +1,12 @@
 import { API_URL } from '../../config/config';
 import { getAuthHeader } from '../../auth/AuthService';
-import type { CallLogDto, PatientDetailsDto, PatientListDto, PatientUpdateDto } from '../types/patient';
+import type {
+  CallLogDto,
+  PatientCreateDto,
+  PatientDetailsDto,
+  PatientListDto,
+  PatientUpdateDto,
+} from '../types/patient';
 
 const headers = {
   'Content-Type': 'application/json',
@@ -9,9 +15,28 @@ const headers = {
 // handles API response
 async function handleResponse(response: Response) {
   if (!response.ok) {
-    throw new Error('Network response was not ok');
+    throw new Error(await readErrorMessage(response));
   }
   return response.json();
+}
+
+// Exported so the Supabase profile lookup reports server messages the same way.
+// Validation failures come back either as a plain-text message
+// (BadRequest(string)) or as a ModelState object. Both are written for the
+// nurse, so pass them through instead of the generic error.
+export async function readErrorMessage(response: Response): Promise<string> {
+  const fallback = 'Network response was not ok';
+  try {
+    const body = (await response.text()).trim();
+    if (!body) return fallback;
+    if (!body.startsWith('{')) return body;
+
+    const parsed = JSON.parse(body);
+    const fieldErrors = parsed.errors ? Object.values(parsed.errors).flat() : [];
+    return (fieldErrors[0] as string) ?? parsed.title ?? fallback;
+  } catch {
+    return fallback;
+  }
 }
 
 // Service object following demo pattern
@@ -35,6 +60,16 @@ const PatientService = {
   async getById(id: string): Promise<PatientDetailsDto> {
     const response = await fetch(`${API_URL}/api/patients/${id}`, {
       headers: { ...headers, ...getAuthHeader() },
+    });
+    return handleResponse(response);
+  },
+
+  // registers a new patient and links them to the logged-in nurse's list
+  async create(dto: PatientCreateDto): Promise<PatientDetailsDto> {
+    const response = await fetch(`${API_URL}/api/patients`, {
+      method: 'POST',
+      headers: { ...headers, ...getAuthHeader() },
+      body: JSON.stringify(dto),
     });
     return handleResponse(response);
   },

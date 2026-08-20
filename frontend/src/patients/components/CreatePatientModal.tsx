@@ -4,45 +4,37 @@ import type { PatientDetailsDto } from '../types/patient';
 import PatientService from '../services/PatientService';
 import SupabaseProfileField, { type SupabaseLinkValue } from './SupabaseProfileField';
 
-// The link carries only the Supabase profile id. The display name is resolved
-// from Supabase by SupabaseProfileField — deliberately NOT from patient.username,
-// which is this patient's local URL handle and a different thing entirely.
-const toLinkValue = (patient: PatientDetailsDto): SupabaseLinkValue | null =>
-  patient.supabaseProfileId
-    ? { supabaseProfileId: patient.supabaseProfileId, username: null }
-    : null;
-
-interface EditPatientModalProps {
+interface CreatePatientModalProps {
   show: boolean;
   onHide: () => void;
-  patient: PatientDetailsDto;
-  onSaved: (updated: PatientDetailsDto) => void;
+  onCreated: (created: PatientDetailsDto) => void;
 }
 
 /**
- * Modal form for editing a patient's contact details
- * (name, email, phone, address).
+ * Modal form for registering a new patient: contact details plus the optional
+ * Supabase link that connects them to the TV app. The new patient is added to
+ * the logged-in nurse's patient list by the backend.
  */
-const EditPatientModal: React.FC<EditPatientModalProps> = ({ show, onHide, patient, onSaved }) => {
-  const [fullName, setFullName] = useState<string>(patient.fullName);
-  const [email, setEmail] = useState<string>(patient.email);
-  const [phoneNumber, setPhoneNumber] = useState<string>(patient.phoneNumber);
-  const [address, setAddress] = useState<string>(patient.address ?? '');
-  const [supabaseLink, setSupabaseLink] = useState<SupabaseLinkValue | null>(toLinkValue(patient));
+const CreatePatientModal: React.FC<CreatePatientModalProps> = ({ show, onHide, onCreated }) => {
+  const [fullName, setFullName] = useState<string>('');
+  const [email, setEmail] = useState<string>('');
+  const [phoneNumber, setPhoneNumber] = useState<string>('');
+  const [address, setAddress] = useState<string>('');
+  const [supabaseLink, setSupabaseLink] = useState<SupabaseLinkValue | null>(null);
   const [saving, setSaving] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
 
-  // Reset the form to the current patient whenever the modal is (re)opened.
+  // Start from a blank form every time the modal is opened.
   useEffect(() => {
     if (show) {
-      setFullName(patient.fullName);
-      setEmail(patient.email);
-      setPhoneNumber(patient.phoneNumber);
-      setAddress(patient.address ?? '');
-      setSupabaseLink(toLinkValue(patient));
+      setFullName('');
+      setEmail('');
+      setPhoneNumber('');
+      setAddress('');
+      setSupabaseLink(null);
       setError('');
     }
-  }, [show, patient]);
+  }, [show]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,17 +47,17 @@ const EditPatientModal: React.FC<EditPatientModalProps> = ({ show, onHide, patie
     try {
       setSaving(true);
       setError('');
-      const updated = await PatientService.update(patient.id, {
+      const created = await PatientService.create({
         fullName: fullName.trim(),
         email: email.trim(),
         phoneNumber: phoneNumber.trim() || null,
         address: address.trim(),
         supabaseProfileId: supabaseLink?.supabaseProfileId ?? null,
       });
-      onSaved(updated);
+      onCreated(created);
       onHide();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Kunne ikke lagre endringene. Prøv igjen.');
+      setError(err instanceof Error ? err.message : 'Kunne ikke opprette pasienten. Prøv igjen.');
       console.error(err);
     } finally {
       setSaving(false);
@@ -76,12 +68,12 @@ const EditPatientModal: React.FC<EditPatientModalProps> = ({ show, onHide, patie
     <Modal show={show} onHide={onHide} centered>
       <Form onSubmit={handleSubmit}>
         <Modal.Header closeButton>
-          <Modal.Title>Rediger pasientinformasjon</Modal.Title>
+          <Modal.Title>Ny pasient</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {error && <Alert variant="danger">{error}</Alert>}
 
-          <Form.Group className="mb-3" controlId="editPatientName">
+          <Form.Group className="mb-3" controlId="createPatientName">
             <Form.Label>Fullt navn</Form.Label>
             <Form.Control
               type="text"
@@ -91,7 +83,7 @@ const EditPatientModal: React.FC<EditPatientModalProps> = ({ show, onHide, patie
             />
           </Form.Group>
 
-          <Form.Group className="mb-3" controlId="editPatientEmail">
+          <Form.Group className="mb-3" controlId="createPatientEmail">
             <Form.Label>E-post</Form.Label>
             <Form.Control
               type="email"
@@ -101,7 +93,7 @@ const EditPatientModal: React.FC<EditPatientModalProps> = ({ show, onHide, patie
             />
           </Form.Group>
 
-          <Form.Group className="mb-3" controlId="editPatientPhone">
+          <Form.Group className="mb-3" controlId="createPatientPhone">
             <Form.Label>Telefon</Form.Label>
             <Form.Control
               type="tel"
@@ -110,7 +102,7 @@ const EditPatientModal: React.FC<EditPatientModalProps> = ({ show, onHide, patie
             />
           </Form.Group>
 
-          <Form.Group className="mb-3" controlId="editPatientAddress">
+          <Form.Group className="mb-3" controlId="createPatientAddress">
             <Form.Label>Adresse</Form.Label>
             <Form.Control
               type="text"
@@ -129,10 +121,10 @@ const EditPatientModal: React.FC<EditPatientModalProps> = ({ show, onHide, patie
             {saving ? (
               <>
                 <Spinner animation="border" size="sm" className="me-2" />
-                Lagrer...
+                Oppretter...
               </>
             ) : (
-              'Lagre endringer'
+              'Opprett pasient'
             )}
           </Button>
         </Modal.Footer>
@@ -141,4 +133,4 @@ const EditPatientModal: React.FC<EditPatientModalProps> = ({ show, onHide, patie
   );
 };
 
-export default EditPatientModal;
+export default CreatePatientModal;

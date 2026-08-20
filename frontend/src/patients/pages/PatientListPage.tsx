@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Alert, Spinner } from 'react-bootstrap';
+import { Alert, Button, Spinner } from 'react-bootstrap';
 import PatientService from '../services/PatientService';
 import type { PatientListDto } from '../types/patient';
+import CreatePatientModal from '../components/CreatePatientModal';
 import DataTable, { type DataTableColumn } from '../../components/common/DataTable';
 import PageHeader from '../../components/common/PageHeader';
 import './PatientListPage.css';
@@ -13,6 +14,7 @@ const PatientListPage: React.FC = () => {
   const [patients, setPatients] = useState<PatientListDto[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
+  const [showCreate, setShowCreate] = useState<boolean>(false);
 
   const loadPatients = async () => {
     try {
@@ -39,7 +41,7 @@ const PatientListPage: React.FC = () => {
       style: { minWidth: '160px' },
       render: (patient) => (
         <Link
-          to={`/patients/${patient.username ?? patient.id}`}
+          to={`/patients/${encodeURIComponent(patient.username ?? patient.id)}`}
           className="fw-semibold text-dark text-decoration-none"
           onClick={(e) => e.stopPropagation()}
         >
@@ -85,13 +87,25 @@ const PatientListPage: React.FC = () => {
       <PageHeader
         title="Pasienter"
         subtitle="Se og administrer alle pasientene dine."
+        actions={
+          <Button variant="primary" onClick={() => setShowCreate(true)}>
+            <i className="bi bi-person-plus me-2" aria-hidden="true"></i>
+            Ny pasient
+          </Button>
+        }
+      />
+
+      <CreatePatientModal
+        show={showCreate}
+        onHide={() => setShowCreate(false)}
+        onCreated={(created) => navigate(`/patients/${encodeURIComponent(created.username ?? created.id)}`)}
       />
 
       <DataTable
         columns={columns}
         data={patients}
         rowKey={(patient) => patient.id}
-        onRowClick={(patient) => navigate(`/patients/${patient.username ?? patient.id}`)}
+        onRowClick={(patient) => navigate(`/patients/${encodeURIComponent(patient.username ?? patient.id)}`)}
         emptyIcon="people"
         emptyText="Ingen pasienter funnet."
       />

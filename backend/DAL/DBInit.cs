@@ -1,5 +1,4 @@
 using backend.Models;
-using Microsoft.Data.Sqlite;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,19 +8,10 @@ namespace backend.DAL
     {
         public static async Task SeedAsync(ApplicationDbContext context, UserManager<User> userManager, RoleManager<IdentityRole> roleManager)
         {
-            // Apply pending migrations, but tolerate legacy dev SQLite databases
-            // where Identity tables were created before migration history was established.
-            try
-            {
-                await context.Database.MigrateAsync();
-            }
-            catch (SqliteException ex) when (ex.Message.Contains("already exists", StringComparison.OrdinalIgnoreCase))
-            {
-                Console.WriteLine($"Migration warning: {ex.Message}");
-                Console.WriteLine("Continuing startup with existing database schema.");
-            }
-            await EnsureUserAddressColumnAsync(context);
-            await EnsureUserSupabaseProfileIdColumnAsync(context);
+            // Schema changes belong to migrations, so let a failure here stop
+            // startup instead of seeding on top of a database whose shape we
+            // cannot vouch for.
+            await context.Database.MigrateAsync();
 
             // Check if roles exist, if not create them
             if (!await roleManager.RoleExistsAsync("Personnel"))
@@ -34,7 +24,9 @@ namespace backend.DAL
                 await roleManager.CreateAsync(new IdentityRole("Patient"));
             }
 
-            await ReplaceLegacyAvailabilityNotesAsync(context);
+            // NOT a one-time cleanup: AvailabilityService can still produce
+            // duplicate slots (see the note on RemoveDuplicateSlotDataAsync),
+            // so this has to keep running until that is fixed properly.
             await RemoveDuplicateSlotDataAsync(context);
 
             // Ensure base personnel and a broader demo patient set always exist.
@@ -53,16 +45,6 @@ namespace backend.DAL
             // "Ring pasient" signaling link will silently fail until re-mapped.
             await EnsureDemoUserAsync(
                 userManager,
-                userName: "patient@homecare.local",
-                email: "patient@homecare.local",
-                fullName: "Erik Johansen",
-                role: "Patient",
-                phoneNumber: "+47 900 00 101",
-                address: "Hagegata 25, 0653 Oslo",
-                supabaseProfileId: "5a262e4e-e2d3-4179-a30a-5a003a652817");
-
-            await EnsureDemoUserAsync(
-                userManager,
                 userName: "patient.ingrid@homecare.local",
                 email: "patient.ingrid@homecare.local",
                 fullName: "Ingrid Berg",
@@ -71,18 +53,22 @@ namespace backend.DAL
                 address: "Grensen 12, 0159 Oslo",
                 supabaseProfileId: "c9f53a55-1375-48e6-95ce-25917f55be2d");
 
-            // Remove demo patients that were dropped from the seed set so they do
-            // not linger in pre-existing dev databases and confuse testing.
-            await RemoveLegacyDemoPatientsAsync(
-                context,
+            // Test patient for the TV app. The Supabase profile "wayki" already
+            // exists in the dev project, so this row is what links it to the
+            // backend and makes /api/tv/* resolve for that device.
+            await EnsureDemoUserAsync(
                 userManager,
-                "patient.paula@homecare.local",
-                "patient.ole@homecare.local",
-                "patient.karim@homecare.local");
+                userName: "patient.wayki@homecare.local",
+                email: "wayki@oslomet.no",
+                fullName: "Bong Wayki",
+                role: "Patient",
+                phoneNumber: "+47 900 00 105",
+                address: "Thorvald Meyers gate 33, 0555 Oslo",
+                supabaseProfileId: "4fb30313-b8e6-4381-896c-d345b5d3bd72");
 
             // Link demo patients to the nurse so they appear in her patient list.
-            await EnsurePatientPersonnelLinkAsync(context, userManager, "patient@homecare.local", "nurse@homecare.local");
             await EnsurePatientPersonnelLinkAsync(context, userManager, "patient.ingrid@homecare.local", "nurse@homecare.local");
+            await EnsurePatientPersonnelLinkAsync(context, userManager, "patient.wayki@homecare.local", "nurse@homecare.local");
 
             // Fill the read-only clinical profile (diagnoses, medications, etc.)
             // for the demo patients so the Besøk workspace has real data.
@@ -147,13 +133,15 @@ namespace backend.DAL
 
             // Seed the canonical demo set: exactly 5 appointments (2 planned +
             // 3 completed), where the completed ones carry real Visit records.
+            // They all belong to Ingrid; Wayki is left without appointments on
+            // purpose, so the TV app can be tested from an empty schedule.
             await SeedDemoAppointmentsAndVisitsAsync(context);
         }
 
         /// <summary>
         /// Fills the read-only clinical profile for the demo patients (only when
         /// not already set, so it never clobbers later edits). Ingrid matches the
-        /// visit-execution design; Erik gets plausible equivalents.
+        /// visit-execution design; Wayki gets a plausible placeholder.
         /// </summary>
         private static async Task EnsurePatientClinicalDataAsync(ApplicationDbContext context, UserManager<User> userManager)
         {
@@ -173,11 +161,27 @@ namespace backend.DAL
                 var patient = await userManager.FindByNameAsync(userName);
                 if (patient == null) return;
 
-                // Readable URL handle (from the Supabase profile). Set independently.
+                // Readable URL handle. Purely local — it is what /patients/:username
+                // resolves against, and is deliberately NOT the Supabase username.
+                // IX_AspNetUsers_ProfileUsername is unique, so check the handle is
+                // free before claiming it: a collision would throw and take startup
+                // down with it.
                 if (string.IsNullOrEmpty(patient.ProfileUsername))
                 {
-                    patient.ProfileUsername = profileUsername;
-                    await userManager.UpdateAsync(patient);
+                    var handleOwner = await userManager.Users
+                        .FirstOrDefaultAsync(u => u.ProfileUsername == profileUsername);
+
+                    if (handleOwner != null)
+                    {
+                        Console.WriteLine(
+                            $"Seeder: URL handle '{profileUsername}' is already used by " +
+                            $"'{handleOwner.UserName}', so '{userName}' keeps the GUID in its URL.");
+                    }
+                    else
+                    {
+                        patient.ProfileUsername = profileUsername;
+                        await userManager.UpdateAsync(patient);
+                    }
                 }
 
                 // Treat a null DateOfBirth as "clinical data not seeded yet".
@@ -231,21 +235,22 @@ namespace backend.DAL
                     ("Paracet", "500 mg", "Ved behov, maks 4× daglig"),
                 });
 
+            // Placeholder profile for the "wayki" TV test patient, so the patient
+            // details page and the Besøk workspace have something to render.
             await SeedAsync(
-                "patient@homecare.local",
-                "erik.johansen",
-                new DateTime(1952, 7, 22),
-                "Maria Johansen",
-                "kone",
-                "Dr. Sofie Lind",
+                "patient.wayki@homecare.local",
+                "bong.wayki",
+                new DateTime(1955, 5, 5),
+                "Trang Wayki",
+                "datter",
+                "Dr. Lars Holm",
                 "Ingen kjente",
-                "KOLS, Hjertesvikt",
-                "Stabil tilstand, Trenger noe tilsyn",
-                "Oppfølging av respirasjon og medisinering. Bistand til daglige gjøremål og sårstell. Rapporter forverring av pusten til fastlege.",
+                "Hypertensjon",
+                "Stabil tilstand",
+                "Testpasient for TV-appen. Daglig tilsyn og blodtrykksmåling.",
                 new[]
                 {
-                    ("Salbutamol inhalator", "100 mikrogram", "Ved behov"),
-                    ("Furosemid", "40 mg", "1× daglig — morgen"),
+                    ("Lisinopril", "10 mg", "1× daglig — morgen"),
                 });
         }
 
@@ -254,17 +259,18 @@ namespace backend.DAL
         /// appointments — two planned (future, Booked) and three completed past
         /// appointments, each with a real <see cref="Visit"/> record (a completed
         /// physical visit, a completed digital visit with call attempts, and a
-        /// not-completed digital visit). Runs only when no appointments exist so
-        /// it never disturbs appointments created through the app.
+        /// not-completed digital visit). They all belong to Ingrid — Wayki is
+        /// deliberately left with an empty schedule. Runs only when no
+        /// appointments exist so it never disturbs appointments created through
+        /// the app.
         /// </summary>
         private static async Task SeedDemoAppointmentsAndVisitsAsync(ApplicationDbContext context)
         {
             if (await context.Appointments.AnyAsync()) return;
 
             var nurse = await context.Users.FirstOrDefaultAsync(u => u.Role == "Personnel");
-            var erik = await context.Users.FirstOrDefaultAsync(u => u.UserName == "patient@homecare.local");
             var ingrid = await context.Users.FirstOrDefaultAsync(u => u.UserName == "patient.ingrid@homecare.local");
-            if (nurse == null || erik == null || ingrid == null) return;
+            if (nurse == null || ingrid == null) return;
 
             var today = DateTime.Today;
 
@@ -286,7 +292,7 @@ namespace backend.DAL
             // --- 2 planned (future, Booked) ---
             var planned = new[]
             {
-                new { Patient = erik, Date = today.AddDays(1), Start = new TimeSpan(10, 0, 0), End = new TimeSpan(11, 0, 0), Tasks = "Medisinhåndtering, Blodtrykksmåling", Note = "Sone A, Hagegata 25, 0653 Oslo" },
+                new { Patient = ingrid, Date = today.AddDays(1), Start = new TimeSpan(10, 0, 0), End = new TimeSpan(11, 0, 0), Tasks = "Medisinhåndtering, Blodtrykksmåling", Note = "Sone A, Grensen 12, 0159 Oslo" },
                 new { Patient = ingrid, Date = today.AddDays(2), Start = new TimeSpan(12, 0, 0), End = new TimeSpan(13, 0, 0), Tasks = "Sårstell, Tilsyn", Note = "Sone A, Grensen 12, 0159 Oslo" },
             };
             foreach (var p in planned)
@@ -307,7 +313,7 @@ namespace backend.DAL
             // --- 3 completed (past), each with a Visit record ---
             var completed = new[]
             {
-                new { Patient = erik,   DayBack = 2, Start = new TimeSpan(9, 0, 0),  End = new TimeSpan(10, 0, 0), Tasks = "Bathing, Dressing", Type = "Physical", Outcome = "Completed", Note = "Sone A, Hagegata 25, 0653 Oslo" },
+                new { Patient = ingrid, DayBack = 2, Start = new TimeSpan(9, 0, 0),  End = new TimeSpan(10, 0, 0), Tasks = "Bathing, Dressing", Type = "Physical", Outcome = "Completed", Note = "Sone A, Grensen 12, 0159 Oslo" },
                 new { Patient = ingrid, DayBack = 3, Start = new TimeSpan(11, 0, 0), End = new TimeSpan(12, 0, 0), Tasks = "Medisinhåndtering, Tilsyn", Type = "Digital", Outcome = "Completed", Note = "Digitalt" },
                 new { Patient = ingrid, DayBack = 5, Start = new TimeSpan(13, 0, 0), End = new TimeSpan(14, 0, 0), Tasks = "Hjelp til måltid, Oppfølging av ernæring", Type = "Digital", Outcome = "Incomplete", Note = "Digitalt" },
             };
@@ -397,109 +403,6 @@ namespace backend.DAL
             };
         }
 
-        private static async Task ReplaceLegacyAvailabilityNotesAsync(ApplicationDbContext context)
-        {
-            const string legacyNote = "Available for appointments";
-            const string defaultAddressNote = "Sone A, Hagegata 25, 0653 Oslo";
-
-            var availabilityWindowsWithLegacyNote = await context.AvailabilityWindows
-                .Where(window => window.Notes == legacyNote)
-                .ToListAsync();
-
-            foreach (var window in availabilityWindowsWithLegacyNote)
-            {
-                window.Notes = defaultAddressNote;
-            }
-
-            var availabilitiesWithLegacyNote = await context.Availabilities
-                .Where(availability => availability.Notes == legacyNote)
-                .ToListAsync();
-
-            foreach (var availability in availabilitiesWithLegacyNote)
-            {
-                availability.Notes = defaultAddressNote;
-            }
-
-            if (availabilityWindowsWithLegacyNote.Count > 0 || availabilitiesWithLegacyNote.Count > 0)
-            {
-                await context.SaveChangesAsync();
-            }
-        }
-
-        private static async Task EnsureUserAddressColumnAsync(ApplicationDbContext context)
-        {
-            var connection = context.Database.GetDbConnection();
-            await connection.OpenAsync();
-
-            try
-            {
-                using var checkCommand = connection.CreateCommand();
-                checkCommand.CommandText = "PRAGMA table_info('AspNetUsers');";
-
-                var hasAddressColumn = false;
-                using (var reader = await checkCommand.ExecuteReaderAsync())
-                {
-                    while (await reader.ReadAsync())
-                    {
-                        var columnName = reader[1]?.ToString();
-                        if (string.Equals(columnName, "Address", StringComparison.OrdinalIgnoreCase))
-                        {
-                            hasAddressColumn = true;
-                            break;
-                        }
-                    }
-                }
-
-                if (!hasAddressColumn)
-                {
-                    using var alterCommand = connection.CreateCommand();
-                    alterCommand.CommandText = "ALTER TABLE AspNetUsers ADD COLUMN Address TEXT NULL;";
-                    await alterCommand.ExecuteNonQueryAsync();
-                }
-            }
-            finally
-            {
-                await connection.CloseAsync();
-            }
-        }
-
-        private static async Task EnsureUserSupabaseProfileIdColumnAsync(ApplicationDbContext context)
-        {
-            var connection = context.Database.GetDbConnection();
-            await connection.OpenAsync();
-
-            try
-            {
-                using var checkCommand = connection.CreateCommand();
-                checkCommand.CommandText = "PRAGMA table_info('AspNetUsers');";
-
-                var hasSupabaseProfileIdColumn = false;
-                using (var reader = await checkCommand.ExecuteReaderAsync())
-                {
-                    while (await reader.ReadAsync())
-                    {
-                        var columnName = reader[1]?.ToString();
-                        if (string.Equals(columnName, "SupabaseProfileId", StringComparison.OrdinalIgnoreCase))
-                        {
-                            hasSupabaseProfileIdColumn = true;
-                            break;
-                        }
-                    }
-                }
-
-                if (!hasSupabaseProfileIdColumn)
-                {
-                    using var alterCommand = connection.CreateCommand();
-                    alterCommand.CommandText = "ALTER TABLE AspNetUsers ADD COLUMN SupabaseProfileId TEXT NULL;";
-                    await alterCommand.ExecuteNonQueryAsync();
-                }
-            }
-            finally
-            {
-                await connection.CloseAsync();
-            }
-        }
-
         private static async Task EnsurePatientPersonnelLinkAsync(
             ApplicationDbContext context,
             UserManager<User> userManager,
@@ -526,40 +429,6 @@ namespace backend.DAL
                 await context.SaveChangesAsync();
             }
         }
-
-        private static async Task RemoveLegacyDemoPatientsAsync(
-            ApplicationDbContext context,
-            UserManager<User> userManager,
-            params string[] userNames)
-        {
-            foreach (var userName in userNames)
-            {
-                var user = await userManager.FindByNameAsync(userName);
-                if (user == null) continue;
-
-                // If the patient still has appointments, leave the account intact
-                // rather than risk a foreign-key failure on delete.
-                var hasAppointments = await context.Appointments.AnyAsync(a => a.PatientId == user.Id);
-                if (hasAppointments)
-                {
-                    Console.WriteLine($"Skipping removal of legacy demo patient '{userName}': appointments still reference it.");
-                    continue;
-                }
-
-                // Clean up any patient-personnel links referencing this user first.
-                var links = await context.PatientUserLinks
-                    .Where(l => l.PatientId == user.Id || l.SecondaryUserId == user.Id)
-                    .ToListAsync();
-                if (links.Count > 0)
-                {
-                    context.PatientUserLinks.RemoveRange(links);
-                    await context.SaveChangesAsync();
-                }
-
-                await userManager.DeleteAsync(user);
-            }
-        }
-
         private static async Task EnsureDemoUserAsync(
             UserManager<User> userManager,
             string userName,
@@ -571,6 +440,28 @@ namespace backend.DAL
             string? supabaseProfileId = null)
         {
             var existingUser = await userManager.FindByNameAsync(userName);
+
+            // Refuse to claim a Supabase profile someone else already holds.
+            // IX_AspNetUsers_SupabaseProfileId is unique, and a violation throws
+            // rather than returning a failed IdentityResult, so without this the
+            // whole seeder — and startup with it — dies on any dev database where
+            // this profile was linked by hand or through the portal.
+            if (supabaseProfileId != null)
+            {
+                var linkOwner = await userManager.Users
+                    .FirstOrDefaultAsync(u => u.SupabaseProfileId == supabaseProfileId);
+
+                if (linkOwner != null && linkOwner.UserName != userName)
+                {
+                    Console.WriteLine(
+                        $"Seeder: Supabase profile '{supabaseProfileId}' is already linked to " +
+                        $"'{linkOwner.UserName}', so '{userName}' is seeded without it. " +
+                        "Re-assign the link from the portal (Pasienter → rediger) if that is wrong.");
+
+                    // Seed everything else; the link is neither stolen nor fatal.
+                    supabaseProfileId = null;
+                }
+            }
 
             if (existingUser == null)
             {
@@ -590,6 +481,12 @@ namespace backend.DAL
                 if (createResult.Succeeded)
                 {
                     await userManager.AddToRoleAsync(newUser, role);
+                }
+                else
+                {
+                    Console.WriteLine(
+                        $"Seeder: could not create demo user '{userName}': " +
+                        string.Join("; ", createResult.Errors.Select(e => e.Description)));
                 }
 
                 return;
@@ -613,7 +510,28 @@ namespace backend.DAL
                 existingUser.Address = address;
                 existingUser.EmailConfirmed = true;
                 existingUser.SupabaseProfileId = supabaseProfileId;
-                await userManager.UpdateAsync(existingUser);
+
+                // A unique-index violation here would otherwise take down startup.
+                // The check above covers the case we know about; this keeps any
+                // other collision a warning rather than a dead backend.
+                try
+                {
+                    await userManager.UpdateAsync(existingUser);
+                }
+                catch (DbUpdateException ex)
+                {
+                    Console.WriteLine($"Seeder: could not update demo user '{userName}': {ex.Message}");
+
+                    // Detach whatever failed. The context is scoped and shared with
+                    // the rest of the seeder, so a rejected change left in Modified
+                    // state would be retried by the next SaveChangesAsync — and that
+                    // one is not in a try/catch, so it would take startup down after
+                    // all, which is exactly what this catch exists to prevent.
+                    foreach (var entry in ex.Entries)
+                    {
+                        entry.State = EntityState.Detached;
+                    }
+                }
             }
 
             if (!await userManager.IsInRoleAsync(existingUser, role))
@@ -622,6 +540,23 @@ namespace backend.DAL
             }
         }
 
+        /// <summary>
+        /// Collapses availability slots that share a personnel/date/start time,
+        /// keeping the one with the most meaningful appointment.
+        ///
+        /// This is a workaround, not a cleanup of old data: nothing stops
+        /// duplicates being created today. <c>AvailabilityService.CreateAsync</c>
+        /// inserts a slot without checking for an existing one, and
+        /// <c>UpdateWindowAsync</c> only compares new slots against *booked*
+        /// ones, so re-saving a window can add a second free slot at the same
+        /// time. The real fix is a uniqueness rule on
+        /// (PersonnelId, Date, StartTime) plus a service that respects it;
+        /// until then this runs on every startup.
+        ///
+        /// Note that it can delete an appointment (see ShouldReplaceAppointment)
+        /// — which is a strong reason to fix the cause rather than keep sweeping
+        /// up at startup.
+        /// </summary>
         private static async Task RemoveDuplicateSlotDataAsync(ApplicationDbContext context)
         {
             var allAvailabilities = await context.Availabilities

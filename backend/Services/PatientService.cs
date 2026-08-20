@@ -1,4 +1,5 @@
 using backend.DTOs;
+using backend.DAL;
 using backend.DAL.Repositories;
 using backend.Models;
 using Microsoft.AspNetCore.Identity;
@@ -13,18 +14,25 @@ namespace backend.Services
         private readonly ICallLogService _callLogService;
         private readonly UserManager<User> _userManager;
 
+        // Only for transactions. Reads and writes still go through the repositories;
+        // this is the one instance they and UserManager all share, so it is what a
+        // multi-step write has to begin the transaction on.
+        private readonly ApplicationDbContext _context;
+
         public PatientService(
             IUserRepository userRepository,
             IAppointmentRepository appointmentRepository,
             IPatientUserLinkRepository linkRepository,
             ICallLogService callLogService,
-            UserManager<User> userManager)
+            UserManager<User> userManager,
+            ApplicationDbContext context)
         {
             _userRepository = userRepository;
             _appointmentRepository = appointmentRepository;
             _linkRepository = linkRepository;
             _callLogService = callLogService;
             _userManager = userManager;
+            _context = context;
         }
 
         public async Task<IEnumerable<PatientListDto>> GetAllPatientsAsync()
@@ -137,6 +145,74 @@ namespace backend.Services
             };
         }
 
+        /// <summary>
+        /// Registers a patient from the portal and puts them on the caller's
+        /// patient list. Optionally links them to a Supabase profile, which is
+        /// what makes the TV app able to resolve them.
+        /// </summary>
+        public async Task<PatientDetailsDto> CreatePatientAsync(PatientCreateDto dto, string creatingPersonnelId)
+        {
+            var email = dto.Email.Trim();
+            var supabaseProfileId = NormalizeSupabaseProfileId(dto.SupabaseProfileId);
+
+            await EnsureSupabaseLinkIsFreeAsync(supabaseProfileId, currentPatientId: null);
+
+            var patient = new User
+            {
+                // The seeded patients use their email as the username; keep new
+                // ones consistent so the update path's "username follows email"
+                // rule applies to them too.
+                UserName = email,
+                Email = email,
+                FullName = dto.FullName.Trim(),
+                Role = "Patient",
+                PhoneNumber = string.IsNullOrWhiteSpace(dto.PhoneNumber) ? null : dto.PhoneNumber.Trim(),
+                Address = string.IsNullOrWhiteSpace(dto.Address) ? null : dto.Address.Trim(),
+                EmailConfirmed = true,
+                SupabaseProfileId = supabaseProfileId
+                // ProfileUsername stays null: the readable URL handle is seeder-owned,
+                // so portal-registered patients are addressed by their GUID. NULLs are
+                // distinct under the unique index, so any number of them coexist.
+            };
+
+            // Registration is 3 writes (account, role, patient-list link) and a
+            // partial one is worse than none: the account would hold the email and
+            // username while being invisible to every list, so the nurse retrying
+            // would be told the address is taken by a patient they cannot see.
+            // UserManager and both repositories share this scoped DbContext, so one
+            // transaction covers all 3.
+            await using var transaction = await _context.Database.BeginTransactionAsync();
+
+            // Deliberately created without a password: patients authenticate
+            // against Supabase on the TV app, and the portal login is
+            // personnel-only, so a password here would only be a way in.
+            var createResult = await _userManager.CreateAsync(patient);
+            if (!createResult.Succeeded)
+            {
+                throw new InvalidOperationException(string.Join("; ", createResult.Errors.Select(e => e.Description)));
+            }
+
+            var roleResult = await _userManager.AddToRoleAsync(patient, "Patient");
+            if (!roleResult.Succeeded)
+            {
+                throw new InvalidOperationException(string.Join("; ", roleResult.Errors.Select(e => e.Description)));
+            }
+
+            // Without this the new patient would be missing from the very list
+            // that created them: GET /api/patients returns the caller's linked
+            // patients, not every patient.
+            await _linkRepository.CreateAsync(new PatientUserLink
+            {
+                PatientId = patient.Id,
+                SecondaryUserId = creatingPersonnelId,
+                RelationshipType = "Personnel"
+            });
+
+            await transaction.CommitAsync();
+
+            return (await GetPatientByIdAsync(patient.Id))!;
+        }
+
         public async Task<bool> UpdatePatientNotesAsync(string patientId, string? notes)
         {
             var patient = await _userRepository.GetByIdAsync(patientId);
@@ -162,6 +238,17 @@ namespace backend.Services
             patient.FullName = dto.FullName;
             patient.PhoneNumber = dto.PhoneNumber;
             patient.Address = dto.Address;
+
+            // The Supabase link is editable here so a patient created before the
+            // portal could link them (or one whose TV account came later) can be
+            // wired up without a seeder change.
+            //
+            // Only SupabaseProfileId moves. patient.ProfileUsername — the readable
+            // URL handle — is deliberately left alone: linking, relinking or
+            // unlinking a TV account must never rename the patient's URL.
+            var supabaseProfileId = NormalizeSupabaseProfileId(dto.SupabaseProfileId);
+            await EnsureSupabaseLinkIsFreeAsync(supabaseProfileId, patient.Id);
+            patient.SupabaseProfileId = supabaseProfileId;
 
             // Email changes go through UserManager so the normalized columns stay
             // consistent. Seeded accounts use the email as their username, so keep
@@ -194,7 +281,48 @@ namespace backend.Services
             // Persist the non-Identity fields (FullName/PhoneNumber/Address).
             await _userRepository.UpdateAsync(patient);
 
-            return await GetPatientByIdAsync(patientId);
+            // Read back by id rather than by the route key, which may have been
+            // the profile username that this update just changed.
+            return await GetPatientByIdAsync(patient.Id);
+        }
+
+        /// <summary>
+        /// Lowercased on purpose: <see cref="IUserRepository.GetBySupabaseProfileIdAsync"/>
+        /// compares exactly so it can use the index, and Supabase issues
+        /// lowercase UUIDs. Blank means "not linked".
+        /// </summary>
+        private static string? NormalizeSupabaseProfileId(string? value)
+        {
+            var trimmed = value?.Trim();
+            return string.IsNullOrEmpty(trimmed) ? null : trimmed.ToLowerInvariant();
+        }
+
+        /// <summary>
+        /// Refuses a Supabase profile already claimed by someone else.
+        /// IX_AspNetUsers_SupabaseProfileId is unique, so without this a collision
+        /// would surface as a 500 from SQLite instead of a message the nurse can
+        /// act on. <paramref name="currentPatientId"/> is null when creating, and
+        /// the patient's own id when editing (so re-saving an unchanged form is
+        /// not treated as a conflict).
+        ///
+        /// Only the Supabase id is checked. The local URL handle plays no part in
+        /// validating a TV link — the two are independent by design.
+        /// </summary>
+        private async Task EnsureSupabaseLinkIsFreeAsync(
+            string? supabaseProfileId,
+            string? currentPatientId)
+        {
+            if (supabaseProfileId == null)
+            {
+                return;
+            }
+
+            var owner = await _userRepository.GetBySupabaseProfileIdAsync(supabaseProfileId);
+            if (owner != null && owner.Id != currentPatientId)
+            {
+                throw new InvalidOperationException(
+                    $"Supabase-profilen er allerede koblet til {owner.FullName}.");
+            }
         }
 
         private static AppointmentSummaryDto MapToAppointmentSummary(Appointment appointment)

@@ -30,6 +30,17 @@ namespace backend.DAL
                 .HasIndex(u => u.ProfileUsername)
                 .IsUnique();
 
+            // One backend patient per Supabase profile, which is what lets
+            // GetBySupabaseProfileIdAsync resolve a TV caller to exactly one user.
+            //
+            // The database has carried this index since the AddSupabaseProfileId
+            // migration, but the model had lost it — so EnsureCreated-built
+            // databases (tests) went without it, and the next scaffolded migration
+            // would have tried to drop it. Declared here so model and schema agree.
+            modelBuilder.Entity<User>()
+                .HasIndex(u => u.SupabaseProfileId)
+                .IsUnique();
+
             // Configure one-to-one relationship between Appointment and Availability
             modelBuilder.Entity<Appointment>()
                 .HasOne(a => a.Availability)

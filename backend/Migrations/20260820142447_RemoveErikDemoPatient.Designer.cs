@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using backend.DAL;
 
@@ -10,9 +11,11 @@ using backend.DAL;
 namespace backend.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260820142447_RemoveErikDemoPatient")]
+    partial class RemoveErikDemoPatient
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.8");
@@ -179,7 +182,7 @@ namespace backend.Migrations
 
                     b.HasIndex("PatientId");
 
-                    b.ToTable("Appointments", (string)null);
+                    b.ToTable("Appointments");
                 });
 
             modelBuilder.Entity("backend.Models.Availability", b =>
@@ -213,7 +216,7 @@ namespace backend.Migrations
 
                     b.HasIndex("PersonnelId");
 
-                    b.ToTable("Availabilities", (string)null);
+                    b.ToTable("Availabilities");
                 });
 
             modelBuilder.Entity("backend.Models.AvailabilityWindow", b =>
@@ -245,7 +248,7 @@ namespace backend.Migrations
 
                     b.HasIndex("PersonnelId");
 
-                    b.ToTable("AvailabilityWindows", (string)null);
+                    b.ToTable("AvailabilityWindows");
                 });
 
             modelBuilder.Entity("backend.Models.CallLog", b =>
@@ -295,7 +298,7 @@ namespace backend.Migrations
 
                     b.HasIndex("VisitId");
 
-                    b.ToTable("CallLogs", (string)null);
+                    b.ToTable("CallLogs");
                 });
 
             modelBuilder.Entity("backend.Models.PatientMedication", b =>
@@ -325,7 +328,7 @@ namespace backend.Migrations
 
                     b.HasIndex("PatientId");
 
-                    b.ToTable("PatientMedications", (string)null);
+                    b.ToTable("PatientMedications");
                 });
 
             modelBuilder.Entity("backend.Models.PatientUserLink", b =>
@@ -352,7 +355,7 @@ namespace backend.Migrations
 
                     b.HasIndex("SecondaryUserId");
 
-                    b.ToTable("PatientUserLinks", (string)null);
+                    b.ToTable("PatientUserLinks");
                 });
 
             modelBuilder.Entity("backend.Models.User", b =>
@@ -466,9 +469,6 @@ namespace backend.Migrations
                     b.HasIndex("ProfileUsername")
                         .IsUnique();
 
-                    b.HasIndex("SupabaseProfileId")
-                        .IsUnique();
-
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
@@ -524,7 +524,7 @@ namespace backend.Migrations
 
                     b.HasIndex("ResponsibleUserId");
 
-                    b.ToTable("Visits", (string)null);
+                    b.ToTable("Visits");
                 });
 
             modelBuilder.Entity("backend.Models.VisitTask", b =>
@@ -557,7 +557,7 @@ namespace backend.Migrations
 
                     b.HasIndex("VisitId");
 
-                    b.ToTable("VisitTasks", (string)null);
+                    b.ToTable("VisitTasks");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

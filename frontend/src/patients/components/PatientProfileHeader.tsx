@@ -42,6 +42,15 @@ const PatientProfileHeader: React.FC<PatientProfileHeaderProps> = ({ patient, on
                   {chip.value}
                 </Badge>
               ))}
+              {/* Whether this patient can be reached on the TV at all: without a
+                  Supabase link the TV app cannot resolve them. */}
+              <Badge
+                icon="tv"
+                bg={patient.supabaseProfileId ? 'connected' : 'light'}
+                bordered={!patient.supabaseProfileId}
+              >
+                {patient.supabaseProfileId ? 'TV tilkoblet' : 'Ingen TV-kobling'}
+              </Badge>
             </div>
           </div>
         </div>

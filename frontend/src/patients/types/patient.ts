@@ -62,10 +62,24 @@ export interface PatientDetailsDto {
   clinical: PatientClinical;
 }
 
-// Payload for updating a patient's contact details
+// Payload for updating a patient's contact details and Supabase (TV) link.
+// Note there is no profileUsername: `username` on the details DTO is the local
+// URL handle, and linking or unlinking a TV account must never rewrite it.
 export interface PatientUpdateDto {
   fullName: string;
   email: string;
-  phoneNumber?: string;
+  phoneNumber?: string | null;
   address?: string;
+  supabaseProfileId?: string | null;
+}
+
+// Payload for registering a new patient from the portal. supabaseProfileId
+// is what lets the patient use the TV app; it is optional so a patient can be
+// linked later. New patients get no URL handle and are addressed by their GUID.
+export interface PatientCreateDto {
+  fullName: string;
+  email: string;
+  phoneNumber?: string | null;
+  address?: string;
+  supabaseProfileId?: string | null;
 }

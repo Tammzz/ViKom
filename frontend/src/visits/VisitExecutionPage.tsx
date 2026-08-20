@@ -297,7 +297,12 @@ const VisitExecutionPage: React.FC = () => {
   }
 
   const isDigital = visit.visitType === 'Digital';
-  const canCall = isDigital && !!visit.supabaseProfileId;
+  // Calling the patient's TV is useful on every visit, not just digital ones (a
+  // nurse standing outside a door still needs to reach the patient), so the call
+  // only requires a linked TV profile.
+  const canCall = !!visit.supabaseProfileId;
+  const hasCallAttempts = visit.callAttempts.length > 0;
+  const callLabel = hasCallAttempts ? 'Ring igjen' : 'Ring pasient';
   const completedCount = visit.tasks.filter((t) => t.status === 'Completed').length;
   const totalTasks = visit.tasks.length;
   const progressPct = totalTasks > 0 ? Math.round((completedCount / totalTasks) * 100) : 0;
@@ -343,6 +348,15 @@ const VisitExecutionPage: React.FC = () => {
 
             {isActive && (
               <div className="d-flex flex-wrap align-items-start gap-2">
+                <Button
+                  variant="primary"
+                  onClick={openCall}
+                  disabled={!canCall || completing}
+                  title={!canCall ? 'Pasienten har ingen TV-profil koblet til seg' : undefined}
+                >
+                  <i className="bi bi-telephone-outbound me-2" aria-hidden="true"></i>
+                  {callLabel}
+                </Button>
                 <Button variant="outline-danger" onClick={() => setShowCancelModal(true)} disabled={completing}>
                   <i className="bi bi-x-circle me-2" aria-hidden="true"></i>Avbryt besøk
                 </Button>
@@ -385,7 +399,7 @@ const VisitExecutionPage: React.FC = () => {
               conditionFlags={visit.patientClinical.conditionFlags}
             />
 
-            {isDigital && (
+            {(isDigital || hasCallAttempts) && (
               <SectionCard title="Samtaleforsøk" icon="telephone-outbound">
                 {visit.callAttempts.length === 0 ? (
                   <p className="text-muted mb-0">Ingen samtaleforsøk registrert enda.</p>
@@ -399,20 +413,6 @@ const VisitExecutionPage: React.FC = () => {
                   </ol>
                 )}
 
-                {isActive && (
-                  <div className="mt-3 d-grid">
-                    <Button
-                      variant="primary"
-                      onClick={openCall}
-                      disabled={!canCall}
-                      title={!canCall ? 'Pasienten har ingen TV-profil koblet til seg' : undefined}
-                    >
-                      <i className="bi bi-telephone me-2" aria-hidden="true"></i>
-                      {visit.callAttempts.length === 0 ? 'Ring pasient' : 'Ring igjen'}
-                    </Button>
-                  </div>
-                )}
-
                 {callSuccess && (
                   <Alert variant="success" className="mt-3 mb-0">
                     Pasienten svarte. Du kan fullføre besøket når du er ferdig.
@@ -421,7 +421,21 @@ const VisitExecutionPage: React.FC = () => {
 
                 {callPrompt && isActive && (
                   <div className="mt-3 p-3 border rounded bg-light">
-                    {callPrompt.outcome === 'Declined' ? (
+                    {!isDigital ? (
+                      <>
+                        <p className="fw-semibold mb-1">
+                          {callPrompt.outcome === 'Declined'
+                            ? 'Pasienten avviste samtalen.'
+                            : callPrompt.outcome === 'Failed'
+                              ? 'Teknisk problem under anropet.'
+                              : 'Ingen svar fra pasient.'}
+                        </p>
+                        <p className="text-muted small mb-3">
+                          Besøket fortsetter som normalt. Du kan prøve å ringe igjen senere.
+                        </p>
+                        <Button size="sm" variant="primary" onClick={openCall}>Ring igjen</Button>
+                      </>
+                    ) : callPrompt.outcome === 'Declined' ? (
                       <>
                         <p className="fw-semibold mb-1">Pasienten avviste samtalen.</p>
                         <p className="text-muted small mb-3">Dette kan ha vært et uhell.</p>

@@ -3,9 +3,12 @@ using System.ComponentModel.DataAnnotations;
 namespace backend.DTOs
 {
     /// <summary>
-    /// Payload for updating a patient's contact details.
+    /// Payload for registering a new patient from the portal.
+    ///
+    /// The Supabase fields are optional: a patient can be created first and linked
+    /// to their TV identity later through <see cref="PatientUpdateDto"/>.
     /// </summary>
-    public class PatientUpdateDto
+    public class PatientCreateDto
     {
         [Required(ErrorMessage = "Full name is required.")]
         [RegularExpression(@"^[\p{L}.\- ]+$", ErrorMessage = "The name must contain only letters, spaces, periods, or hyphens.")]
@@ -21,8 +24,8 @@ namespace backend.DTOs
         public string? Address { get; set; }
 
         /// <summary>
-        /// UUID of the patient's Supabase profile. Empty clears the link, which
-        /// makes the TV app stop resolving this patient.
+        /// UUID of the patient's Supabase profile, which is what lets the TV app
+        /// resolve them. Empty means "not linked yet".
         /// </summary>
         // The empty alternative keeps a blank field valid: the form always posts
         // the input, and "" means "no link" rather than a malformed one.
@@ -31,10 +34,10 @@ namespace backend.DTOs
             ErrorMessage = "Supabase profile ID must be a UUID.")]
         public string? SupabaseProfileId { get; set; }
 
-        // No ProfileUsername here on purpose. Linking, relinking or unlinking a
-        // Supabase account must change only SupabaseProfileId — the local URL
-        // handle is not the Supabase username, and rewriting it here would rename
-        // the patient's URL mid-session and could collide with another patient's
-        // handle on IX_AspNetUsers_ProfileUsername.
+        // No ProfileUsername here on purpose. That column is the *local* URL
+        // handle behind /patients/{username}, not the Supabase username, and it
+        // is owned by the seeder. Patients registered here leave it null and are
+        // addressed by their GUID, so a Supabase link can never rename a patient's
+        // URL or collide with another patient's handle.
     }
 }

@@ -77,7 +77,7 @@ const DayCard: React.FC<DayCardProps> = ({
                 </div>
                 {appointment.status === 'Completed' && (
                   <div className="completed-text">
-                    ✓ Completed
+                    <i className="bi bi-check-lg me-1"></i>Completed
                   </div>
                 )}
                 {appointment.status === 'Cancelled' && (

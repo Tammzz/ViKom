@@ -118,6 +118,7 @@ builder.Services.AddScoped<backend.Services.IDashboardService, backend.Services.
 builder.Services.AddScoped<backend.Services.IPatientUserLinkService, backend.Services.PatientUserLinkService>();
 builder.Services.AddScoped<backend.Services.ICallLogService, backend.Services.CallLogService>();
 builder.Services.AddScoped<backend.Services.IVisitService, backend.Services.VisitService>();
+builder.Services.AddScoped<backend.Services.ISupabaseProfileDirectory, backend.Services.SupabaseProfileDirectory>();
 
 // Configure Swagger with JWT support
 builder.Services.AddEndpointsApiExplorer();

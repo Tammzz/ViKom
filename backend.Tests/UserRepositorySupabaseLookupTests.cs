@@ -46,8 +46,8 @@ public class UserRepositorySupabaseLookupTests : IDisposable
             new User
             {
                 Id = "unlinked-local-id",
-                UserName = "patient.paula@homecare.local",
-                FullName = "Paula Olsen",
+                UserName = "patient.unlinked@homecare.local",
+                FullName = "Unlinked Patient",
                 Role = "Patient",
                 SupabaseProfileId = null
             });
